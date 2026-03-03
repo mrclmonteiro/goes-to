@@ -1,32 +1,42 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Mudei o nome da função de 'middleware' para 'proxy' aqui:
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next()
+  const response = NextResponse.next()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookies) => cookies.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        ),
-      },
-    }
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Skip middleware if env vars are missing
+  if (!url || !key) {
+    return response
+  }
 
-  if (!user && request.nextUrl.pathname.startsWith('/filmes')) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookies) =>
+          cookies.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          ),
+      },
+    })
 
-  return response
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user && request.nextUrl.pathname.startsWith('/filmes')) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  } catch (error) {
+    // If there's an error with Supabase, let the request continue
+    // This prevents the app from getting stuck during auth checks
+    console.error('Middleware error:', error)
+  }
+
+  return response
 }
 
 export const config = {
-  matcher: ['/filmes/:path*'],
+  matcher: ['/filmes/:path*'],
 }

@@ -14,23 +14,30 @@ export default function LoginPage() {
   async function handleSubmit() {
     setLoading(true)
     setMessage('')
-    const supabase = createClient()
-    if (!supabase) {
-      setMessage('Erro interno: cliente Supabase não disponível.')
-      setLoading(false)
-      return
-    }
+    
+    try {
+      const supabase = createClient()
+      if (!supabase || typeof supabase !== 'object') {
+        setMessage('Erro: Supabase não configurado. Verifique as variáveis de ambiente.')
+        setLoading(false)
+        return
+      }
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setMessage(error.message)
-      else setMessage('Verifique seu email para confirmar o cadastro!')
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setMessage(error.message)
-      else router.push('/filmes')
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) setMessage(error.message)
+        else setMessage('Verifique seu email para confirmar o cadastro!')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) setMessage(error.message)
+        else router.push('/filmes')
+      }
+    } catch (error: any) {
+      setMessage(error?.message || 'Erro ao processar requisição. Tente novamente.')
+      console.error('Auth error:', error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
