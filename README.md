@@ -2,8 +2,6 @@
 
 > *O app para organizar os filmes indicados às grandes premiações de um jeito fácil, leve — e bonito, modéstia à parte.*
 
-![Goes To... App Banner](https://via.placeholder.com/800x200/0a0a0f/fbbf24?text=Goes+To...+App) ---
-
 ## ✨ O que você pode fazer no Goes To...
 
 * **🎬 Acompanhe os indicados:** Um jeito simples de registrar os filmes indicados que você já assistiu.
