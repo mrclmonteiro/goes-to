@@ -1,13 +1,18 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
+  // O objeto 'experimental' foi removido porque a chave não é mais válida
   images: {
-    domains: ['image.tmdb.org'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+        port: '',
+        pathname: '/**', // Permite qualquer caminho de imagem dentro desse domínio
+      },
+    ],
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
