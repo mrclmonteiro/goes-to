@@ -52,6 +52,10 @@ type UserFilm = { film_id: string; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type MovieData = { poster: string | null }
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <p className="text-lg font-semibold" style={{ color: 'white' }}>{children}</p>
+}
+
 function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] }) {
   if (ratings.length === 0) return (
     <div className="flex flex-col items-center py-4">
@@ -105,19 +109,59 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
   )
 }
 
-// Horizontal scroll row with edge gradients
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
       <div className="flex gap-3 overflow-x-auto pl-4 pr-4"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {children}
-        {/* spacer so last card isn't flush */}
         <div style={{ minWidth: 4, flexShrink: 0 }}/>
       </div>
-      {/* right fade */}
       <div className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none"
         style={{ background: 'linear-gradient(to right, transparent, #0a0a0f)' }}/>
+    </div>
+  )
+}
+
+// Reusable bottom sheet wrapper
+function BottomSheet({ open, y, dragging, title, onClose, onTouchStart, onTouchMove, onTouchEnd, children }: {
+  open: boolean; y: number; dragging: boolean; title: string
+  onClose: () => void
+  onTouchStart: (e: React.TouchEvent) => void
+  onTouchMove: (e: React.TouchEvent) => void
+  onTouchEnd: () => void
+  children: React.ReactNode
+}) {
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col justify-end">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col"
+        style={{
+          background: '#0e0e14', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
+          boxShadow: '0 -8px 48px rgba(0,0,0,0.5)', maxHeight: '88vh',
+          transform: `translateY(${y}%)`,
+          transition: dragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
+        }}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+        </div>
+        <div className="flex items-center justify-between px-5 pt-2 pb-3">
+          <div className="w-9"/>
+          <p className="text-sm font-semibold" style={{ color: 'white' }}>{title}</p>
+          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
+        <div className="overflow-y-auto flex-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+          {children}
+        </div>
+      </div>
     </div>
   )
 }
@@ -126,7 +170,6 @@ export default function DescobrirPage() {
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [allUserFilms, setAllUserFilms] = useState<UserFilm[]>([])
-  const [catRatings, setCatRatings] = useState<{film_id: string; category: string; rating: number}[]>([])
   const [myUserFilms, setMyUserFilms] = useState<UserFilm[]>([])
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
@@ -134,11 +177,21 @@ export default function DescobrirPage() {
   const [selectedCat, setSelectedCat] = useState('Best Picture')
   const [catDropdownOpen, setCatDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+
+  // Fact sheet
   const [factSheet, setFactSheet] = useState<typeof FACTS[0] | null>(null)
-  const [sheetY, setSheetY] = useState(100)
-  const [sheetDragging, setSheetDragging] = useState(false)
-  const dragStart = useRef<number | null>(null)
-  const dragCurrent = useRef(0)
+  const [factY, setFactY] = useState(100)
+  const [factDragging, setFactDragging] = useState(false)
+  const factDragStart = useRef<number | null>(null)
+  const factDragCurrent = useRef(0)
+
+  // Nominees sheet
+  const [nomineeSheet, setNomineeSheet] = useState<string | null>(null) // category key
+  const [nomineeY, setNomineeY] = useState(100)
+  const [nomineeDragging, setNomineeDragging] = useState(false)
+  const nomineeDragStart = useRef<number | null>(null)
+  const nomineeDragCurrent = useRef(0)
+
   const [dailyFact] = useState(() => {
     const now = new Date()
     const start = new Date(now.getFullYear(), 0, 0)
@@ -151,7 +204,7 @@ export default function DescobrirPage() {
       const supabase = createClient()
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
-      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, { data: catRatingsData }, { data: myUF }] = await Promise.all([
+      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, , { data: myUF }] = await Promise.all([
         supabase.from('films').select('*'),
         supabase.from('nominations').select('*'),
         supabase.from('user_films').select('film_id, rating'),
@@ -163,22 +216,16 @@ export default function DescobrirPage() {
       setFilms(loaded)
       setNominations(noms)
       setAllUserFilms(allUF ?? [])
-      setCatRatings(catRatingsData ?? [])
       setMyUserFilms(myUF ?? [])
       setLoading(false)
-
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data as any)
-
-      // Fotos de pessoas
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
         .map((n: Nomination) => n.nominee as string)
       const unique = [...new Set(nominees)] as string[]
       const photoPairs = await Promise.all(unique.map(async name => [name, await fetchPersonPhoto(name)] as const))
       setPersonPhotos(Object.fromEntries(photoPairs))
-
-      // Similares
       const topRated = (myUF ?? []).filter((u: UserFilm) => (u.rating ?? 0) >= 4)
       if (topRated.length > 0) {
         const topFilm = loaded.find((f: Film) => f.id === topRated[0].film_id)
@@ -192,11 +239,31 @@ export default function DescobrirPage() {
     load()
   }, [])
 
+  // Lock scroll when any sheet is open
+  useEffect(() => {
+    if (factSheet || nomineeSheet) document.body.style.overflow = 'hidden'
+    else document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
+  }, [factSheet, nomineeSheet])
+
+  // Fact sheet open
+  useEffect(() => {
+    if (factSheet) requestAnimationFrame(() => setFactY(0))
+    else setFactY(100)
+  }, [factSheet])
+
+  function closeFactSheet() { setFactY(100); setTimeout(() => setFactSheet(null), 400) }
+
+  function openNomineeSheet(cat: string) {
+    setNomineeSheet(cat)
+    requestAnimationFrame(() => setNomineeY(0))
+  }
+  function closeNomineeSheet() { setNomineeY(100); setTimeout(() => setNomineeSheet(null), 400) }
+
   const filmsByCategory = (cat: string) => {
     const ids = nominations.filter(n => n.category === cat).map(n => n.film_id)
     return films.filter(f => ids.includes(f.id))
   }
-
   const swingRatings = (cat: string) =>
     filmsByCategory(cat).map(f => {
       const rats = allUserFilms.filter(u => u.film_id === f.id && u.rating)
@@ -213,22 +280,6 @@ export default function DescobrirPage() {
   const unwatched = films.filter(f => !myUserFilms.find(u => u.film_id === f.id))
   const isPersonCat = (cat: string) => PERSON_CATEGORIES.includes(cat)
 
-  useEffect(() => {
-    if (factSheet) {
-      document.body.style.overflow = 'hidden'
-      requestAnimationFrame(() => setSheetY(0))
-    } else {
-      setSheetY(100)
-      document.body.style.overflow = ''
-    }
-    return () => { document.body.style.overflow = '' }
-  }, [factSheet])
-
-  function closeSheet() {
-    setSheetY(100)
-    setTimeout(() => setFactSheet(null), 400)
-  }
-
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
@@ -240,6 +291,11 @@ export default function DescobrirPage() {
       <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
     </main>
   )
+
+  // Current nominees for the open sheet
+  const sheetNoms = nomineeSheet ? nomineesByCategory(nomineeSheet) : []
+  const sheetSR = nomineeSheet ? swingRatings(nomineeSheet) : []
+  const sheetIsPerson = nomineeSheet ? isPersonCat(nomineeSheet) : false
 
   return (
     <>
@@ -259,10 +315,10 @@ export default function DescobrirPage() {
 
         <div className="flex flex-col gap-7">
 
-          {/* Swingometer */}
-          <div className="mx-4 rounded-3xl p-5" style={glass}>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Termômetro</p>
+          {/* ── Termômetro ─────────────────────────────────────────── */}
+          <div className="px-4">
+            <div className="flex items-center justify-between mb-3">
+              <SectionTitle>Termômetro</SectionTitle>
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setCatDropdownOpen(!catDropdownOpen)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
@@ -286,10 +342,12 @@ export default function DescobrirPage() {
                 )}
               </div>
             </div>
-            <GaugeChart ratings={swingRatings(selectedCat)}/>
+            <div className="rounded-3xl p-5" style={glass}>
+              <GaugeChart ratings={swingRatings(selectedCat)}/>
+            </div>
           </div>
 
-          {/* Curiosidade do dia */}
+          {/* ── Curiosidade do dia ─────────────────────────────────── */}
           <div className="px-4">
             <button onClick={() => setFactSheet(dailyFact)} className="w-full rounded-3xl p-5 text-left relative overflow-hidden"
               style={{ background: `linear-gradient(135deg, ${dailyFact.grad[0]}, ${dailyFact.grad[1]})`, border: '1px solid rgba(255,255,255,0.12)' }}>
@@ -302,95 +360,48 @@ export default function DescobrirPage() {
             </button>
           </div>
 
-          {/* Todos os indicados por categoria */}
-          <div>
-            <p className="text-xs uppercase tracking-widest font-medium mb-5 px-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Todos os indicados
-            </p>
-            <div className="flex flex-col gap-4 px-4">
+          {/* ── Todos os indicados — grid compacto de categorias ───── */}
+          <div className="px-4">
+            <SectionTitle>Todos os indicados</SectionTitle>
+            <div className="grid grid-cols-2 gap-2 mt-3">
               {Object.keys(CATEGORY_LABELS).map(cat => {
                 const noms = nomineesByCategory(cat)
                 if (!noms.length) return null
-                const isPerson = isPersonCat(cat)
                 const sr = swingRatings(cat)
+                const top = sr[0]
                 return (
-                  <div key={cat} className="rounded-3xl overflow-hidden" style={glass}>
-                    <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(251,191,36,0.7)' }}>
-                        {CATEGORY_LABELS[cat]}
+                  <button key={cat} onClick={() => openNomineeSheet(cat)}
+                    className="rounded-2xl p-4 text-left flex flex-col gap-1"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest leading-tight"
+                      style={{ color: 'rgba(251,191,36,0.65)' }}>
+                      {CATEGORY_LABELS[cat]}
+                    </p>
+                    <p className="text-xs font-medium leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      {noms.length} indicado{noms.length !== 1 ? 's' : ''}
+                    </p>
+                    {top && (
+                      <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        ★ {top.title}
                       </p>
-                    </div>
-                    <div className="flex flex-col">
-                      {noms.map(({ film, nominee }, i) => {
-                        const poster = (movieData[film.title] as any)?.poster
-                        const personPhoto = nominee ? personPhotos[nominee] : null
-                        const filmRating = sr.find(r => r.title === film.title)
-                        const showPerson = isPerson && nominee
-                        return (
-                          <Link key={`${film.id}-${nominee}-${i}`} href={`/filmes/${film.id}`}>
-                            <div className="flex items-center gap-3 px-4 py-3"
-                              style={{ borderBottom: i < noms.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                              {/* Poster + foto sobreposta */}
-                              <div className="relative flex-shrink-0" style={{ width: 36, height: 52 }}>
-                                <div className="w-full h-full rounded-lg overflow-hidden"
-                                  style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)' }}>
-                                  {poster && <img src={poster} alt={film.title} className="w-full h-full object-cover"/>}
-                                </div>
-                                {showPerson && (
-                                  <div className="absolute rounded-full overflow-hidden"
-                                    style={{
-                                      width: 24, height: 24,
-                                      bottom: -4, right: -8,
-                                      border: '2px solid #0e0e14',
-                                      background: 'rgba(255,255,255,0.1)',
-                                    }}>
-                                    {personPhoto
-                                      ? <img src={personPhoto} alt={nominee} className="w-full h-full object-cover"/>
-                                      : <div className="w-full h-full flex items-center justify-center text-[8px] font-bold"
-                                          style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
-                                          {nominee.charAt(0)}
-                                        </div>
-                                    }
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0" style={{ marginLeft: showPerson ? 10 : 0 }}>
-                                <p className="text-sm font-medium leading-tight truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                                  {nominee ?? film.title}
-                                </p>
-                                {nominee && (
-                                  <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{film.title}</p>
-                                )}
-                              </div>
-
-                              {filmRating && (
-                                <p className="text-xs flex-shrink-0" style={{ color: '#fbbf24' }}>{filmRating.rating}★</p>
-                              )}
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                                <path d="M9 18L15 12L9 6" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"/>
-                              </svg>
-                            </div>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </div>
+                    )}
+                  </button>
                 )
               })}
             </div>
           </div>
 
-          {/* Você ainda não viu */}
+          {/* ── Você ainda não viu ─────────────────────────────────── */}
           {unwatched.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest font-medium mb-4 px-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Você ainda não viu
-              </p>
+              <div className="px-4 mb-4">
+                <SectionTitle>Você ainda não viu</SectionTitle>
+              </div>
               <HScrollRow>
                 {unwatched.slice(0, 12).map(film => (
                   <Link key={film.id} href={`/filmes/${film.id}`}
-                    className="flex-shrink-0 relative rounded-2xl overflow-hidden" style={{ width: 110, aspectRatio: '2/3' }}>
+                    className="flex-shrink-0 relative rounded-2xl overflow-hidden"
+                    style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <div className="absolute inset-0">
                       {(movieData[film.title] as any)?.poster
                         ? <img src={(movieData[film.title] as any).poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -409,37 +420,41 @@ export default function DescobrirPage() {
             </div>
           )}
 
-          {/* Recomendados */}
+          {/* ── Você pode gostar ───────────────────────────────────── */}
           {similar.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest font-medium mb-1 px-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Você pode gostar</p>
-              <p className="text-xs mb-4 px-4" style={{ color: 'rgba(255,255,255,0.25)' }}>Baseado nos filmes que você mais curtiu</p>
-              <HScrollRow>
-                {similar.map(film => (
-  <Link key={film.title}
-    href={`/filme-externo?id=${film.tmdbId}&title=${encodeURIComponent(film.title)}`}
-    className="flex-shrink-0 relative rounded-2xl overflow-hidden"
-    style={{ width: 110, aspectRatio: '2/3' }}>
-    <div className="absolute inset-0">
-      {film.poster
-        ? <img src={film.poster} alt={film.title} className="w-full h-full object-cover"/>
-        : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg,#1a0533,#0a0a0f)' }}/>
-      }
-    </div>
-    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 60%)' }}/>
-    <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight z-10" style={{ color: 'rgba(255,255,255,0.8)' }}>
-      {film.title}
-    </p>
-  </Link>
-))}
-              </HScrollRow>
+              <div className="px-4 mb-1">
+                <SectionTitle>Você pode gostar</SectionTitle>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Baseado nos filmes que você mais curtiu</p>
+              </div>
+              <div className="mt-3">
+                <HScrollRow>
+                  {similar.map(film => (
+                    <Link key={film.title}
+                      href={`/filme-externo?id=${film.tmdbId}&title=${encodeURIComponent(film.title)}`}
+                      className="flex-shrink-0 relative rounded-2xl overflow-hidden"
+                      style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div className="absolute inset-0">
+                        {film.poster
+                          ? <img src={film.poster} alt={film.title} className="w-full h-full object-cover"/>
+                          : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg,#1a0533,#0a0a0f)' }}/>
+                        }
+                      </div>
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 60%)' }}/>
+                      <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight z-10" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        {film.title}
+                      </p>
+                    </Link>
+                  ))}
+                </HScrollRow>
+              </div>
             </div>
           )}
 
-          {/* Mais curiosidades */}
+          {/* ── Mais curiosidades ──────────────────────────────────── */}
           <div className="px-4">
-            <p className="text-xs uppercase tracking-widest font-medium mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Mais curiosidades</p>
-            <div className="grid grid-cols-2 gap-3">
+            <SectionTitle>Mais curiosidades</SectionTitle>
+            <div className="grid grid-cols-2 gap-3 mt-3">
               {FACTS.map((fact, i) => (
                 <button key={i} onClick={() => setFactSheet(fact)}
                   className="rounded-3xl p-4 text-left relative overflow-hidden"
@@ -468,70 +483,112 @@ export default function DescobrirPage() {
         </div>
       </main>
 
-      {/* Fact Bottom Sheet animado com drag */}
-      {(factSheet || sheetY < 100) && (
-        <div className="fixed inset-0 z-[999] flex flex-col justify-end">
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={closeSheet}/>
-          <div className="relative w-full rounded-t-[32px] flex flex-col"
-            style={{
-              background: '#0e0e14',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderBottom: 'none',
-              boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
-              maxHeight: '92vh',
-              transform: `translateY(${sheetY}%)`,
-              transition: sheetDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
-            }}
-            onTouchStart={e => { dragStart.current = e.touches[0].clientY; setSheetDragging(true) }}
-            onTouchMove={e => {
-              if (dragStart.current === null) return
-              const d = e.touches[0].clientY - dragStart.current
-              if (d < 0) return
-              dragCurrent.current = d
-              setSheetY((d / window.innerHeight) * 100)
-            }}
-            onTouchEnd={() => {
-              setSheetDragging(false)
-              if (dragCurrent.current > 120) closeSheet()
-              else setSheetY(0)
-              dragStart.current = null
-              dragCurrent.current = 0
-            }}>
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+      {/* ── Fact Bottom Sheet ──────────────────────────────────────── */}
+      <BottomSheet
+        open={!!factSheet} y={factY} dragging={factDragging} title="Curiosidade"
+        onClose={closeFactSheet}
+        onTouchStart={e => { factDragStart.current = e.touches[0].clientY; setFactDragging(true) }}
+        onTouchMove={e => {
+          if (factDragStart.current === null) return
+          const d = e.touches[0].clientY - factDragStart.current
+          if (d < 0) return
+          factDragCurrent.current = d
+          setFactY((d / window.innerHeight) * 100)
+        }}
+        onTouchEnd={() => {
+          setFactDragging(false)
+          if (factDragCurrent.current > 120) closeFactSheet()
+          else setFactY(0)
+          factDragStart.current = null
+          factDragCurrent.current = 0
+        }}
+      >
+        {factSheet && (
+          <>
+            <div className="mx-4 mt-4 mb-5 rounded-2xl p-5 relative overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${factSheet.grad[0]}, ${factSheet.grad[1]})` }}>
+              <div className="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
+              <span className="text-5xl block mb-3">{factSheet.emoji}</span>
+              <p className="text-lg font-bold leading-tight">{factSheet.title}</p>
             </div>
-            <div className="flex items-center justify-between px-5 pt-2 pb-3">
-              <div className="w-9"/>
-              <p className="text-sm font-semibold" style={{ color: 'white' }}>Curiosidade</p>
-              <button onClick={closeSheet}
-                className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
+            <div className="px-5">
+              <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{factSheet.text}</p>
             </div>
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-            <div className="overflow-y-auto flex-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
-              {factSheet && (
-                <>
-                  <div className="mx-4 mt-4 mb-5 rounded-2xl p-5 relative overflow-hidden"
-                    style={{ background: `linear-gradient(135deg, ${factSheet.grad[0]}, ${factSheet.grad[1]})` }}>
-                    <div className="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none"
-                      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
-                    <span className="text-5xl block mb-3">{factSheet.emoji}</span>
-                    <p className="text-lg font-bold leading-tight">{factSheet.title}</p>
+          </>
+        )}
+      </BottomSheet>
+
+      {/* ── Nominees Bottom Sheet ──────────────────────────────────── */}
+      <BottomSheet
+        open={!!nomineeSheet} y={nomineeY} dragging={nomineeDragging}
+        title={nomineeSheet ? (CATEGORY_LABELS[nomineeSheet] ?? nomineeSheet) : ''}
+        onClose={closeNomineeSheet}
+        onTouchStart={e => { nomineeDragStart.current = e.touches[0].clientY; setNomineeDragging(true) }}
+        onTouchMove={e => {
+          if (nomineeDragStart.current === null) return
+          const d = e.touches[0].clientY - nomineeDragStart.current
+          if (d < 0) return
+          nomineeDragCurrent.current = d
+          setNomineeY((d / window.innerHeight) * 100)
+        }}
+        onTouchEnd={() => {
+          setNomineeDragging(false)
+          if (nomineeDragCurrent.current > 120) closeNomineeSheet()
+          else setNomineeY(0)
+          nomineeDragStart.current = null
+          nomineeDragCurrent.current = 0
+        }}
+      >
+        <div className="flex flex-col py-2">
+          {sheetNoms.map(({ film, nominee }, i) => {
+            const poster = (movieData[film.title] as any)?.poster
+            const personPhoto = nominee ? personPhotos[nominee] : null
+            const filmRating = sheetSR.find(r => r.title === film.title)
+            const showPerson = sheetIsPerson && nominee
+            return (
+              <Link key={`${film.id}-${i}`} href={`/filmes/${film.id}`} onClick={closeNomineeSheet}>
+                <div className="flex items-center gap-3 px-5 py-3"
+                  style={{ borderBottom: i < sheetNoms.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  {/* Poster + pessoa sobreposta */}
+                  <div className="relative flex-shrink-0" style={{ width: 40, height: 58 }}>
+                    <div className="w-full h-full rounded-xl overflow-hidden"
+                      style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      {poster && <img src={poster} alt={film.title} className="w-full h-full object-cover"/>}
+                    </div>
+                    {showPerson && (
+                      <div className="absolute rounded-full overflow-hidden"
+                        style={{ width: 24, height: 24, bottom: -4, right: -8, border: '2px solid #0e0e14' }}>
+                        {personPhoto
+                          ? <img src={personPhoto} alt={nominee} className="w-full h-full object-cover"/>
+                          : <div className="w-full h-full flex items-center justify-center text-[8px] font-bold"
+                              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{nominee.charAt(0)}</div>
+                        }
+                      </div>
+                    )}
                   </div>
-                  <div className="px-5">
-                    <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{factSheet.text}</p>
+
+                  <div className="flex-1 min-w-0" style={{ marginLeft: showPerson ? 10 : 0 }}>
+                    <p className="text-sm font-medium leading-tight truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                      {nominee ?? film.title}
+                    </p>
+                    {nominee && (
+                      <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{film.title}</p>
+                    )}
                   </div>
-                </>
-              )}
-            </div>
-          </div>
+
+                  {filmRating && (
+                    <p className="text-xs flex-shrink-0" style={{ color: '#fbbf24' }}>{filmRating.rating}★</p>
+                  )}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M9 18L15 12L9 6" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+              </Link>
+            )
+          })}
         </div>
-      )}
+      </BottomSheet>
     </>
   )
 }

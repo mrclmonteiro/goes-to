@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
 
-
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
+const HERO_DURATION = 6000
 
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
@@ -31,6 +31,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Documentary Feature': 'Documentário',
 }
 
+const HERO_CATEGORIES = [
+  'Best Picture',
+  'Best International Feature',
+  'Best Animated Feature',
+  'Best Documentary Feature',
+]
 const FILM_CATEGORIES = ['Best Picture','Best Animated Feature','Best International Feature','Best Adapted Screenplay','Best Original Screenplay','Best Cinematography','Best Film Editing','Best Original Score','Best Original Song','Best Costume Design','Best Production Design','Best Makeup and Hairstyling','Best Sound','Best Visual Effects','Best Casting','Best Documentary Feature']
 const PERSON_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
@@ -119,7 +125,7 @@ function PosterCard({ film, userFilm, onToggle, poster }: {
   return (
     <Link href={`/filmes/${film.id}`}
       className="relative flex flex-col rounded-2xl overflow-hidden"
-      style={{ aspectRatio: '2/3' }}>
+      style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
       <div className="absolute inset-0">
         {poster
           ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -168,27 +174,53 @@ function PersonCard({ name, film, photo }: { name: string; film: Film; photo: st
   )
 }
 
+// Calendar icon SVG
+function CalendarIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2.5"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+      <line x1="12" y1="3" x2="12" y2="5"/>
+      <circle cx="8" cy="15" r="1" fill="currentColor"/>
+      <circle cx="12" cy="15" r="1" fill="currentColor"/>
+      <circle cx="16" cy="15" r="1" fill="currentColor"/>
+    </svg>
+  )
+}
+
 export default function FilmesPage() {
   const countdown = useCountdown()
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
-  const [allUserFilms, setAllUserFilms] = useState<{film_id: string; rating: number | null}[]>([])
-  const [catRatings, setCatRatings] = useState<{film_id: string; category: string; rating: number}[]>([])
+  const [allUserFilms, setAllUserFilms] = useState<{ film_id: string; rating: number | null }[]>([])
+  const [catRatings, setCatRatings] = useState<{ film_id: string; category: string; rating: number }[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
-  const [heroCategory, setHeroCategory] = useState('Best Picture')
   const [listCategory, setListCategory] = useState('Best Picture')
-  const [heroDropdownOpen, setHeroDropdownOpen] = useState(false)
   const [listDropdownOpen, setListDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  // ── Hero rotation state ──────────────────────────────────────────
+  const [heroIdx, setHeroIdx] = useState(0)
+  const [heroProgress, setHeroProgress] = useState(0)
+  const [textVisible, setTextVisible] = useState(true)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragX, setDragX] = useState(0)
+  const isDraggingRef = useRef(false)
+  const dragStartXRef = useRef<number | null>(null)
+
+  const heroCategory = HERO_CATEGORIES[heroIdx]
+
+  // ── Data loading ─────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       if (!supabase) return
-
       const { data: { user } } = await supabase.auth.getUser()
       if (user) setUserId(user.id)
       const { data: filmsData } = await supabase.from('films').select('*')
@@ -202,12 +234,9 @@ export default function FilmesPage() {
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
       setCatRatings(catRatingsData ?? [])
-      setCatRatings(catRatingsData ?? [])
       setLoading(false)
-      // Busca pôsteres e backdrops
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data)
-      // Busca fotos de pessoas
       const noms = nominationsData ?? []
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
@@ -219,6 +248,49 @@ export default function FilmesPage() {
     load()
   }, [])
 
+  // ── Auto-rotate ──────────────────────────────────────────────────
+  useEffect(() => {
+    setHeroProgress(0)
+    // Brief fade-out → fade-in on category change
+    setTextVisible(false)
+    const fadeIn = setTimeout(() => setTextVisible(true), 180)
+    const start = Date.now()
+    const tick = setInterval(() => {
+      if (isDraggingRef.current) return
+      const pct = Math.min(((Date.now() - start) / HERO_DURATION) * 100, 100)
+      setHeroProgress(pct)
+      if (pct >= 100) {
+        clearInterval(tick)
+        setHeroIdx(i => (i + 1) % HERO_CATEGORIES.length)
+      }
+    }, 50)
+    return () => { clearInterval(tick); clearTimeout(fadeIn) }
+  }, [heroIdx])
+
+  // ── Drag / swipe handlers ────────────────────────────────────────
+  const onHeroDragStart = (x: number) => {
+    isDraggingRef.current = true
+    setIsDragging(true)
+    dragStartXRef.current = x
+  }
+  const onHeroDragMove = (x: number) => {
+    if (!isDraggingRef.current || dragStartXRef.current === null) return
+    setDragX(x - dragStartXRef.current)
+  }
+  const onHeroDragEnd = () => {
+    if (!isDraggingRef.current) return
+    const dx = dragX
+    isDraggingRef.current = false
+    setIsDragging(false)
+    dragStartXRef.current = null
+    setDragX(0)
+    if (Math.abs(dx) > 60) {
+      if (dx < 0) setHeroIdx(i => (i + 1) % HERO_CATEGORIES.length)
+      else         setHeroIdx(i => (i - 1 + HERO_CATEGORIES.length) % HERO_CATEGORIES.length)
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
   const getUF = (id: string) => userFilms.find(u => u.film_id === id)
   const isPersonCategory = PERSON_CATEGORIES.includes(listCategory)
 
@@ -226,7 +298,6 @@ export default function FilmesPage() {
     const ids = nominations.filter(n => n.category === cat).map(n => n.film_id)
     return films.filter(f => ids.includes(f.id))
   }
-
   const nomineesByCategory = (cat: string) =>
     nominations
       .filter(n => n.category === cat && n.nominee)
@@ -244,17 +315,18 @@ export default function FilmesPage() {
       .filter(f => f.rating > 0)
       .sort((a, b) => b.rating - a.rating)
 
-  const heroFilms = filmsByCategory(heroCategory)
-  const heroTop = swingRatings(heroCategory)[0]
-  const heroBackdrop = heroTop
-    ? movieData[heroTop.title]?.backdrop
-    : heroFilms[0] ? movieData[heroFilms[0].title]?.backdrop : null
+  // Pre-compute all hero backdrops for the sliding strip
+  const heroBackdrops = HERO_CATEGORIES.map(cat => {
+    const top = swingRatings(cat)[0]
+    const catFilms = filmsByCategory(cat)
+    const title = top?.title ?? catFilms[0]?.title
+    return title ? (movieData[title]?.backdrop ?? null) : null
+  })
 
   async function toggleWatched(filmId: string) {
     if (!userId) return
     const supabase = createClient()
     if (!supabase) return
-
     const ex = getUF(filmId)
     if (ex) {
       await supabase.from('user_films').update({ watched: !ex.watched }).eq('user_id', userId).eq('film_id', filmId)
@@ -273,6 +345,11 @@ export default function FilmesPage() {
     boxShadow: '0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
   }
 
+  // Text opacity fades with drag distance
+  const textOpacity = isDragging
+    ? Math.max(0, 1 - Math.abs(dragX) / 120)
+    : textVisible ? 1 : 0
+
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
@@ -282,48 +359,99 @@ export default function FilmesPage() {
   return (
     <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
 
-      {/* HERO */}
-      <div className="relative w-full" style={{ height: '88vh', minHeight: 520 }}>
-        <div className="absolute inset-0">
-          {heroBackdrop
-            ? <img src={heroBackdrop} alt="" className="w-full h-full object-cover"/>
-            : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0533, #0a0a0f)'}}/>
-          }
-          <div className="absolute inset-0" style={{
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.15) 40%, rgba(10,10,15,0.85) 75%, #0a0a0f 100%)'
-          }}/>
+      {/* ── HERO ──────────────────────────────────────────────────── */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: '72vh', minHeight: 480, cursor: isDragging ? 'grabbing' : 'grab' }}
+        onMouseDown={e => onHeroDragStart(e.clientX)}
+        onMouseMove={e => onHeroDragMove(e.clientX)}
+        onMouseUp={onHeroDragEnd}
+        onMouseLeave={onHeroDragEnd}
+        onTouchStart={e => onHeroDragStart(e.touches[0].clientX)}
+        onTouchMove={e => { e.preventDefault(); onHeroDragMove(e.touches[0].clientX) }}
+        onTouchEnd={onHeroDragEnd}
+      >
+        {/* Sliding backdrop strip */}
+        <div
+          className="absolute inset-y-0 left-0 flex"
+          style={{
+            width: `${HERO_CATEGORIES.length * 100}%`,
+            transform: `translateX(calc(-${heroIdx * (100 / HERO_CATEGORIES.length)}% + ${dragX}px))`,
+            transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(.4,0,.2,1)',
+            willChange: 'transform',
+          }}
+        >
+          {heroBackdrops.map((backdrop, i) => (
+            <div
+              key={i}
+              style={{ width: `${100 / HERO_CATEGORIES.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}
+            >
+              {backdrop
+                ? <img src={backdrop} alt="" className="w-full h-full object-cover" draggable={false} style={{ userSelect: 'none' }}/>
+                : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0533, #0a0a0f)'}}/>
+              }
+            </div>
+          ))}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-8 text-center">
-          <p className="text-xs font-medium mb-3 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Segundo nossos usuários
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 38%, rgba(10,10,15,0.82) 72%, #0a0a0f 100%)'
+        }}/>
+
+        {/* Text — fades on drag & on category change */}
+        <div
+          className="absolute bottom-0 left-0 right-0 px-6 pb-12 text-center pointer-events-none"
+          style={{
+            opacity: textOpacity,
+            transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease',
+          }}
+        >
+          <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Segundo nossos usuários, o Oscar de
           </p>
-          <p className="text-sm mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>o Oscar de</p>
-          <div className="relative inline-block mb-3">
-            <button onClick={() => setHeroDropdownOpen(!heroDropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mx-auto"
-              style={{ ...glass, color: 'white' }}>
-              {CATEGORY_LABELS[heroCategory] ?? heroCategory}
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>▾</span>
-            </button>
-            {heroDropdownOpen && (
-              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 rounded-2xl py-2 z-50 w-56"
-                style={{ ...glass, background: 'rgba(20,20,30,0.92)' }}>
-                {FILM_CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => { setHeroCategory(cat); setHeroDropdownOpen(false) }}
-                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
-                    style={{ color: cat === heroCategory ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
-                    {CATEGORY_LABELS[cat] ?? cat}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <p className="text-xl font-bold mb-1" style={{ color: 'rgba(255,255,255,0.88)' }}>
+            {CATEGORY_LABELS[heroCategory] ?? heroCategory}
+          </p>
           <p className="text-2xl font-light mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Goes To…</p>
-          <p className="text-4xl font-bold leading-tight">{heroTop?.title ?? heroFilms[0]?.title ?? '—'}</p>
+          <p className="text-4xl font-bold leading-tight">
+            {swingRatings(heroCategory)[0]?.title ?? filmsByCategory(heroCategory)[0]?.title ?? '—'}
+          </p>
+        </div>
+
+        {/* Dot / progress-bar indicators */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 pointer-events-auto">
+          {HERO_CATEGORIES.map((cat, i) => (
+            <button
+              key={cat}
+              onClick={() => setHeroIdx(i)}
+              style={{
+                height: 5,
+                width: i === heroIdx ? 36 : 5,
+                borderRadius: 3,
+                background: 'rgba(255,255,255,0.28)',
+                overflow: 'hidden',
+                transition: 'width 0.3s cubic-bezier(.4,0,.2,1)',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {i === heroIdx && (
+                <div style={{
+                  height: '100%',
+                  width: `${heroProgress}%`,
+                  background: 'white',
+                  transition: 'width 0.05s linear',
+                }}/>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* SWINGOMETER */}
+      {/* ── SWINGOMETER — follows heroCategory ────────────────────── */}
       <div className="mx-4 mt-4 rounded-3xl p-6" style={{
         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
       }}>
@@ -332,20 +460,25 @@ export default function FilmesPage() {
 
       <div className="mx-4 my-6" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
 
-      {/* LISTA */}
+      {/* ── LISTA ─────────────────────────────────────────────────── */}
       <div className="px-4">
         <div className="flex items-center gap-2 mb-5 flex-wrap">
-          <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Indicados a</p>
+          {/* Liquid-glass–inspired: bigger, white label */}
+          <p className="text-lg font-semibold tracking-tight" style={{ color: 'white' }}>Indicados a</p>
           <div className="relative">
-            <button onClick={() => setListDropdownOpen(!listDropdownOpen)}
+            <button
+              onClick={() => setListDropdownOpen(!listDropdownOpen)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ ...glass, color: 'white' }}>
+              style={{ ...glass, color: 'white' }}
+            >
               {CATEGORY_LABELS[listCategory] ?? listCategory}
               <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>▾</span>
             </button>
             {listDropdownOpen && (
-              <div className="absolute top-full mt-2 left-0 rounded-2xl py-2 z-50 w-60"
-                style={{ ...glass, background: 'rgba(20,20,30,0.92)' }}>
+              <div
+                className="absolute top-full mt-2 left-0 rounded-2xl py-2 z-50 w-60 max-h-72 overflow-y-auto"
+                style={{ ...glass, background: 'rgba(20,20,30,0.92)' }}
+              >
                 {ALL_CATEGORIES.map(cat => (
                   <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
@@ -358,36 +491,36 @@ export default function FilmesPage() {
           </div>
         </div>
 
-        {/* Grid filmes ou pessoas */}
+        {/* Grid */}
         {isPersonCategory ? (
-  <div className="grid grid-cols-3 gap-3">
-    {nomineesByCategory(listCategory).map(({ name, film }) => (
-      <Link key={name} href={`/filmes/${film.id}`}
-        className="relative flex flex-col rounded-2xl overflow-hidden"
-        style={{ aspectRatio: '2/3' }}>
-        <div className="absolute inset-0">
-          {movieData[film.title]?.poster
-            ? <img src={movieData[film.title].poster!} alt={film.title} className="w-full h-full object-cover"/>
-            : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)'}}/>
-          }
-        </div>
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%)' }}/>
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-10 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
-            style={{ border: '1.5px solid rgba(255,255,255,0.4)' }}>
-            {personPhotos[name]
-              ? <img src={personPhotos[name]!} alt={name} className="w-full h-full object-cover"/>
-              : <div className="w-full h-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{name.charAt(0)}</div>
-            }
+          <div className="grid grid-cols-3 gap-3">
+            {nomineesByCategory(listCategory).map(({ name, film }) => (
+              <Link key={name} href={`/filmes/${film.id}`}
+                className="relative flex flex-col rounded-2xl overflow-hidden"
+                style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="absolute inset-0">
+                  {movieData[film.title]?.poster
+                    ? <img src={movieData[film.title].poster!} alt={film.title} className="w-full h-full object-cover"/>
+                    : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)'}}/>
+                  }
+                </div>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%)' }}/>
+                <div className="absolute bottom-0 left-0 right-0 p-3 z-10 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
+                    style={{ border: '1.5px solid rgba(255,255,255,0.4)' }}>
+                    {personPhotos[name]
+                      ? <img src={personPhotos[name]!} alt={name} className="w-full h-full object-cover"/>
+                      : <div className="w-full h-full flex items-center justify-center text-xs font-bold"
+                          style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{name.charAt(0)}</div>
+                    }
+                  </div>
+                  <p className="text-xs font-semibold leading-tight"
+                    style={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{name}</p>
+                </div>
+              </Link>
+            ))}
           </div>
-          <p className="text-xs font-semibold leading-tight"
-            style={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{name}</p>
-        </div>
-      </Link>
-    ))}
-  </div>
-) : (
+        ) : (
           <div className="grid grid-cols-3 gap-3">
             {filmsByCategory(listCategory).map(film => (
               <PosterCard key={film.id} film={film} userFilm={getUF(film.id)}
@@ -400,38 +533,51 @@ export default function FilmesPage() {
 
       <div className="mx-4 my-6" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
 
-      {/* COUNTDOWN */}
-      <div className="mx-4 rounded-3xl p-5 flex items-center gap-4" style={{
-        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-      }}>
-        <div className="rounded-2xl overflow-hidden flex-shrink-0 w-14 h-14 flex flex-col"
-          style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
-          <div className="flex items-center justify-center text-[10px] font-bold tracking-widest uppercase py-0.5"
-            style={{ background: '#e53e3e', color: 'white' }}>MAR</div>
-          <div className="flex-1 flex items-center justify-center font-bold text-2xl"
-            style={{ background: 'rgba(255,255,255,0.08)', color: 'white' }}>15</div>
+      {/* ── COUNTDOWN ─────────────────────────────────────────────── */}
+      <div className="px-4">
+        {/* Label outside the box */}
+        <p className="text-lg font-semibold mb-3 px-1" style={{ color: 'white' }}>
+          Oscar 2026 começa em
+        </p>
+        <div className="rounded-3xl p-5 flex items-center gap-4" style={{
+          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          {/* Calendar tile */}
+          <div className="rounded-2xl overflow-hidden flex-shrink-0 w-14 h-14 flex flex-col"
+            style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+            <div className="flex items-center justify-center text-[10px] font-bold tracking-widest uppercase py-0.5"
+              style={{ background: '#e53e3e', color: 'white' }}>MAR</div>
+            <div className="flex-1 flex items-center justify-center font-bold text-2xl"
+              style={{ background: 'rgba(255,255,255,0.08)', color: 'white' }}>15</div>
+          </div>
+
+          {/* Countdown numbers */}
+          <div className="flex-1">
+            {countdown ? (
+              <div className="flex gap-3">
+                {[{ v: countdown.d, l: 'dias' }, { v: countdown.h, l: 'horas' }, { v: countdown.m, l: 'min' }, { v: countdown.s, l: 'seg' }].map(({ v, l }) => (
+                  <div key={l} className="text-center">
+                    <p className="text-xl font-bold tabular-nums">{String(v).padStart(2, '0')}</p>
+                    <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{l}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>É hoje! 🎬</p>
+            )}
+          </div>
+
+          {/* Add-to-calendar icon button */}
+          <a
+            href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
+            download="oscar2026.ics"
+            title="Adicionar ao calendário"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ ...glass, color: 'rgba(255,255,255,0.8)' }}
+          >
+            <CalendarIcon/>
+          </a>
         </div>
-        <div className="flex-1">
-          <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Oscar 2026 começa em</p>
-          {countdown ? (
-            <div className="flex gap-3">
-              {[{ v: countdown.d, l: 'dias' }, { v: countdown.h, l: 'horas' }, { v: countdown.m, l: 'min' }, { v: countdown.s, l: 'seg' }].map(({ v, l }) => (
-                <div key={l} className="text-center">
-                  <p className="text-xl font-bold tabular-nums">{String(v).padStart(2, '0')}</p>
-                  <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{l}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>É hoje! 🎬</p>
-          )}
-        </div>
-        <a href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
-          download="oscar2026.ics"
-          className="rounded-2xl px-3 py-2 text-xs font-semibold flex-shrink-0"
-          style={{ ...glass, color: 'rgba(255,255,255,0.8)' }}>
-          + Agenda
-        </a>
       </div>
 
     </main>
