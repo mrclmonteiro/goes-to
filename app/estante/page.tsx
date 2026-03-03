@@ -62,7 +62,7 @@ function BottomSheet({ open, onClose, children, title }: {
   return (
     <div className="fixed inset-0 z-[999] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}/>
-      <div className="relative w-full rounded-t-[32px] flex flex-col"
+      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden"
         style={{
           background: '#0e0e14', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
           boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
@@ -84,23 +84,47 @@ function BottomSheet({ open, onClose, children, title }: {
           else setTranslateY(0)
           dragStart.current = null
         }}>
-        <div className="flex justify-center pt-3 pb-1">
+        
+        {/* GRADIENTE E FUNDO DO HEADER (Fixo passando na frente do conteúdo) */}
+        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
+          style={{ 
+            height: '100px', 
+            background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' 
+          }} 
+        />
+
+        {/* HANDLE DE ARRASTAR */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 pb-1 z-30 pointer-events-none">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
         </div>
-        <div className="flex items-center justify-between px-5 pt-2 pb-4">
-          <div className="w-9"/>
-          {title && <p className="text-sm font-semibold" style={{ color: 'white' }}>{title}</p>}
-          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
+
+        {/* HEADER - TÍTULO E BOTÃO DE FECHAR (LIQUID GLASS 43x43) */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30 pointer-events-none">
+          {/* Título grande alinhado à esquerda */}
+          {title && <p className="text-lg font-semibold" style={{ color: 'white' }}>{title}</p>}
+          
+          <button onClick={onClose} className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0 pointer-events-auto"
+            style={{ 
+              background: 'rgba(120,120,128,0.18)', 
+              backdropFilter: 'blur(48px) saturate(200%)',
+              WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+              border: '1px solid rgba(255,255,255,0.25)', 
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+              width: '43px', height: '43px' 
+            }}>
+            {/* Ícone fechar com proporção de 24px */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
         </div>
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-        <div className="overflow-y-auto flex-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+
+        {/* ÁREA SCROLLÁVEL - PASSA POR TRÁS DO TÍTULO E GRADIENTE */}
+        <div className="overflow-y-auto flex-1 z-10 w-full" 
+             style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
           {children}
         </div>
+        
       </div>
     </div>
   )
@@ -322,25 +346,46 @@ export default function EstantePage() {
           </div>
         )}
 
-        {/* Botões flutuantes */}
-        <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 pointer-events-none"
-          style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)', paddingBottom: 12 }}>
-          <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full flex items-center justify-center pointer-events-auto"
-            style={{ background: 'rgba(10,10,15,0.7)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <button onClick={() => setConfigOpen(true)}
-            className="w-9 h-9 rounded-full flex items-center justify-center pointer-events-auto"
-            style={{ background: 'rgba(10,10,15,0.7)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="white" strokeWidth="1.8"/>
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" strokeWidth="1.8"/>
-            </svg>
-          </button>
-        </div>
+        {/* Botões flutuantes Superiores (Liquid Glass) */}
+        
+        {/* Botão Superior Esquerdo (Voltar) */}
+        <button onClick={() => router.back()}
+          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95 pointer-events-auto"
+          style={{
+            background: 'rgba(120,120,128,0.18)',
+            backdropFilter: 'blur(48px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+            top: 'max(env(safe-area-inset-top), 45px)',
+            left: '15px',
+            width: '43px',
+            height: '43px',
+          }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
+            <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        
+        {/* Botão Superior Direito (Configurações) */}
+        <button onClick={() => setConfigOpen(true)}
+          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95 pointer-events-auto"
+          style={{
+            background: 'rgba(120,120,128,0.18)',
+            backdropFilter: 'blur(48px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+            top: 'max(env(safe-area-inset-top), 45px)',
+            right: '15px',
+            width: '43px',
+            height: '43px',
+          }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="white" strokeWidth="1.8"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" strokeWidth="1.8"/>
+          </svg>
+        </button>
 
         {/* Hero perfil */}
         <div className="relative pt-16 pb-8 flex flex-col items-center px-4"
@@ -443,20 +488,39 @@ export default function EstantePage() {
                 {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
               </SectionTitle>
               <div className="flex items-center gap-2">
+                
+                {/* Dropdown Meta (Liquid Glass - 43px) */}
                 <div style={{ position: 'relative' }}>
                   <button onClick={() => setGoalDropdownOpen(!goalDropdownOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
-                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.4)' }}>▾</span>
+                    className="flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
+                    style={{ 
+                      height: '43px', /* 85px pela metade */
+                      background: 'rgba(120,120,128,0.18)', 
+                      backdropFilter: 'blur(48px) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+                      border: '1px solid rgba(255,255,255,0.25)', 
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.9)' 
+                    }}>
+                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.6)' }}>▾</span>
                   </button>
+                  
                   {goalDropdownOpen && (
                     <>
                       <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setGoalDropdownOpen(false)}/>
-                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52" style={{ ...glass, background: 'rgba(14,14,20,0.98)', zIndex: 99 }}>
+                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52 overflow-hidden shadow-2xl" 
+                        style={{ 
+                          background: 'rgba(20,20,25,0.65)', 
+                          backdropFilter: 'blur(48px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
+                          zIndex: 99 
+                        }}>
                         {GOAL_OPTIONS.map(g => (
                           <button key={g.category} onClick={() => updateGoal(g.category)}
-                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
-                            style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
+                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
+                            style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
                             {g.label}
                           </button>
                         ))}
@@ -464,27 +528,45 @@ export default function EstantePage() {
                     </>
                   )}
                 </div>
-                <button onClick={() => setMetaOpen(true)} className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round"/>
+
+                {/* Botão Compartilhar (Liquid Glass 43px/24px) */}
+                <button onClick={() => setMetaOpen(true)} 
+                  className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+                  style={{ 
+                    width: '43px', height: '43px', /* 85px pela metade */
+                    background: 'rgba(120,120,128,0.18)', 
+                    backdropFilter: 'blur(48px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+                    border: '1px solid rgba(255,255,255,0.25)', 
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+                    color: 'white' 
+                  }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '-2px' }}>
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                    <polyline points="16 6 12 2 8 6"/>
+                    <line x1="12" y1="2" x2="12" y2="15"/>
                   </svg>
                 </button>
+
               </div>
             </div>
 
-            {/* Box da Meta */}
-            <div className="rounded-3xl p-5" style={{ ...glass, ...(goalComplete ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' } : {}) }}>
+            {/* Box da Meta (Glass Card) */}
+            <div className="rounded-3xl p-5" style={{ 
+              ...glass, 
+              background: goalComplete ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.06)',
+              border: goalComplete ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.1)'
+            }}>
               <div className="flex items-end gap-2 mb-3">
                 <span className="text-4xl font-bold tabular-nums" style={{ color: goalComplete ? '#fbbf24' : 'white' }}>{watchedGoal}</span>
                 <span className="text-xl mb-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {goalFilms.length}</span>
-                <span className="text-sm mb-1 ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>assistidos</span>
+                <span className="text-[10px] uppercase tracking-wider mb-1.5 ml-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>assistidos</span>
               </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${progress * 100}%`, background: goalComplete ? 'linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)' }}/>
               </div>
-              <p className="text-xs mt-2" style={{ color: goalComplete ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.25)' }}>
+              <p className="text-[11px] mt-3 font-medium" style={{ color: goalComplete ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.3)' }}>
                 {goalComplete ? 'Você assistiu tudo! Incrível 🌟' : `${goalFilms.length - watchedGoal} ${goalFilms.length - watchedGoal === 1 ? 'falta' : 'faltam'} pra cravar a meta 🎯`}
               </p>
             </div>

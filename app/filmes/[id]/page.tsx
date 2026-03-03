@@ -179,10 +179,21 @@ export default function FilmePage() {
         {/* ── Back button — fixed, always visible ──────────────── */}
         <button
           onClick={() => router.back()}
-          className="fixed top-14 left-4 z-50 w-9 h-9 rounded-full flex items-center justify-center"
-          style={glass}
+          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95"
+          style={{
+            background: 'rgba(120,120,128,0.18)',
+            backdropFilter: 'blur(48px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+            top: 'max(env(safe-area-inset-top), 45px)',
+            left: '15px',
+            width: '43px',
+            height: '43px',
+          }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          {/* Ajuste de tamanho (20) e correção ótica (mr-[2px]) */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
             <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
