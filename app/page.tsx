@@ -17,8 +17,8 @@ export default function LoginPage() {
     
     try {
       const supabase = createClient()
-      if (!supabase || typeof supabase !== 'object') {
-        setMessage('Erro: Supabase não configurado. Verifique as variáveis de ambiente.')
+      if (!supabase) {
+        setMessage('Erro: Supabase não configurado. Verifique se as variáveis de ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY estão configuradas.')
         setLoading(false)
         return
       }
