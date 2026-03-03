@@ -5,6 +5,8 @@ import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 const AVATARS = ['🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨']
 const AVATAR_COLORS = [
   ['#1a0533','#0a0a0f'],['#1a0a00','#0a0a0f'],['#001a1a','#0a0a0f'],

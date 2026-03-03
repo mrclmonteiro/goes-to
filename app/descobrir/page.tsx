@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchSimilarMovies } from '@/lib/tmdb'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 const ALL_CATEGORIES = [
   'Best Picture', 'Best Director', 'Best Actor', 'Best Actress',
   'Best Supporting Actor', 'Best Supporting Actress',

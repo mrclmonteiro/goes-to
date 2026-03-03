@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 type Film = { id: string; title: string }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
