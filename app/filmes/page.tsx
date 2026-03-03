@@ -174,6 +174,7 @@ export default function FilmesPage() {
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
   const [allUserFilms, setAllUserFilms] = useState<{film_id: string; rating: number | null}[]>([])
+  const [catRatings, setCatRatings] = useState<{film_id: string; category: string; rating: number}[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
@@ -194,11 +195,13 @@ export default function FilmesPage() {
       const { data: nominationsData } = await supabase.from('nominations').select('*')
       const { data: userFilmsData } = await supabase.from('user_films').select('*').eq('user_id', user?.id ?? '')
       const { data: allFilmsData } = await supabase.from('user_films').select('film_id, rating')
+      const { data: catRatingsData } = await supabase.from('user_category_ratings').select('film_id, category, rating')
       const loaded = filmsData ?? []
       setFilms(loaded)
       setNominations(nominationsData ?? [])
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
+      setCatRatings(catRatingsData ?? [])
       setLoading(false)
       // Busca pôsteres e backdrops
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
@@ -232,9 +235,9 @@ export default function FilmesPage() {
   const swingRatings = (cat: string) =>
     filmsByCategory(cat)
       .map(f => {
-        const ratings = allUserFilms.filter(u => u.film_id === f.id && u.rating)
-        if (ratings.length === 0) return { title: f.title, rating: 0 }
-        const avg = ratings.reduce((s, u) => s + (u.rating ?? 0), 0) / ratings.length
+        const rats = catRatings.filter(r => r.film_id === f.id && r.category === cat)
+        if (rats.length === 0) return { title: f.title, rating: 0 }
+        const avg = rats.reduce((s, r) => s + r.rating, 0) / rats.length
         return { title: f.title, rating: Math.round(avg * 10) / 10 }
       })
       .filter(f => f.rating > 0)

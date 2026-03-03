@@ -126,6 +126,7 @@ export default function DescobrirPage() {
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [allUserFilms, setAllUserFilms] = useState<UserFilm[]>([])
+  const [catRatings, setCatRatings] = useState<{film_id: string; category: string; rating: number}[]>([])
   const [myUserFilms, setMyUserFilms] = useState<UserFilm[]>([])
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
@@ -150,10 +151,11 @@ export default function DescobrirPage() {
       const supabase = createClient()
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
-      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, { data: myUF }] = await Promise.all([
+      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, { data: myUF }, { data: catRatingsData }] = await Promise.all([
         supabase.from('films').select('*'),
         supabase.from('nominations').select('*'),
         supabase.from('user_films').select('film_id, rating'),
+        supabase.from('user_category_ratings').select('film_id, category, rating'),
         supabase.from('user_films').select('film_id, rating').eq('user_id', user?.id ?? ''),
       ])
       const loaded = filmsData ?? []
@@ -161,6 +163,7 @@ export default function DescobrirPage() {
       setFilms(loaded)
       setNominations(noms)
       setAllUserFilms(allUF ?? [])
+      setCatRatings(catRatingsData ?? [])
       setMyUserFilms(myUF ?? [])
       setLoading(false)
 
