@@ -151,7 +151,7 @@ export default function DescobrirPage() {
       const supabase = createClient()
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
-      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, { data: myUF }, { data: catRatingsData }] = await Promise.all([
+      const [{ data: filmsData }, { data: nomsData }, { data: allUF }, { data: catRatingsData }, { data: myUF }] = await Promise.all([
         supabase.from('films').select('*'),
         supabase.from('nominations').select('*'),
         supabase.from('user_films').select('film_id, rating'),
