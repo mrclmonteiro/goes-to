@@ -144,7 +144,6 @@ function PersonCard({ name, film, photo }: { name: string; film: Film; photo: st
 }
 
 export default function FilmesPage() {
-  const supabase = createClient()
   const countdown = useCountdown()
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
@@ -160,6 +159,9 @@ export default function FilmesPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
+      if (!supabase) return
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) setUserId(user.id)
       const { data: filmsData } = await supabase.from('films').select('*')
@@ -178,7 +180,7 @@ export default function FilmesPage() {
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
         .map((n: Nomination) => n.nominee as string)
-      const unique = [...new Set(nominees)]
+      const unique = [...new Set(nominees)] as string[]
       const photoPairs = await Promise.all(unique.map(async name => [name, await fetchPersonPhoto(name)] as const))
       setPersonPhotos(Object.fromEntries(photoPairs))
     }
@@ -213,6 +215,9 @@ export default function FilmesPage() {
 
   async function toggleWatched(filmId: string) {
     if (!userId) return
+    const supabase = createClient()
+    if (!supabase) return
+
     const ex = getUF(filmId)
     if (ex) {
       await supabase.from('user_films').update({ watched: !ex.watched }).eq('user_id', userId).eq('film_id', filmId)

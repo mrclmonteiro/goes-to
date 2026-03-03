@@ -12,7 +12,6 @@ type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 export default function FilmePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const supabase = createClient()
 
   const [film, setFilm] = useState<Film | null>(null)
   const [nominations, setNominations] = useState<Nomination[]>([])
@@ -26,6 +25,9 @@ export default function FilmePage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
+      if (!supabase) return
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) setUserId(user.id)
       const { data: filmData } = await supabase.from('films').select('*').eq('id', id).single()
@@ -56,6 +58,9 @@ export default function FilmePage() {
 
   async function toggleWatched() {
     if (!userId || !film) return
+    const supabase = createClient()
+    if (!supabase) return
+
     if (userFilm) {
       await supabase.from('user_films').update({ watched: !userFilm.watched }).eq('user_id', userId).eq('film_id', id)
       setUserFilm({ ...userFilm, watched: !userFilm.watched })
@@ -67,6 +72,9 @@ export default function FilmePage() {
 
   async function saveRating(cat: string, value: number) {
     if (!userId || !film) return
+    const supabase = createClient()
+    if (!supabase) return
+
     const newRatings = { ...ratings, [cat]: value }
     setRatings(newRatings)
     const vals = Object.values(newRatings)

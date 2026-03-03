@@ -89,7 +89,6 @@ function BottomSheet({ open, onClose, children, title }: {
 }
 
 export default function EstantePage() {
-  const supabase = createClient()
   const router = useRouter()
   const shareRef = useRef<HTMLDivElement>(null)
 
@@ -115,6 +114,9 @@ export default function EstantePage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
+      if (!supabase) { router.push('/'); return }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
       setUserId(user.id)
@@ -163,12 +165,18 @@ export default function EstantePage() {
 
   async function updateGoal(cat: string) {
     if (!userId) return
+    const supabase = createClient()
+    if (!supabase) return
+
     setProfile(p => ({ ...p, goal_category: cat })); setGoalDropdownOpen(false)
     await supabase.from('user_profiles').update({ goal_category: cat }).eq('id', userId)
   }
 
   async function updateAvatar(dir: 1 | -1) {
     if (!userId) return
+    const supabase = createClient()
+    if (!supabase) return
+
     const next = (profile.avatar_index + dir + AVATARS.length) % AVATARS.length
     setProfile(p => ({ ...p, avatar_index: next }))
     await supabase.from('user_profiles').update({ avatar_index: next }).eq('id', userId)
@@ -176,6 +184,9 @@ export default function EstantePage() {
 
   async function saveConfig() {
     if (!userId) return
+    const supabase = createClient()
+    if (!supabase) return
+
     setSavingConfig(true); setConfigMsg('')
     await supabase.from('user_profiles').update({ display_name: editDisplayName, username: editUsername }).eq('id', userId)
     setProfile(p => ({ ...p, display_name: editDisplayName, username: editUsername }))
@@ -429,7 +440,7 @@ export default function EstantePage() {
             {savingConfig ? 'Salvando...' : 'Salvar alterações'}
           </button>
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }}
+          <button onClick={async () => { const sb = createClient(); if (sb) await sb.auth.signOut(); router.push('/') }}
             className="w-full py-3.5 rounded-full text-sm font-semibold"
             style={{ background: 'rgba(255,59,48,0.12)', border: '1px solid rgba(255,59,48,0.2)', color: 'rgba(255,99,88,0.9)' }}>
             Sair da conta

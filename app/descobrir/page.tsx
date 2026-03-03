@@ -71,7 +71,6 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
 }
 
 export default function DescobrirPage() {
-  const supabase = createClient()
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
@@ -84,6 +83,9 @@ export default function DescobrirPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
+      if (!supabase) return
+
       const { data: { user } } = await supabase.auth.getUser()
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nomsData } = await supabase.from('nominations').select('*')

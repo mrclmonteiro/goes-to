@@ -10,11 +10,17 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleSubmit() {
     setLoading(true)
     setMessage('')
+    const supabase = createClient()
+    if (!supabase) {
+      setMessage('Erro interno: cliente Supabase não disponível.')
+      setLoading(false)
+      return
+    }
+
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setMessage(error.message)

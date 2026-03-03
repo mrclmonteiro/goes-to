@@ -21,7 +21,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default function BuscaPage() {
-  const supabase = createClient()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [query, setQuery] = useState('')
@@ -34,6 +33,9 @@ export default function BuscaPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
+      if (!supabase) return
+
       const { data: { user } } = await supabase.auth.getUser()
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nomsData } = await supabase.from('nominations').select('*')
