@@ -77,7 +77,7 @@ export default function FilmePage() {
       setUserFilm(ufData ?? null)
       if (ufData?.rating) {
         // distribui nota salva por todas as categorias como ponto de partida
-        const cats = nomsData?.map((n: Nomination) => n.category) ?? []
+        const cats = nomsData?.map((n: Nomination) => CATEGORY_LABELS[n.category] ?? n.category) ?? []
         const initial: Record<string, number> = {}
         cats.forEach((c: string) => { initial[c] = ufData.rating ?? 0 })
         setRatings(initial)
@@ -117,7 +117,7 @@ export default function FilmePage() {
     const newRatings = { ...ratings, [cat]: value }
     setRatings(newRatings)
     const vals = Object.values(newRatings)
-    const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
+    const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10
     if (userFilm) {
       await supabase.from('user_films').update({ rating: avg, watched: true }).eq('user_id', userId).eq('film_id', id)
       setUserFilm({ ...userFilm, rating: avg, watched: true })
