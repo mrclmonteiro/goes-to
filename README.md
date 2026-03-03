@@ -35,15 +35,28 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 ### Environment variables ⚙️
 
-This project relies on Supabase for authentication and data storage. Before deploying make sure you define the following **environment variables** in your Vercel dashboard (Project Settings → Environment Variables):
+This project relies on Supabase for authentication and TMDB for movie data. Before deploying, define the following **environment variables** in your Vercel dashboard (Project Settings → Environment Variables):
 
+**Required:**
 - `NEXT_PUBLIC_SUPABASE_URL` – your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` – the anonymous API key
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` – the Supabase anonymous API key
+- `NEXT_PUBLIC_TMDB_TOKEN` – your TMDB API authorization token (Bearer token)
 
-The build will fail with a `@supabase/ssr: Your project's URL and API key are required to create a Supabase client!` error if those values are missing. Local development uses `.env.local`.
+**Getting TMDB Token:**
+1. Go to [TMDB](https://www.themoviedb.org/)
+2. Sign up for a free account
+3. Go to Settings → API
+4. Create an API key (v4 auth token)
+5. Use that token as `NEXT_PUBLIC_TMDB_TOKEN`
 
-Optionally, include any other keys you use (e.g. TMDB API credentials) with the `NEXT_PUBLIC_` prefix.
+**Local Development:**
+Create a `.env.local` file with all variables:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+NEXT_PUBLIC_TMDB_TOKEN=your_tmdb_token
+```
 
-Once the variables are set, trigger a new deployment and the errors should disappear.
+Once variables are set in Vercel, trigger a new deployment.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

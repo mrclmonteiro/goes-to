@@ -3,15 +3,46 @@ const IMG = (size: string) => `https://image.tmdb.org/t/p/${size}`
 
 async function get(path: string) {
   const token = process.env.NEXT_PUBLIC_TMDB_TOKEN
-  const res = await fetch(`${BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } })
-  if (!res.ok) return null
-  return res.json()
+  
+  if (!token) {
+    console.warn('TMDB token not configured')
+    return null
+  }
+
+  try {
+    const res = await fetch(`${BASE}${path}`, { 
+      headers: { 
+        Authorization: `Bearer ${token}`,
+      },
+      next: { revalidate: 3600 } // cache for 1 hour
+    })
+    
+    if (!res.ok) {
+      console.warn(`TMDB API error: ${res.status} ${res.statusText}`)
+      return null
+    }
+    
+    return res.json()
+  } catch (error) {
+    console.warn('TMDB fetch error:', error)
+    return null
+  }
 }
 
 export async function fetchMovieData(title: string) {
   const data = await get(`/search/movie?query=${encodeURIComponent(title)}&language=en-US`)
+  
+  if (!data) {
+    console.warn(`No TMDB data for: ${title}`)
+    return null
+  }
+  
   const movie = data?.results?.[0]
-  if (!movie) return null
+  if (!movie) {
+    console.warn(`No results for: ${title}`)
+    return null
+  }
+  
   return {
     id: movie.id,
     poster: movie.poster_path ? IMG('w342') + movie.poster_path : null,
