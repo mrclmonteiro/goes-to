@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import BottomNavWrapper from './components/BottomNavWrapper'
+import InstallBanner from './components/InstallBanner'
+
 
 export const dynamic = 'force-dynamic'
 
