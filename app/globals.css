@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #ffffff;
+  --fg: #000000;
+  --accent: #fb9f0a;
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(0,0,0,0.08);
+  --card-bg: rgba(0,0,0,0.04);
+  --card-border: rgba(0,0,0,0.06);
+  --muted: rgba(0,0,0,0.35);
+  --bg-rgb: 255,255,255;
+  --fg-rgb: 0,0,0;
+  --accent-rgb: 251,159,10;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0f;
+    --fg: #ffffff;
+    --accent: #fbbf24;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.08);
+    --card-bg: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.07);
+    --muted: rgba(255,255,255,0.35);
+    --bg-rgb: 10,10,15;
+    --fg-rgb: 255,255,255;
+    --accent-rgb: 251,191,36;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
