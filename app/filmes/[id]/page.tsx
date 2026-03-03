@@ -3,8 +3,46 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { fetchMovieDetails } from '@/lib/tmdb'
+function HScrollRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <div className="flex gap-5 overflow-x-auto pl-4 pr-4"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        {children}
+        <div style={{ minWidth: 4, flexShrink: 0 }}/>
+      </div>
+      <div className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, transparent, #0a0a0f)' }}/>
+    </div>
+  )
+}
+
 import RatingSheet from '@/app/components/RatingSheet'
 
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'Best Picture': 'Melhor Filme',
+  'Best Director': 'Melhor Direção',
+  'Best Actor': 'Melhor Ator',
+  'Best Actress': 'Melhor Atriz',
+  'Best Supporting Actor': 'Melhor Ator Coadjuvante',
+  'Best Supporting Actress': 'Melhor Atriz Coadjuvante',
+  'Best Animated Feature': 'Melhor Animação',
+  'Best International Feature': 'Melhor Filme Internacional',
+  'Best Adapted Screenplay': 'Roteiro Adaptado',
+  'Best Original Screenplay': 'Roteiro Original',
+  'Best Cinematography': 'Fotografia',
+  'Best Film Editing': 'Montagem',
+  'Best Original Score': 'Trilha Sonora Original',
+  'Best Original Song': 'Canção Original',
+  'Best Costume Design': 'Figurino',
+  'Best Production Design': 'Direção de Arte',
+  'Best Makeup and Hairstyling': 'Maquiagem e Cabelo',
+  'Best Sound': 'Som',
+  'Best Visual Effects': 'Efeitos Visuais',
+  'Best Casting': 'Elenco',
+  'Best Documentary Feature': 'Documentário',
+}
 
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type Film = { id: string; title: string }
@@ -111,7 +149,7 @@ export default function FilmePage() {
 
   const backdrop = details?.backdrop
   const genres = details?.genres ?? []
-  const filmNominations = nominations.map(n => n.category)
+  const filmNominations = nominations.map(n => ({ category: n.category, nominee: n.nominee ?? null }))
 
   return (
     <>
@@ -130,7 +168,7 @@ export default function FilmePage() {
           </div>
 
           <button onClick={() => router.back()}
-            className="absolute top-14 left-4 z-20 w-9 h-9 rounded-full flex items-center justify-center"
+            className="absolute top-14 left-4 z-10 w-9 h-9 rounded-full flex items-center justify-center"
             style={glass}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -138,7 +176,7 @@ export default function FilmePage() {
           </button>
 
           <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 text-center">
-            <h1 className="text-3xl font-bold leading-tight mb-2">{film.title}</h1>
+            <h1 className="text-3xl font-bold leading-tight mb-2">{details?.ptTitle || film.title}</h1>
             {genres.length > 0 && (
               <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>{genres.join(' · ')}</p>
             )}
@@ -195,12 +233,21 @@ export default function FilmePage() {
                 Concorrendo a
               </p>
               <div className="flex flex-col">
-                {filmNominations.map((cat, i) => (
-                  <div key={cat}>
+                {filmNominations.map((nom, i) => (
+                  <div key={nom.category}>
                     <div className="flex items-center justify-center gap-3 py-3">
-                      <span style={{ color: 'rgba(251,191,36,0.5)', fontSize: 18 }}>❦</span>
-                      <p className="text-sm font-medium text-center" style={{ color: 'rgba(255,255,255,0.85)' }}>{cat}</p>
-                      <span style={{ color: 'rgba(251,191,36,0.5)', fontSize: 18, transform: 'scaleX(-1)', display: 'inline-block' }}>❦</span>
+                      <svg width="14" height="20" viewBox="0 0 14 20" fill="none">
+                        <path d="M7 1 C5 3 2 5 1 8 C0 11 2 14 4 15 C5 16 6 17 7 19 C8 17 9 16 10 15 C12 14 14 11 13 8 C12 5 9 3 7 1Z" fill="rgba(251,191,36,0.45)" stroke="rgba(251,191,36,0.3)" strokeWidth="0.5"/>
+                        <line x1="7" y1="5" x2="7" y2="19" stroke="rgba(251,191,36,0.25)" strokeWidth="0.8"/>
+                      </svg>
+                      <div className="text-center">
+                        <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>{CATEGORY_LABELS[nom.category] ?? nom.category}</p>
+                        {nom.nominee && <p className="text-xs mt-0.5" style={{ color: 'rgba(251,191,36,0.6)' }}>{nom.nominee}</p>}
+                      </div>
+                      <svg width="14" height="20" viewBox="0 0 14 20" fill="none" style={{ transform: 'scaleX(-1)' }}>
+                        <path d="M7 1 C5 3 2 5 1 8 C0 11 2 14 4 15 C5 16 6 17 7 19 C8 17 9 16 10 15 C12 14 14 11 13 8 C12 5 9 3 7 1Z" fill="rgba(251,191,36,0.45)" stroke="rgba(251,191,36,0.3)" strokeWidth="0.5"/>
+                        <line x1="7" y1="5" x2="7" y2="19" stroke="rgba(251,191,36,0.25)" strokeWidth="0.8"/>
+                      </svg>
                     </div>
                     {i < filmNominations.length - 1 && (
                       <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
@@ -296,7 +343,7 @@ export default function FilmePage() {
           {details?.cast?.length > 0 && (
             <div>
               <p className="text-xs uppercase tracking-widest font-medium mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Elenco</p>
-              <div className="flex gap-5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              <HScrollRow>
                 {details.cast.map((actor: any) => (
                   <div key={actor.name} className="flex flex-col items-center flex-shrink-0 w-20">
                     <div className="w-16 h-16 rounded-full overflow-hidden mb-2"
@@ -317,7 +364,7 @@ export default function FilmePage() {
                     </p>
                   </div>
                 ))}
-              </div>
+              </HScrollRow>
             </div>
           )}
 
@@ -365,7 +412,8 @@ export default function FilmePage() {
         open={ratingSheetOpen}
         onClose={() => setRatingSheetOpen(false)}
         filmTitle={film.title}
-        categories={filmNominations}
+        categories={filmNominations.map(n => CATEGORY_LABELS[n.category] ?? n.category)}
+        nominees={Object.fromEntries(filmNominations.filter(n => n.nominee).map(n => [CATEGORY_LABELS[n.category] ?? n.category, n.nominee!]))}
         ratings={ratings}
         onRate={saveRating}
       />

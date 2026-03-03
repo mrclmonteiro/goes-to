@@ -7,7 +7,31 @@ import Link from 'next/link'
 
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
 
-const FILM_CATEGORIES = ['Best Picture', 'Best Animated Feature', 'Best International Feature']
+const CATEGORY_LABELS: Record<string, string> = {
+  'Best Picture': 'Melhor Filme',
+  'Best Director': 'Melhor Direção',
+  'Best Actor': 'Melhor Ator',
+  'Best Actress': 'Melhor Atriz',
+  'Best Supporting Actor': 'Melhor Ator Coadjuvante',
+  'Best Supporting Actress': 'Melhor Atriz Coadjuvante',
+  'Best Animated Feature': 'Melhor Animação',
+  'Best International Feature': 'Melhor Filme Internacional',
+  'Best Adapted Screenplay': 'Roteiro Adaptado',
+  'Best Original Screenplay': 'Roteiro Original',
+  'Best Cinematography': 'Fotografia',
+  'Best Film Editing': 'Montagem',
+  'Best Original Score': 'Trilha Sonora Original',
+  'Best Original Song': 'Canção Original',
+  'Best Costume Design': 'Figurino',
+  'Best Production Design': 'Direção de Arte',
+  'Best Makeup and Hairstyling': 'Maquiagem e Cabelo',
+  'Best Sound': 'Som',
+  'Best Visual Effects': 'Efeitos Visuais',
+  'Best Casting': 'Elenco',
+  'Best Documentary Feature': 'Documentário',
+}
+
+const FILM_CATEGORIES = ['Best Picture','Best Animated Feature','Best International Feature','Best Adapted Screenplay','Best Original Screenplay','Best Cinematography','Best Film Editing','Best Original Score','Best Original Song','Best Costume Design','Best Production Design','Best Makeup and Hairstyling','Best Sound','Best Visual Effects','Best Casting','Best Documentary Feature']
 const PERSON_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
 
@@ -149,6 +173,7 @@ export default function FilmesPage() {
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
+  const [allUserFilms, setAllUserFilms] = useState<{film_id: string; rating: number | null}[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
@@ -168,10 +193,12 @@ export default function FilmesPage() {
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nominationsData } = await supabase.from('nominations').select('*')
       const { data: userFilmsData } = await supabase.from('user_films').select('*').eq('user_id', user?.id ?? '')
+      const { data: allFilmsData } = await supabase.from('user_films').select('film_id, rating')
       const loaded = filmsData ?? []
       setFilms(loaded)
       setNominations(nominationsData ?? [])
       setUserFilms(userFilmsData ?? [])
+      setAllUserFilms(allFilmsData ?? [])
       setLoading(false)
       // Busca pôsteres e backdrops
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
@@ -204,7 +231,12 @@ export default function FilmesPage() {
 
   const swingRatings = (cat: string) =>
     filmsByCategory(cat)
-      .map(f => ({ title: f.title, rating: getUF(f.id)?.rating ?? 0 }))
+      .map(f => {
+        const ratings = allUserFilms.filter(u => u.film_id === f.id && u.rating)
+        if (ratings.length === 0) return { title: f.title, rating: 0 }
+        const avg = ratings.reduce((s, u) => s + (u.rating ?? 0), 0) / ratings.length
+        return { title: f.title, rating: Math.round(avg * 10) / 10 }
+      })
       .filter(f => f.rating > 0)
       .sort((a, b) => b.rating - a.rating)
 
@@ -266,7 +298,7 @@ export default function FilmesPage() {
             <button onClick={() => setHeroDropdownOpen(!heroDropdownOpen)}
               className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mx-auto"
               style={{ ...glass, color: 'white' }}>
-              {heroCategory}
+              {CATEGORY_LABELS[heroCategory] ?? heroCategory}
               <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>▾</span>
             </button>
             {heroDropdownOpen && (
@@ -276,7 +308,7 @@ export default function FilmesPage() {
                   <button key={cat} onClick={() => { setHeroCategory(cat); setHeroDropdownOpen(false) }}
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
                     style={{ color: cat === heroCategory ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
-                    {cat}
+                    {CATEGORY_LABELS[cat] ?? cat}
                   </button>
                 ))}
               </div>
@@ -304,7 +336,7 @@ export default function FilmesPage() {
             <button onClick={() => setListDropdownOpen(!listDropdownOpen)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
               style={{ ...glass, color: 'white' }}>
-              {listCategory}
+              {CATEGORY_LABELS[listCategory] ?? listCategory}
               <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>▾</span>
             </button>
             {listDropdownOpen && (
@@ -314,7 +346,7 @@ export default function FilmesPage() {
                   <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
                     style={{ color: cat === listCategory ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
-                    {cat}
+                    {CATEGORY_LABELS[cat] ?? cat}
                   </button>
                 ))}
               </div>
@@ -390,8 +422,8 @@ export default function FilmesPage() {
             <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>É hoje! 🎬</p>
           )}
         </div>
-        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Oscar+2026&dates=20260315T230000Z/20260316T030000Z"
-          target="_blank" rel="noopener noreferrer"
+        <a href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
+          download="oscar2026.ics"
           className="rounded-2xl px-3 py-2 text-xs font-semibold flex-shrink-0"
           style={{ ...glass, color: 'rgba(255,255,255,0.8)' }}>
           + Agenda

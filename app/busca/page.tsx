@@ -12,13 +12,26 @@ type MovieData = { poster: string | null }
 
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
-  'Best Director': 'Direção',
-  'Best Actor': 'Ator',
-  'Best Actress': 'Atriz',
-  'Best Supporting Actor': 'Ator Coadjuvante',
-  'Best Supporting Actress': 'Atriz Coadjuvante',
-  'Best Animated Feature': 'Animação',
-  'Best International Feature': 'Internacional',
+  'Best Director': 'Melhor Direção',
+  'Best Actor': 'Melhor Ator',
+  'Best Actress': 'Melhor Atriz',
+  'Best Supporting Actor': 'Melhor Ator Coadjuvante',
+  'Best Supporting Actress': 'Melhor Atriz Coadjuvante',
+  'Best Animated Feature': 'Melhor Animação',
+  'Best International Feature': 'Melhor Filme Internacional',
+  'Best Adapted Screenplay': 'Roteiro Adaptado',
+  'Best Original Screenplay': 'Roteiro Original',
+  'Best Cinematography': 'Fotografia',
+  'Best Film Editing': 'Montagem',
+  'Best Original Score': 'Trilha Sonora Original',
+  'Best Original Song': 'Canção Original',
+  'Best Costume Design': 'Figurino',
+  'Best Production Design': 'Direção de Arte',
+  'Best Makeup and Hairstyling': 'Maquiagem e Cabelo',
+  'Best Sound': 'Som',
+  'Best Visual Effects': 'Efeitos Visuais',
+  'Best Casting': 'Elenco',
+  'Best Documentary Feature': 'Documentário',
 }
 
 export default function BuscaPage() {

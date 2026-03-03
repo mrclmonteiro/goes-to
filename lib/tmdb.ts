@@ -44,6 +44,7 @@ export async function fetchMovieData(title: string) {
   }
   
   return {
+    ptTitle: data.title ?? null,
     id: movie.id,
     poster: movie.poster_path ? IMG('w342') + movie.poster_path : null,
     backdrop: movie.backdrop_path ? IMG('w1280') + movie.backdrop_path : null,
