@@ -202,6 +202,7 @@ export default function FilmesPage() {
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
       setCatRatings(catRatingsData ?? [])
+      setCatRatings(catRatingsData ?? [])
       setLoading(false)
       // Busca pôsteres e backdrops
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
@@ -235,9 +236,9 @@ export default function FilmesPage() {
   const swingRatings = (cat: string) =>
     filmsByCategory(cat)
       .map(f => {
-        const rats = catRatings.filter(r => r.film_id === f.id && r.category === cat)
+        const rats = allUserFilms.filter(u => u.film_id === f.id && u.rating)
         if (rats.length === 0) return { title: f.title, rating: 0 }
-        const avg = rats.reduce((s, r) => s + r.rating, 0) / rats.length
+        const avg = rats.reduce((s, u) => s + (u.rating ?? 0), 0) / rats.length
         return { title: f.title, rating: Math.round(avg * 10) / 10 }
       })
       .filter(f => f.rating > 0)
