@@ -1,11 +1,9 @@
 'use client'
-export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
 
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
 

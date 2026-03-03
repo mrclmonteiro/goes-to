@@ -1,12 +1,10 @@
 'use client'
-export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { fetchMovieDetails } from '@/lib/tmdb'
 import RatingSheet from '@/app/components/RatingSheet'
 
-export const dynamic = 'force-dynamic'
 
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type Film = { id: string; title: string }

@@ -1,12 +1,10 @@
 'use client'
-export const dynamic = 'force-dynamic'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
 
 const AVATARS = ['🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨']
 const AVATAR_COLORS = [
