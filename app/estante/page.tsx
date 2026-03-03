@@ -5,13 +5,26 @@ import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-
-const AVATARS = ['🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨']
+// Novos avatares adicionados no final
+const AVATARS = [
+  '🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨',
+  '🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰'
+]
 const AVATAR_COLORS = [
   ['#1a0533','#0a0a0f'],['#1a0a00','#0a0a0f'],['#001a1a','#0a0a0f'],
   ['#1a1500','#0a0a0f'],['#0a001a','#0a0a0f'],['#1a1a00','#0a0a0f'],
   ['#001a0a','#0a0a0f'],['#1a000a','#0a0a0f'],
+  // Cores para os novos avatares
+  ['#331a00','#0a0a0f'], // Leão
+  ['#001a33','#0a0a0f'], // Up
+  ['#1a1a1a','#0a0a0f'], // 007
+  ['#0d0d0d','#0a0a0f'], // Batman
+  ['#1a0033','#0a0a0f'], // Paris
+  ['#330000','#0a0a0f'], // Clube
+  ['#002233','#0a0a0f'], // Titanic
+  ['#332a00','#0a0a0f'], // Chefão
 ]
+
 const GOAL_OPTIONS = [
   { label: 'Best Picture', category: 'Best Picture' },
   { label: 'Atuação', category: 'Atuação' },
@@ -25,6 +38,10 @@ type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string }
 type Profile = { display_name: string | null; username: string | null; avatar_index: number; goal_category: string }
+
+function SectionTitle({ children, className = '' }: { children: React.ReactNode, className?: string }) {
+  return <p className={`text-lg font-semibold ${className}`} style={{ color: 'white' }}>{children}</p>
+}
 
 function BottomSheet({ open, onClose, children, title }: {
   open: boolean; onClose: () => void; children: React.ReactNode; title?: string
@@ -102,6 +119,7 @@ export default function EstantePage() {
   const [loading, setLoading] = useState(true)
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [activeEgg, setActiveEgg] = useState<string | null>(null) // NOVO ESTADO AQUI
   const [configOpen, setConfigOpen] = useState(false)
   const [metaOpen, setMetaOpen] = useState(false)
   const [editingAvatar, setEditingAvatar] = useState(false)
@@ -219,6 +237,22 @@ export default function EstantePage() {
     }, 'image/png')
   }
 
+  // Função para lidar com o click do editar/confirmar avatar
+  const handleToggleAvatarEdit = () => {
+    if (editingAvatar) {
+      setEditingAvatar(false)
+      const currentAvatar = AVATARS[profile.avatar_index]
+      const easterEggAvatars = ['🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰']
+      
+      if (easterEggAvatars.includes(currentAvatar)) {
+        setActiveEgg(currentAvatar)
+        setTimeout(() => setActiveEgg(null), 3000) // reseta após 3s
+      }
+    } else {
+      setEditingAvatar(true)
+    }
+  }
+
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
@@ -239,6 +273,32 @@ export default function EstantePage() {
 
   return (
     <>
+      <style>{`
+        @keyframes lion-crown {
+          0% { transform: translateY(-40px); opacity: 0; }
+          20% { transform: translateY(0); opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes pop-in-out {
+          0% { transform: scale(0); opacity: 0; }
+          15% { transform: scale(1.2); opacity: 1; }
+          30% { transform: scale(1); opacity: 1; }
+          80% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(0); opacity: 0; }
+        }
+        @keyframes titanic-sink {
+          0% { transform: rotate(0deg) translateY(0); }
+          30% { transform: rotate(-30deg) translateY(0); }
+          80% { transform: rotate(-45deg) translateY(60px); opacity: 0; }
+          100% { transform: rotate(0deg) translateY(0); opacity: 1; }
+        }
+        @keyframes up-fly {
+          0% { transform: translateY(100vh); }
+          100% { transform: translateY(-120vh); }
+        }
+      `}</style>
+
       <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
 
         {showConfetti && (
@@ -251,6 +311,14 @@ export default function EstantePage() {
                 animation: `fall ${1 + Math.random() * 2}s ${Math.random() * 2}s linear forwards`,
               }}/>
             ))}
+          </div>
+        )}
+
+        {/* Easter Egg do Filme Up - Fica fixo cobrindo a tela inteira */}
+        {activeEgg === '🎈' && (
+          <div style={{ position: 'fixed', left: '50%', bottom: -100, marginLeft: -25, fontSize: '3rem', zIndex: 60, animation: 'up-fly 3s linear forwards', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span>🎈</span>
+            <span style={{ marginTop: -15 }}>🏠</span>
           </div>
         )}
 
@@ -286,13 +354,54 @@ export default function EstantePage() {
                 </svg>
               </button>
             )}
+            
             <div className="relative">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl"
+              <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl relative z-10"
                 style={{ background: goalComplete ? 'rgba(251,191,36,0.2)' : `${avatarColors[0]}88`, border: `2.5px solid ${goalComplete ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)'}` }}>
-                {AVATARS[profile.avatar_index]}
+                
+                {/* Avatar renderizado com animação condicional para Titanic */}
+                <span style={{ display: 'inline-block', animation: activeEgg === '🛳' ? 'titanic-sink 3s ease-in-out forwards' : 'none' }}>
+                  {AVATARS[profile.avatar_index]}
+                </span>
+
+                {/* INÍCIO DOS EASTER EGGS POSICIONADOS NO AVATAR */}
+                {activeEgg === '🦁' && (
+                  <span style={{ position: 'absolute', top: -15, fontSize: '2rem', animation: 'lion-crown 2s ease-out forwards', pointerEvents: 'none' }}>👑</span>
+                )}
+                {activeEgg === '🤵' && (
+                  <span style={{ position: 'absolute', right: -15, top: 15, fontSize: '1.5rem', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>🍸🔫</span>
+                )}
+                {activeEgg === '🦇' && (
+                  <span style={{ position: 'absolute', left: -5, top: 25, fontSize: '1.5rem', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>🃏</span>
+                )}
+                {activeEgg === '🗼' && (
+                  <span style={{ position: 'absolute', width: '140%', height: '140%', display: 'flex', justifyContent: 'space-between', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', top: -5, left: 10, fontSize: '1.2rem' }}>🕛</span>
+                    <span style={{ position: 'absolute', top: 20, right: -10, fontSize: '1.2rem' }}>🌃</span>
+                    <span style={{ position: 'absolute', bottom: 5, left: 20, fontSize: '1.2rem' }}>🌙</span>
+                  </span>
+                )}
+                {activeEgg === '☕️' && (
+                  <span style={{ position: 'absolute', width: '140%', height: '140%', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', top: -5, left: 20, fontSize: '1.2rem' }}>🍳</span>
+                    <span style={{ position: 'absolute', top: 35, right: -5, fontSize: '1.2rem' }}>🍩</span>
+                    <span style={{ position: 'absolute', bottom: 5, left: 35, fontSize: '1.2rem' }}>♣️</span>
+                  </span>
+                )}
+                {activeEgg === '💰' && (
+                  <span style={{ position: 'absolute', width: '150%', height: '150%', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', top: 5, left: 5, fontSize: '1.2rem' }}>🥐</span>
+                    <span style={{ position: 'absolute', top: 15, right: -10, fontSize: '1.2rem' }}>💥</span>
+                    <span style={{ position: 'absolute', bottom: 15, right: 10, fontSize: '1.2rem' }}>🔫</span>
+                    <span style={{ position: 'absolute', bottom: 5, left: 15, fontSize: '1.2rem' }}>🌹</span>
+                  </span>
+                )}
+                {/* FIM DOS EASTER EGGS */}
+                
               </div>
-              <button onClick={() => setEditingAvatar(!editingAvatar)}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-xs"
+              
+              <button onClick={handleToggleAvatarEdit}
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-xs z-20"
                 style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}>
                 {editingAvatar ? '✓' : '✏️'}
               </button>
@@ -328,41 +437,44 @@ export default function EstantePage() {
 
           {/* Meta */}
           <div style={{ position: 'relative', zIndex: 10 }}>
-            <div className="rounded-3xl p-5" style={{ ...glass, ...(goalComplete ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' } : {}) }}>
-              <div className="flex items-start justify-between mb-4">
-                <p className="text-xs uppercase tracking-widest font-medium" style={{ color: goalComplete ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.4)' }}>
-                  {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
-                </p>
-                <div className="flex items-center gap-2">
-                  <div style={{ position: 'relative' }}>
-                    <button onClick={() => setGoalDropdownOpen(!goalDropdownOpen)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
-                      {goalLabel} <span style={{ color: 'rgba(255,255,255,0.4)' }}>▾</span>
-                    </button>
-                    {goalDropdownOpen && (
-                      <>
-                        <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setGoalDropdownOpen(false)}/>
-                        <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52" style={{ ...glass, background: 'rgba(14,14,20,0.98)', zIndex: 99 }}>
-                          {GOAL_OPTIONS.map(g => (
-                            <button key={g.category} onClick={() => updateGoal(g.category)}
-                              className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
-                              style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
-                              {g.label}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <button onClick={() => setMetaOpen(true)} className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
+            {/* Título + Ações fora do Box */}
+            <div className="flex items-center justify-between mb-3">
+              <SectionTitle className={goalComplete ? "text-amber-400" : ""}>
+                {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
+              </SectionTitle>
+              <div className="flex items-center gap-2">
+                <div style={{ position: 'relative' }}>
+                  <button onClick={() => setGoalDropdownOpen(!goalDropdownOpen)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.4)' }}>▾</span>
                   </button>
+                  {goalDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setGoalDropdownOpen(false)}/>
+                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52" style={{ ...glass, background: 'rgba(14,14,20,0.98)', zIndex: 99 }}>
+                        {GOAL_OPTIONS.map(g => (
+                          <button key={g.category} onClick={() => updateGoal(g.category)}
+                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
+                            style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
+                <button onClick={() => setMetaOpen(true)} className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </button>
               </div>
+            </div>
+
+            {/* Box da Meta */}
+            <div className="rounded-3xl p-5" style={{ ...glass, ...(goalComplete ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' } : {}) }}>
               <div className="flex items-end gap-2 mb-3">
                 <span className="text-4xl font-bold tabular-nums" style={{ color: goalComplete ? '#fbbf24' : 'white' }}>{watchedGoal}</span>
                 <span className="text-xl mb-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {goalFilms.length}</span>
@@ -381,7 +493,7 @@ export default function EstantePage() {
           {/* Grid filmes */}
           {watchedFilms.length > 0 ? (
             <div>
-              <p className="text-xs uppercase tracking-widest font-medium mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>O que você assistiu</p>
+              <SectionTitle className="mb-3">O que você assistiu</SectionTitle>
               <div className="grid grid-cols-3 gap-3">
                 {watchedFilms.map(film => {
                   const uf = userFilms.find(u => u.film_id === film.id)

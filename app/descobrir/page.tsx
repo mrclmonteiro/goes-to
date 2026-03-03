@@ -299,18 +299,18 @@ export default function DescobrirPage() {
 
   return (
     <>
-      <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
+      <main className="min-h-screen pb-36 relative overflow-x-hidden" style={{ background: '#0a0a0f', color: 'white' }}>
+
+        {/* Luzes de Fundo (agora aplicadas na página toda e não cortadas) */}
+        <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
+        <div className="absolute top-8 right-0 w-48 h-48 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
 
         {/* Header */}
-        <div className="relative px-4 pt-16 pb-6 overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
-          <div className="absolute top-8 right-0 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
-          <div className="relative">
-            <h1 className="text-3xl font-bold leading-tight">Descobrir</h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Termômetro, indicados e curiosidades</p>
-          </div>
+        <div className="relative px-4 pt-16 pb-6">
+          <h1 className="text-3xl font-bold leading-tight">Descobrir</h1>
+          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Termômetro, indicados e curiosidades</p>
         </div>
 
         <div className="flex flex-col gap-7">
