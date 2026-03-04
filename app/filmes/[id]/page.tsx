@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase'
 import { fetchMovieDetails } from '@/lib/tmdb'
 import RatingSheet from '@/app/components/RatingSheet'
 
+// ── Helpers ──────────────────────────────────────────────────────────
+
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
@@ -20,81 +22,292 @@ function HScrollRow({ children }: { children: React.ReactNode }) {
   )
 }
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <p className="text-lg font-semibold" style={{ color: 'white' }}>{children}</p>
+}
+
+// ── Design tokens inline (Tailwind v4 override pattern) ──────────────
+const lgStyle: React.CSSProperties = {
+  background: 'rgba(120,120,128,0.18)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+}
+
+// ── PWA gate ─────────────────────────────────────────────────────────
+function useIsPWA() {
+  const [isPWA, setIsPWA] = useState(false)
+  useEffect(() => {
+    setIsPWA(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    )
+  }, [])
+  return isPWA
+}
+
+function detectOS(): 'ios' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other'
+  const ua = navigator.userAgent
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios'
+  if (/android/i.test(ua)) return 'android'
+  return 'other'
+}
+
+function InstallGate({ onClose }: { onClose: () => void }) {
+  const os = detectOS()
+  const [visible, setVisible] = useState(false)
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)) }, [])
+  function dismiss() { setVisible(false); setTimeout(onClose, 280) }
+  const instructions =
+    os === 'ios'
+      ? 'No Safari, toque em ⬡ (Compartilhar) → "Adicionar à Tela de Início" → "Adicionar".'
+      : os === 'android'
+      ? 'No Chrome, toque em ⋮ (Menu) → "Adicionar à tela inicial" → "Instalar".'
+      : 'No seu navegador, procure a opção "Instalar app" ou "Adicionar à tela inicial".'
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5"
+      style={{
+        backdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        background: visible ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+        transition: 'backdrop-filter 0.3s ease, background 0.3s ease',
+      }}
+      onClick={dismiss}>
+      <div onClick={e => e.stopPropagation()}
+        style={{
+          background: 'rgba(12,12,18,0.72)',
+          backdropFilter: 'blur(48px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.08)',
+          borderRadius: 28, padding: '28px 24px 24px',
+          width: '100%', maxWidth: 360,
+          transform: visible ? 'scale(1)' : 'scale(0.92)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease',
+          position: 'relative',
+        }}>
+        <button onClick={dismiss}
+          className="lg-btn rounded-full flex items-center justify-center"
+          style={{ position: 'absolute', top: 16, right: 16, width: 43, height: 43, ...lgStyle }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 16 }}>
+          <span style={{ fontSize: 52, lineHeight: 1, display: 'block' }}>👮</span>
+          <span style={{ fontSize: 26, position: 'absolute', bottom: 0, right: -4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>🔦</span>
+        </div>
+        <p style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 10, lineHeight: 1.2 }}>Pego pelo lanterninha!</p>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 20 }}>
+          Para compartilhar nos Stories, você precisa adicionar o atalho do app no seu celular.
+        </p>
+        <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '12px 14px', marginBottom: 20 }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {os === 'ios' ? 'iPhone / iPad' : os === 'android' ? 'Android' : 'Como instalar'}
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{instructions}</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <button onClick={dismiss} className="accent-btn"
+            style={{ background: 'rgba(251,191,36,0.13)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24', fontSize: 15, fontWeight: 700 }}>
+            OK, entendi!
+          </button>
+          <button onClick={dismiss} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', padding: '4px' }}>
+            Não, obrigado
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Bottom Sheet (padrão do app) ─────────────────────────────────────
+function BottomSheet({ open, onClose, title, children }: {
+  open: boolean; onClose: () => void; title: string; children: React.ReactNode
+}) {
+  const [translateY, setTranslateY] = useState(100)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStart = useRef<number | null>(null)
+  const currentY = useRef(0)
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      requestAnimationFrame(() => setTranslateY(0))
+    } else {
+      requestAnimationFrame(() => setTranslateY(100))
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  if (!open && translateY >= 100) return null
+
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col justify-end">
+      <div className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden sheet"
+        style={{
+          transform: `translateY(${translateY}%)`,
+          transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
+          maxHeight: '92vh',
+        }}
+        onTouchStart={e => { dragStart.current = e.touches[0].clientY; setIsDragging(true) }}
+        onTouchMove={e => {
+          if (dragStart.current === null) return
+          const d = e.touches[0].clientY - dragStart.current
+          if (d < 0) return
+          currentY.current = d
+          setTranslateY((d / window.innerHeight) * 100)
+        }}
+        onTouchEnd={() => {
+          setIsDragging(false)
+          if (currentY.current > 120) onClose()
+          else setTranslateY(0)
+          dragStart.current = null; currentY.current = 0
+        }}>
+
+        {/* Handle */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+        </div>
+
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30">
+          <button onClick={onClose}
+            className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+          <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
+            style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
+            {title}
+          </p>
+          <div style={{ width: 43 }}/>
+        </div>
+
+        <div className="sheet-content-fade"/>
+        <div className="overflow-y-auto flex-1 z-10 w-full"
+          style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Data ─────────────────────────────────────────────────────────────
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
   'Best Director': 'Melhor Direção',
   'Best Actor': 'Melhor Ator',
   'Best Actress': 'Melhor Atriz',
-  'Best Supporting Actor': 'Melhor Ator Coadjuvante',
-  'Best Supporting Actress': 'Melhor Atriz Coadjuvante',
+  'Best Supporting Actor': 'Melhor Ator Coadj.',
+  'Best Supporting Actress': 'Melhor Atriz Coadj.',
   'Best Animated Feature': 'Melhor Animação',
-  'Best International Feature': 'Melhor Filme Internacional',
+  'Best International Feature': 'Filme Internacional',
   'Best Adapted Screenplay': 'Roteiro Adaptado',
   'Best Original Screenplay': 'Roteiro Original',
   'Best Cinematography': 'Fotografia',
   'Best Film Editing': 'Montagem',
-  'Best Original Score': 'Trilha Sonora Original',
+  'Best Original Score': 'Trilha Sonora',
   'Best Original Song': 'Canção Original',
   'Best Costume Design': 'Figurino',
   'Best Production Design': 'Direção de Arte',
-  'Best Makeup and Hairstyling': 'Maquiagem e Cabelo',
+  'Best Makeup and Hairstyling': 'Maquiagem',
   'Best Sound': 'Som',
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
 }
 
+// Abbreviated labels for the share card (max ~14 chars)
+const CAT_SHORT: Record<string, string> = {
+  'Melhor Filme': 'Melhor Filme',
+  'Melhor Direção': 'Direção',
+  'Melhor Ator': 'Ator',
+  'Melhor Atriz': 'Atriz',
+  'Melhor Ator Coadj.': 'Ator Coadj.',
+  'Melhor Atriz Coadj.': 'Atriz Coadj.',
+  'Melhor Animação': 'Animação',
+  'Filme Internacional': 'Internacional',
+  'Roteiro Adaptado': 'Rot. Adaptado',
+  'Roteiro Original': 'Rot. Original',
+  'Fotografia': 'Fotografia',
+  'Montagem': 'Montagem',
+  'Trilha Sonora': 'Trilha Sonora',
+  'Canção Original': 'Canção',
+  'Figurino': 'Figurino',
+  'Direção de Arte': 'Dir. de Arte',
+  'Maquiagem': 'Maquiagem',
+  'Som': 'Som',
+  'Efeitos Visuais': 'Ef. Visuais',
+  'Elenco': 'Elenco',
+  'Documentário': 'Documentário',
+}
+
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
+type Profile = { display_name: string | null; username: string | null; avatar_index: number }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-lg font-semibold" style={{ color: 'white' }}>{children}</p>
-  )
-}
+const AVATARS = ['🎬','🍿','🎭','🏆','🎞️','⭐','🎪','🎨','🦁','🎈','🤵','🦇','🗼','☕️','🛳','💰']
 
 export default function FilmePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const isPWA = useIsPWA()
+  const shareRef = useRef<HTMLDivElement>(null)
 
   const [film, setFilm] = useState<Film | null>(null)
   const [nominations, setNominations] = useState<Nomination[]>([])
   const [userFilm, setUserFilm] = useState<UserFilm | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Profile>({ display_name: null, username: null, avatar_index: 0 })
   const [details, setDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [ratingSheetOpen, setRatingSheetOpen] = useState(false)
   const [ratings, setRatings] = useState<Record<string, number>>({})
 
-  // Synopsis bottom sheet
+  // share
+  const [shareOpen, setShareOpen] = useState(false)
+  const [showInstallGate, setShowInstallGate] = useState(false)
+  const [iconDataUrl, setIconDataUrl] = useState<string>('')
+  const [posterDataUrl, setPosterDataUrl] = useState<string>('')
+
+  // synopsis sheet
   const [synopsisOpen, setSynopsisOpen] = useState(false)
-  const [synopsisY, setSynopsisY] = useState(100)
-  const [synopsisDragging, setSynopsisDragging] = useState(false)
-  const synopsisDragStart = useRef<number | null>(null)
-  const synopsisDragCurrent = useRef(0)
 
-  function openSynopsis() {
-    setSynopsisOpen(true)
-    requestAnimationFrame(() => setSynopsisY(0))
-  }
-  function closeSynopsis() {
-    setSynopsisY(100)
-    setTimeout(() => setSynopsisOpen(false), 400)
-  }
-
+  // Pre-load app icon
   useEffect(() => {
-    if (synopsisOpen) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = ''
-    return () => { document.body.style.overflow = '' }
-  }, [synopsisOpen])
+    fetch('/icon.png')
+      .then(r => r.blob())
+      .then(blob => new Promise<string>(resolve => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(blob)
+      }))
+      .then(setIconDataUrl)
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setUserId(user.id)
+      if (user) {
+        setUserId(user.id)
+        const { data: profileData } = await supabase.from('user_profiles').select('display_name, username, avatar_index').eq('id', user.id).maybeSingle()
+        if (profileData) setProfile(profileData)
+      }
       const { data: filmData } = await supabase.from('films').select('*').eq('id', id).single()
       const { data: nomsData } = await supabase.from('nominations').select('*').eq('film_id', id)
       const { data: ufData } = await supabase.from('user_films').select('*').eq('film_id', id).eq('user_id', user?.id ?? '').maybeSingle()
@@ -113,6 +326,18 @@ export default function FilmePage() {
         if (basic?.id) {
           const det = await fetchMovieDetails(basic.id)
           setDetails(det)
+          // Pre-load poster as base64 for html2canvas
+          if (det?.poster) {
+            fetch(det.poster)
+              .then(r => r.blob())
+              .then(blob => new Promise<string>(resolve => {
+                const reader = new FileReader()
+                reader.onload = () => resolve(reader.result as string)
+                reader.readAsDataURL(blob)
+              }))
+              .then(setPosterDataUrl)
+              .catch(() => {})
+          }
         }
       }
       setLoading(false)
@@ -150,13 +375,42 @@ export default function FilmePage() {
     }
   }
 
-  const glass = {
+  async function shareRatings() {
+    if (!isPWA) { setShowInstallGate(true); return }
+    if (!shareRef.current) return
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(shareRef.current, {
+      backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
+      onclone: (doc: Document) => { doc.documentElement.style.fontFeatureSettings = 'normal' },
+    })
+    canvas.toBlob(async blob => {
+      if (!blob) return
+      const fname = `goes-to-${film?.title.toLowerCase().replace(/\s+/g, '-') ?? 'notas'}.png`
+      const file = new File([blob], fname, { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Goes To... · ${film?.title}` })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = fname; a.click()
+        URL.revokeObjectURL(url)
+      }
+    }, 'image/png')
+  }
+
+  const glass: React.CSSProperties = {
     background: 'rgba(255,255,255,0.06)',
     backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
     border: '1px solid rgba(255,255,255,0.1)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
   }
+
+  const ratedCategories = Object.entries(ratings).filter(([, v]) => v > 0)
+  const hasRatings = ratedCategories.length > 0
+  const avgRating = hasRatings
+    ? Math.round(ratedCategories.reduce((s, [, v]) => s + v, 0) / ratedCategories.length * 10) / 10
+    : 0
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
@@ -177,29 +431,29 @@ export default function FilmePage() {
     <>
       <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
 
-        {/* ── Back button — fixed, always visible ──────────────── */}
-        <button
-          onClick={() => router.back()}
-          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95"
-          style={{
-            background: 'rgba(120,120,128,0.18)',
-            backdropFilter: 'blur(48px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-            top: 'max(env(safe-area-inset-top), 45px)',
-            left: '15px',
-            width: '43px',
-            height: '43px',
-          }}
-        >
-          {/* Ajuste de tamanho (20) e correção ótica (mr-[2px]) */}
+        {/* ── Back button ─────────────────────────────────────── */}
+        <button onClick={() => router.back()}
+          className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
+          style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '43px', height: '43px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
             <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
 
-        {/* ── Hero ─────────────────────────────────────────────── */}
+        {/* ── Share button (só aparece quando tem avaliações) ── */}
+        {hasRatings && (
+          <button onClick={() => setShareOpen(true)}
+            className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
+            style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', right: '15px', width: '43px', height: '43px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </button>
+        )}
+
+        {/* ── Hero ────────────────────────────────────────────── */}
         <div className="relative w-full" style={{ height: '75vh', minHeight: 460 }}>
           <div className="absolute inset-0">
             {backdrop
@@ -224,7 +478,7 @@ export default function FilmePage() {
           </div>
         </div>
 
-        {/* ── Content ──────────────────────────────────────────── */}
+        {/* ── Content ─────────────────────────────────────────── */}
         <div className="mt-6 flex flex-col gap-8">
 
           {/* Ações */}
@@ -259,7 +513,7 @@ export default function FilmePage() {
             </p>
           )}
 
-          {/* ── Concorrendo a — sem box ───────────────────────── */}
+          {/* Concorrendo a */}
           {filmNominations.length > 0 && (
             <div className="px-4">
               <SectionTitle>Concorrendo a</SectionTitle>
@@ -279,6 +533,13 @@ export default function FilmePage() {
                           <p className="text-xs mt-0.5" style={{ color: 'rgba(251,191,36,0.6)' }}>{nom.nominee}</p>
                         )}
                       </div>
+                      {/* Rating badge inline */}
+                      {ratings[CATEGORY_LABELS[nom.category] ?? nom.category] > 0 && (
+                        <span className="ml-auto text-xs font-bold flex-shrink-0"
+                          style={{ color: '#fbbf24' }}>
+                          {'★'.repeat(ratings[CATEGORY_LABELS[nom.category] ?? nom.category])}
+                        </span>
+                      )}
                     </div>
                     {i < filmNominations.length - 1 && (
                       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
@@ -289,7 +550,7 @@ export default function FilmePage() {
             </div>
           )}
 
-          {/* ── Sinopse — título fora, texto em box com "Ver mais" ── */}
+          {/* Sinopse */}
           {details?.overview && (
             <div className="px-4">
               <SectionTitle>Sinopse</SectionTitle>
@@ -303,10 +564,9 @@ export default function FilmePage() {
                 }}>
                   {details.overview}
                 </p>
-                {/* gradient fade at bottom of text */}
                 <div className="absolute left-0 right-0 pointer-events-none"
                   style={{ bottom: 44, height: 32, background: 'linear-gradient(to bottom, transparent, rgba(18,18,28,0.96))' }}/>
-                <button onClick={openSynopsis}
+                <button onClick={() => setSynopsisOpen(true)}
                   className="mt-3 text-xs font-semibold relative z-10"
                   style={{ color: 'rgba(251,191,36,0.8)' }}>
                   Ver mais ↓
@@ -315,12 +575,11 @@ export default function FilmePage() {
             </div>
           )}
 
-          {/* ── Ficha técnica — sem box ───────────────────────── */}
+          {/* Ficha técnica */}
           {(details?.director || details?.writers?.length > 0 || details?.budget > 0) && (
             <div className="px-4">
               <SectionTitle>Ficha técnica</SectionTitle>
               <div className="mt-4 flex flex-col gap-5">
-
                 {details?.director && (
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0"
@@ -339,7 +598,6 @@ export default function FilmePage() {
                     </div>
                   </div>
                 )}
-
                 {details?.writers?.length > 0 && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
@@ -351,7 +609,6 @@ export default function FilmePage() {
                     </div>
                   </>
                 )}
-
                 {(details?.budget > 0 || details?.productionCompanies?.length > 0) && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
@@ -375,7 +632,7 @@ export default function FilmePage() {
             </div>
           )}
 
-          {/* ── Elenco — título px-4, scroll toca a borda ──────── */}
+          {/* Elenco */}
           {details?.cast?.length > 0 && (
             <div>
               <p className="px-4 text-lg font-semibold mb-4" style={{ color: 'white' }}>Elenco</p>
@@ -404,7 +661,7 @@ export default function FilmePage() {
             </div>
           )}
 
-          {/* ── Onde assistir — sem box ───────────────────────── */}
+          {/* Onde assistir */}
           {details?.streaming?.length > 0 && (
             <div className="px-4">
               <SectionTitle>Onde assistir</SectionTitle>
@@ -427,7 +684,6 @@ export default function FilmePage() {
               </div>
             </div>
           )}
-
         </div>
       </main>
 
@@ -442,77 +698,182 @@ export default function FilmePage() {
         onRate={saveRating}
       />
 
-      {/* ── Synopsis Bottom Sheet ────────────────────────────────── */}
-      {synopsisOpen && (
-        <div className="fixed inset-0 z-[999] flex flex-col justify-end">
-          {/* Backdrop */}
-          <div className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={closeSynopsis}/>
-
-          {/* Sheet */}
-          <div
-            className="relative w-full rounded-t-[32px] flex flex-col"
-            style={{
-              background: '#0e0e14',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderBottom: 'none',
-              boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
-              maxHeight: '85vh',
-              transform: `translateY(${synopsisY}%)`,
-              transition: synopsisDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
-            }}
-            onTouchStart={e => {
-              synopsisDragStart.current = e.touches[0].clientY
-              setSynopsisDragging(true)
-            }}
-            onTouchMove={e => {
-              if (synopsisDragStart.current === null) return
-              const d = e.touches[0].clientY - synopsisDragStart.current
-              if (d < 0) return
-              synopsisDragCurrent.current = d
-              setSynopsisY((d / window.innerHeight) * 100)
-            }}
-            onTouchEnd={() => {
-              setSynopsisDragging(false)
-              if (synopsisDragCurrent.current > 120) closeSynopsis()
-              else setSynopsisY(0)
-              synopsisDragStart.current = null
-              synopsisDragCurrent.current = 0
-            }}
-          >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-2 pb-3">
-              <div className="w-9"/>
-              <p className="text-sm font-semibold" style={{ color: 'white' }}>Sinopse</p>
-              <button
-                onClick={closeSynopsis}
-                className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-
-            {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 px-5 py-5"
-              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
-              <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                {details?.overview}
-              </p>
-            </div>
-          </div>
+      {/* ── Sinopse Sheet ─────────────────────────────────────────── */}
+      <BottomSheet open={synopsisOpen} onClose={() => setSynopsisOpen(false)} title="Sinopse">
+        <div className="px-5 py-2">
+          <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            {details?.overview}
+          </p>
         </div>
-      )}
+      </BottomSheet>
+
+      {/* ── Share Ratings Sheet ───────────────────────────────────── */}
+      <BottomSheet open={shareOpen} onClose={() => setShareOpen(false)} title="Minhas notas">
+        <div className="px-5 py-4 flex flex-col gap-5">
+
+          {/* ── Card 9:16 — wrapper arredondado só na UI ── */}
+          <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
+          <div ref={shareRef}
+            style={{
+              width: '100%', height: '100%',
+              background: 'linear-gradient(160deg, #0f0c29 0%, #1a0533 45%, #0a0a0f 100%)',
+              borderRadius: 0,
+              display: 'flex', flexDirection: 'column',
+              padding: '32px 26px 28px',
+              position: 'relative',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}>
+
+            {/* Orbe decorativo */}
+            <div style={{
+              position: 'absolute', top: '-5%', right: '-15%',
+              width: '70%', height: '35%', borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)',
+              filter: 'blur(40px)', pointerEvents: 'none',
+            }}/>
+            <div style={{
+              position: 'absolute', bottom: '5%', left: '-20%',
+              width: '60%', height: '25%', borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)',
+              filter: 'blur(32px)', pointerEvents: 'none',
+            }}/>
+
+            {/* Topo: app + user */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8, overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0,
+                }}>
+                  {iconDataUrl
+                    ? <img src={iconDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
+                  }
+                </div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>Goes To...</p>
+              </div>
+              {/* Avatar + nome */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 99,
+                  background: 'rgba(167,139,250,0.2)',
+                  border: '1.5px solid rgba(167,139,250,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                }}>
+                  {AVATARS[profile.avatar_index]}
+                </div>
+                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>
+                  {profile.display_name ?? 'Cinéfilo'}
+                </p>
+              </div>
+            </div>
+
+            {/* Filme: poster + título + média */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+              <div style={{
+                width: 52, height: 78, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
+                border: '1px solid rgba(255,255,255,0.15)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+              }}>
+                {posterDataUrl
+                  ? <img src={posterDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                  : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.08)' }}/>
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.15em',
+                  textTransform: 'uppercase', color: 'rgba(167,139,250,0.7)', marginBottom: 4,
+                }}>
+                  Oscar 2026
+                </p>
+                <p style={{
+                  fontSize: 18, fontWeight: 800, color: 'white',
+                  lineHeight: 1.2, marginBottom: 6,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                } as any}>
+                  {details?.ptTitle || film.title}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: '#fbbf24' }}>{avgRating}</span>
+                  <span style={{ fontSize: 11, color: '#fbbf24' }}>★</span>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>/ 5 · média</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 16 }}/>
+
+            {/* Título da seção */}
+            <p style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.16em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12,
+            }}>
+              Minhas avaliações por categoria
+            </p>
+
+            {/* Grid de categorias — 2 colunas, compacto para suportar até 16 */}
+            <div style={{
+              flex: 1,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '6px 12px',
+              alignContent: 'start',
+              overflow: 'hidden',
+            }}>
+              {ratedCategories.map(([cat, stars]) => (
+                <div key={cat} style={{
+                  display: 'flex', flexDirection: 'column', gap: 3,
+                  padding: '6px 8px', borderRadius: 8,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <p style={{
+                    fontSize: 9, color: 'rgba(255,255,255,0.45)',
+                    fontWeight: 600, lineHeight: 1.2,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {CAT_SHORT[cat] ?? cat}
+                  </p>
+                  {/* Mini star bar */}
+                  <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    {[1,2,3,4,5].map(n => (
+                      <div key={n} style={{
+                        flex: 1, height: 3, borderRadius: 99,
+                        background: n <= stars ? '#fbbf24' : 'rgba(255,255,255,0.1)',
+                      }}/>
+                    ))}
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', marginLeft: 3, flexShrink: 0 }}>
+                      {stars}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rodapé */}
+            <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 16, letterSpacing: '0.05em' }}>
+              goes-to.vercel.app
+            </p>
+          </div>
+          </div>{/* end visual wrapper */}
+
+          <button onClick={shareRatings}
+            className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Compartilhar nos Instagram Stories
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* ── Install Gate ─────────────────────────────────────────── */}
+      {showInstallGate && <InstallGate onClose={() => setShowInstallGate(false)} />}
     </>
   )
 }

@@ -7,37 +7,28 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { EasterEgg, EggType } from '@/app/components/EasterEgg'
 
-// Novos avatares adicionados no final
 const AVATARS = [
   '🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨',
   '🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰'
 ]
 const AVATAR_COLORS = [
-  ['#A1C4FD', '#C2E9FB'], // 🎬 Azul pastel
-  ['#B5EAD7', '#83C5BE'], // 🍿 Menta pastel
-  ['#FFDAC1', '#FF9AA2'], // 🎭 Pêssego/Rosa pastel
-  ['#C7CEEA', '#A3B1C6'], // 🏆 Lilás/Azul acinzentado pastel
-  ['#FDFD96', '#F6D365'], // 🎞️ Amarelo pastel
-  ['#E0C3FC', '#8EC5FC'], // ⭐ Violeta/Azul pastel
-  ['#84FAB0', '#8FD3F4'], // 🎪 Ciano pastel
-  ['#E2E2E2', '#C9D6FF'], // 🎨 Cinza/Azul muito claro
-  ['#A18CD1', '#FBC2EB'], // 🦁 Roxo/Rosa (Oposto ao leão)
-  ['#D4FC79', '#96E6A1'], // 🎈 Verde limão (Oposto ao balão vermelho)
-  ['#FBC2EB', '#A6C1EE'], // 🤵 Rosa/Azul claro pastel
-  ['#FF9A9E', '#FECFEF'], // 🦇 Rosa bebê pastel (Contraste leve)
-  ['#89F7FE', '#66A6FF'], // 🗼 Ciano pastel
-  ['#FFECD2', '#FCB69F'], // ☕️ Coral/Pêssego
-  ['#D4FC79', '#96E6A1'], // 🛳 Verde água
-  ['#F3E7E9', '#E3EEFF']  // 💰 Azul e rosa ultraclaros
+  ['#A1C4FD', '#C2E9FB'], ['#B5EAD7', '#83C5BE'], ['#FFDAC1', '#FF9AA2'],
+  ['#C7CEEA', '#A3B1C6'], ['#FDFD96', '#F6D365'], ['#E0C3FC', '#8EC5FC'],
+  ['#84FAB0', '#8FD3F4'], ['#E2E2E2', '#C9D6FF'], ['#A18CD1', '#FBC2EB'],
+  ['#D4FC79', '#96E6A1'], ['#FBC2EB', '#A6C1EE'], ['#FF9A9E', '#FECFEF'],
+  ['#89F7FE', '#66A6FF'], ['#FFECD2', '#FCB69F'], ['#D4FC79', '#96E6A1'],
+  ['#F3E7E9', '#E3EEFF']
 ]
 
+// ── metas em português + personalizada ──────────────────────────────
 const GOAL_OPTIONS = [
-  { label: 'Best Picture', category: 'Best Picture' },
-  { label: 'Atuação', category: 'Atuação' },
-  { label: 'Direção', category: 'Best Director' },
-  { label: 'Internacional', category: 'Best International Feature' },
-  { label: 'Animação', category: 'Best Animated Feature' },
+  { label: 'Melhor Filme',   category: 'Best Picture' },
+  { label: 'Atuação',        category: 'Atuação' },
+  { label: 'Direção',        category: 'Best Director' },
+  { label: 'Internacional',  category: 'Best International Feature' },
+  { label: 'Elenco',         category: 'Best Casting' },
   { label: 'Todos os indicados', category: 'Todos' },
+  { label: 'Personalizada',  category: 'custom' },
 ]
 
 type Film = { id: string; title: string }
@@ -49,11 +40,130 @@ function SectionTitle({ children, className = '' }: { children: React.ReactNode,
   return <p className={`text-lg font-semibold ${className}`} style={{ color: 'white' }}>{children}</p>
 }
 
+// Liquid glass — tudo inline (Tailwind v4 interfere via CSS)
+const lgStyle: React.CSSProperties = {
+  background: 'rgba(120,120,128,0.18)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+}
+const ddStyle: React.CSSProperties = {
+  background: 'rgba(20,20,25,0.65)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
+}
+
+// ── PWA detection ────────────────────────────────────────────────────
+function useIsPWA() {
+  const [isPWA, setIsPWA] = useState(false)
+  useEffect(() => {
+    setIsPWA(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    )
+  }, [])
+  return isPWA
+}
+
+function detectOS(): 'ios' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other'
+  const ua = navigator.userAgent
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios'
+  if (/android/i.test(ua)) return 'android'
+  return 'other'
+}
+
+function InstallGate({ onClose }: { onClose: () => void }) {
+  const os = detectOS()
+  const [visible, setVisible] = useState(false)
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)) }, [])
+  function dismiss() { setVisible(false); setTimeout(onClose, 280) }
+  const instructions =
+    os === 'ios'
+      ? 'No Safari, toque em ⬡ (Compartilhar) → "Adicionar à Tela de Início" → "Adicionar".'
+      : os === 'android'
+      ? 'No Chrome, toque em ⋮ (Menu) → "Adicionar à tela inicial" → "Instalar".'
+      : 'No seu navegador, procure a opção "Instalar app" ou "Adicionar à tela inicial".'
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-5"
+      style={{
+        backdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        background: visible ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+        transition: 'backdrop-filter 0.3s ease, background 0.3s ease',
+      }}
+      onClick={dismiss}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'rgba(12,12,18,0.72)',
+          backdropFilter: 'blur(48px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.08)',
+          borderRadius: 28,
+          padding: '28px 24px 24px',
+          width: '100%',
+          maxWidth: 360,
+          transform: visible ? 'scale(1)' : 'scale(0.92)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease',
+          position: 'relative',
+        }}
+      >
+        <button onClick={dismiss}
+          className="lg-btn rounded-full flex items-center justify-center"
+          style={{
+            position: 'absolute', top: 16, right: 16, width: 43, height: 43,
+            background: 'rgba(120,120,128,0.18)',
+            backdropFilter: 'blur(32px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+          }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 16 }}>
+          <span style={{ fontSize: 52, lineHeight: 1, display: 'block' }}>👮</span>
+          <span style={{ fontSize: 26, position: 'absolute', bottom: 0, right: -4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>🔦</span>
+        </div>
+        <p style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 10, lineHeight: 1.2 }}>
+          Pego pelo lanterninha!
+        </p>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 20 }}>
+          Para compartilhar nos Stories, você precisa adicionar o atalho do app no seu celular.
+        </p>
+        <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '12px 14px', marginBottom: 20 }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {os === 'ios' ? 'iPhone / iPad' : os === 'android' ? 'Android' : 'Como instalar'}
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{instructions}</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <button onClick={dismiss} className="accent-btn"
+            style={{ background: 'rgba(251,191,36,0.13)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24', fontSize: 15, fontWeight: 700 }}>
+            OK, entendi!
+          </button>
+          <button onClick={dismiss} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', padding: '4px' }}>
+            Não, obrigado
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Bottom Sheet ──────────────────────────────────────────────────────
 function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: {
   open: boolean; onClose: () => void; children: React.ReactNode
-  title?: string
-  onAction?: () => void   // botão direito (ex: salvar)
-  actionLabel?: string    // texto do botão direito (ex: "Concluído")
+  title?: string; onAction?: () => void; actionLabel?: string
 }) {
   const [translateY, setTranslateY] = useState(100)
   const [isDragging, setIsDragging] = useState(false)
@@ -71,14 +181,8 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
     return () => { document.body.style.overflow = '' }
   }, [open])
 
-  // ensure props are referenced to avoid unused variable warnings
-  useEffect(() => {
-    // no-op: props may be used by future header button implementation
-  }, [onAction, actionLabel])
-
   if (!open && translateY >= 100) return null
-
-  const hasActions = !!onAction  // true = layout Apple 3 colunas
+  const hasActions = !!onAction
 
   return (
     <div className="fixed inset-0 z-[999] flex flex-col justify-end">
@@ -87,7 +191,9 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
         onClick={onClose}/>
       <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden"
         style={{
-          background: '#0e0e14', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
+          background: '#0e0e14',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderBottom: 'none',
           boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
           transform: `translateY(${translateY}%)`,
           transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
@@ -105,74 +211,42 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
           setIsDragging(false)
           if (currentY.current > 120) onClose()
           else setTranslateY(0)
-          dragStart.current = null
+          dragStart.current = null; currentY.current = 0
         }}>
 
-        {/* Gradiente sobre o conteúdo */}
-        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
-          style={{ height: '100px', background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' }}/>
-
-        {/* Handle */}
         <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
         </div>
 
-        {/* Header */}
         <div className="absolute top-0 left-0 right-0 flex items-center px-5 pt-6 z-30"
           style={{ justifyContent: hasActions ? 'space-between' : 'flex-end' }}>
-
-          {/* Esquerda: botão fechar (sempre) */}
           <button onClick={onClose}
-            className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
-            style={{
-              background: 'rgba(120,120,128,0.18)',
-              backdropFilter: 'blur(48px) saturate(200%)',
-              WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-              border: '1px solid rgba(255,255,255,0.25)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
-              width: 43, height: 43,
-            }}>
+            className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-
-          {/* Centro: título (só quando há ação à direita) */}
           {hasActions && title && (
             <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
-              style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
-              {title}
-            </p>
+              style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>{title}</p>
           )}
-
-          {/* Sem ação: título à esquerda do X (layout original) */}
           {!hasActions && title && (
             <p className="text-lg font-semibold mr-auto ml-0 pointer-events-none"
-              style={{ color: 'white', position: 'absolute', left: 20, top: 'calc(1.5rem + 10px)' }}>
-              {title}
-            </p>
+              style={{ color: 'white', position: 'absolute', left: 20, top: 'calc(1.5rem + 10px)' }}>{title}</p>
           )}
-
-          {/* Direita: botão de ação (Concluído / salvar) */}
           {hasActions && (
             <button onClick={onAction}
-              className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0 text-sm font-semibold"
-              style={{
-                background: 'rgba(120,120,128,0.18)',
-                backdropFilter: 'blur(48px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-                border: '1px solid rgba(255,255,255,0.25)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
-                width: 43, height: 43, color: '#fbbf24', 
-              }}>
+              className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-  <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
+                <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           )}
         </div>
 
-        {/* Conteúdo */}
+        <div className="sheet-content-fade"/>
         <div className="overflow-y-auto flex-1 z-10 w-full"
           style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
           {children}
@@ -185,6 +259,13 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
 export default function EstantePage() {
   const router = useRouter()
   const shareRef = useRef<HTMLDivElement>(null)
+  const isPWA = useIsPWA()
+  const [showInstallGate, setShowInstallGate] = useState(false)
+  const [iconDataUrl, setIconDataUrl] = useState<string>('')
+
+  // meta personalizada
+  const [customGoalCount, setCustomGoalCount] = useState(10)
+  const [customGoalInput, setCustomGoalInput] = useState('10')
 
   const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile>({ display_name: null, username: null, avatar_index: 0, goal_category: 'Best Picture' })
@@ -195,7 +276,7 @@ export default function EstantePage() {
   const [loading, setLoading] = useState(true)
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
-  const [activeEgg, setActiveEgg] = useState<string | null>(null) // NOVO ESTADO AQUI
+  const [activeEgg, setActiveEgg] = useState<string | null>(null)
   const [configOpen, setConfigOpen] = useState(false)
   const [metaOpen, setMetaOpen] = useState(false)
   const [prevProgress, setPrevProgress] = useState(0)
@@ -207,11 +288,23 @@ export default function EstantePage() {
   const [configMsg, setConfigMsg] = useState('')
   const [tempAvatarIndex, setTempAvatarIndex] = useState(0)
 
+  // Pre-load app icon as base64 for html2canvas
+  useEffect(() => {
+    fetch('/icon.png')
+      .then(r => r.blob())
+      .then(blob => new Promise<string>(resolve => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(blob)
+      }))
+      .then(setIconDataUrl)
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       if (!supabase) { router.push('/'); return }
-
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
       setUserId(user.id)
@@ -240,29 +333,39 @@ export default function EstantePage() {
   }, [router])
 
   const filmCategories = (filmId: string) => nominations.filter(n => n.film_id === filmId).map(n => n.category)
-  const goalFilms = films.filter(f => {
-    const cats = filmCategories(f.id)
-    if (profile.goal_category === 'Todos') return true
-    if (profile.goal_category === 'Atuação') return cats.some(c => c.includes('Actor') || c.includes('Actress'))
-    return cats.includes(profile.goal_category)
-  })
+
+  const isCustomGoal = profile.goal_category === 'custom'
+
+  const goalFilms = isCustomGoal
+    ? films
+    : films.filter(f => {
+        const cats = filmCategories(f.id)
+        if (profile.goal_category === 'Todos') return true
+        if (profile.goal_category === 'Atuação') return cats.some(c => c.includes('Actor') || c.includes('Actress'))
+        return cats.includes(profile.goal_category)
+      })
+
   const watchedGoal = goalFilms.filter(f => userFilms.find(u => u.film_id === f.id && u.watched)).length
-  const progress = goalFilms.length > 0 ? watchedGoal / goalFilms.length : 0
-  const goalComplete = progress >= 1 && goalFilms.length > 0
+  const customTarget = isCustomGoal ? customGoalCount : goalFilms.length
+  const progress = customTarget > 0 ? Math.min(watchedGoal / customTarget, 1) : 0
+  const goalComplete = progress >= 1 && customTarget > 0
   const watchedFilms = films.filter(f => userFilms.find(u => u.film_id === f.id && u.watched))
 
+  const goalLabel = isCustomGoal
+    ? `${customGoalCount} filmes`
+    : (GOAL_OPTIONS.find(g => g.category === profile.goal_category)?.label ?? 'Melhor Filme')
+
   useEffect(() => {
-    if (progress === 1 && prevProgress < 1 && goalFilms.length > 0) {
+    if (progress === 1 && prevProgress < 1 && customTarget > 0) {
       setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000)
     }
     setPrevProgress(progress)
-  }, [progress, prevProgress, goalFilms.length])
+  }, [progress, prevProgress, customTarget])
 
   async function updateGoal(cat: string) {
     if (!userId) return
     const supabase = createClient()
     if (!supabase) return
-
     setProfile(p => ({ ...p, goal_category: cat })); setGoalDropdownOpen(false)
     await supabase.from('user_profiles').update({ goal_category: cat }).eq('id', userId)
   }
@@ -271,56 +374,43 @@ export default function EstantePage() {
     if (!userId) return
     setSavingConfig(true)
     const supabase = createClient()
-    
     if (supabase) {
-      if (editEmail && editEmail !== '') await supabase.auth.updateUser({ email: editEmail })
-      if (editPassword && editPassword !== '') await supabase.auth.updateUser({ password: editPassword })
-      
-      await supabase.from('user_profiles').update({ 
-        display_name: editDisplayName, 
+      if (editEmail) await supabase.auth.updateUser({ email: editEmail })
+      if (editPassword) await supabase.auth.updateUser({ password: editPassword })
+      await supabase.from('user_profiles').update({
+        display_name: editDisplayName,
         username: editUsername,
         avatar_index: tempAvatarIndex
       }).eq('id', userId)
     }
-    
     setProfile(p => ({ ...p, display_name: editDisplayName, username: editUsername, avatar_index: tempAvatarIndex }))
     setConfigMsg('Configurações salvas!')
-    
-    // 1. Primeiro esperamos o tempo da mensagem de sucesso
-    setTimeout(() => { 
+    setTimeout(() => {
       setConfigMsg('')
       setSavingConfig(false)
-      setConfigOpen(false) // Fecha o modal
-
-      // 2. Agora, esperamos o modal sumir da tela (aprox 400ms) para disparar o ovo
+      setConfigOpen(false)
       setTimeout(() => {
         const a = AVATARS[tempAvatarIndex]
-        let egg = null
-        if (a === '🦁') egg = 'lion'
-        else if (a === '🎈') egg = 'up'
-        else if (a === '🤵') egg = '007'
-        else if (a === '🦇') egg = 'batman'
-        else if (a === '🗼') egg = 'paris'
-        else if (a === '☕️') egg = 'clube'
-        else if (a === '🛳') egg = 'titanic'
-        else if (a === '💰') egg = 'chefao'
-
+        const eggMap: Record<string, string> = {
+          '🦁': 'lion', '🎈': 'up', '🤵': '007', '🦇': 'batman',
+          '🗼': 'paris', '☕️': 'clube', '🛳': 'titanic', '💰': 'chefao'
+        }
+        const egg = eggMap[a]
         if (egg) {
           setActiveEgg(egg)
-          // Define o tempo que cada animação dura antes de sumir
-          const duration = (egg === 'up' || egg === 'titanic') ? 4000 : 3000
-          setTimeout(() => setActiveEgg(null), duration)
+          setTimeout(() => setActiveEgg(null), egg === 'up' || egg === 'titanic' ? 4000 : 3000)
         }
-      }, 500) // Meio segundo após mandar fechar o modal
-      
+      }, 500)
     }, 1500)
   }
 
   async function shareGoal() {
+    if (!isPWA) { setShowInstallGate(true); return }
     if (!shareRef.current) return
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(shareRef.current, {
-      backgroundColor: null, scale: 3, useCORS: false, allowTaint: false, logging: false,
+      backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
+      onclone: (doc: Document) => { doc.documentElement.style.fontFeatureSettings = 'normal' },
     })
     canvas.toBlob(async blob => {
       if (!blob) return
@@ -341,7 +431,7 @@ export default function EstantePage() {
     WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
   }
-  const goalLabel = GOAL_OPTIONS.find(g => g.category === profile.goal_category)?.label ?? 'Best Picture'
+
   const accentColor = goalComplete ? '#fbbf24' : '#a78bfa'
   const bgGradient = goalComplete
     ? 'linear-gradient(160deg, #78350f 0%, #451a03 55%, #0a0a0f 100%)'
@@ -356,46 +446,24 @@ export default function EstantePage() {
   return (
     <>
       <style>{`
-        @keyframes lion-crown {
-          0% { transform: translateY(-40px); opacity: 0; }
-          20% { transform: translateY(0); opacity: 1; }
-          80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes pop-in-out {
-          0% { transform: scale(0); opacity: 0; }
-          15% { transform: scale(1.2); opacity: 1; }
-          30% { transform: scale(1); opacity: 1; }
-          80% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(0); opacity: 0; }
-        }
-        @keyframes titanic-sink {
-          0% { transform: rotate(0deg) translateY(0); }
-          30% { transform: rotate(-30deg) translateY(0); }
-          80% { transform: rotate(-45deg) translateY(60px); opacity: 0; }
-          100% { transform: rotate(0deg) translateY(0); opacity: 1; }
-        }
-        @keyframes up-fly {
-          0% { transform: translateY(100vh); }
-          100% { transform: translateY(-120vh); }
+        @keyframes fall {
+          to { transform: translateY(110vh) rotate(360deg); }
         }
       `}</style>
 
       <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
-        <div
-  className="fixed top-0 left-0 right-0 pointer-events-none"
-  style={{
-    height: '220px', // vai até ~metade da foto de perfil
-    zIndex: 0,
-    background: `linear-gradient(to bottom,
-      ${AVATAR_COLORS[profile.avatar_index]?.[0]}4D 0%,
-      ${AVATAR_COLORS[profile.avatar_index]?.[1]}26 55%,
-      transparent 100%
-    )`,
-    transition: 'background 0.6s ease',
-  }}
-/>
 
+        {/* Avatar color light */}
+        <div className="fixed top-0 left-0 right-0 pointer-events-none" style={{
+          height: '220px', zIndex: 0,
+          background: `linear-gradient(to bottom,
+            ${AVATAR_COLORS[profile.avatar_index]?.[0]}4D 0%,
+            ${AVATAR_COLORS[profile.avatar_index]?.[1]}26 55%,
+            transparent 100%)`,
+          transition: 'background 0.6s ease',
+        }}/>
+
+        {/* Confetti */}
         {showConfetti && (
           <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
             {Array.from({ length: 60 }, (_, i) => (
@@ -411,162 +479,123 @@ export default function EstantePage() {
 
         <EasterEgg egg={activeEgg as EggType} />
 
-        {/* Botões flutuantes Superiores (Liquid Glass) */}
-        
-        {/* Botão Superior Direito (Configurações) */}
-        <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true); }}
-          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95 pointer-events-auto"
-          style={{
-            background: 'rgba(120,120,128,0.18)',
-            backdropFilter: 'blur(48px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-            top: 'max(env(safe-area-inset-top), 45px)',
-            left: '15px',
-            width: '43px',
-            height: '43px',
-          }}>
+        {/* Botão voltar */}
+        <button onClick={() => router.back()}
+          className="lg-btn fixed z-[100] flex items-center justify-center rounded-full pointer-events-auto"
+          style={{ ...lgStyle, top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '43px', height: '43px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
             <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        
-        {/* Botão Superior Direito (Configurações) */}
-        <button onClick={() => setConfigOpen(true)}
-          className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95 pointer-events-auto"
-          style={{
-            background: 'rgba(120,120,128,0.18)',
-            backdropFilter: 'blur(48px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-            top: 'max(env(safe-area-inset-top), 45px)',
-            right: '15px',
-            width: '43px',
-            height: '43px',
-          }}>
+
+        {/* Botão configurações */}
+        <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true) }}
+          className="lg-btn fixed z-[100] flex items-center justify-center rounded-full pointer-events-auto"
+          style={{ ...lgStyle, top: 'max(env(safe-area-inset-top), 45px)', right: '15px', width: '43px', height: '43px' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="white" strokeWidth="1.8"/>
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" strokeWidth="1.8"/>
           </svg>
         </button>
 
-        {/* Perfil - Avatar e Nomes */}
-          <div 
-            className="flex flex-col items-center relative z-10" 
-            style={{ 
-              marginTop: '100px', 
-              marginBottom: '33px' // <--- ADICIONE ESTA LINHA (65px / 2)
-            }}
-          >
-            {/* Foto de Perfil */}
-            <div 
-              className="relative rounded-full flex items-center justify-center mb-4 shadow-2xl pointer-events-none"
-              style={{ 
-                width: '125px', 
-                height: '125px',
-                background: `linear-gradient(135deg, ${AVATAR_COLORS[profile.avatar_index]?.[0] || '#333'}, ${AVATAR_COLORS[profile.avatar_index]?.[1] || '#111'})`,
-                border: '3px solid rgba(255,255,255,0.6)'
-              }}>
-              <span style={{ fontSize: '65px' }}>
-                {AVATARS[profile.avatar_index]}
-              </span>
-            </div>
-            
-            {/* Nome de Exibição */}
-            <p className="font-bold tracking-tight" style={{ fontSize: '20px', color: 'white', lineHeight: '1.2' }}>
-              {profile.display_name || 'Cinéfilo'}
-            </p>
-            
-            {/* Username */}
-            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
-              @{profile.username || 'usuario'}
-            </p>
+        {/* Perfil */}
+        <div className="flex flex-col items-center relative z-10" style={{ marginTop: '100px', marginBottom: '33px' }}>
+          <div className="relative rounded-full flex items-center justify-center mb-4 shadow-2xl pointer-events-none"
+            style={{
+              width: '125px', height: '125px',
+              background: `linear-gradient(135deg, ${AVATAR_COLORS[profile.avatar_index]?.[0] || '#333'}, ${AVATAR_COLORS[profile.avatar_index]?.[1] || '#111'})`,
+              border: '3px solid rgba(255,255,255,0.6)'
+            }}>
+            <span style={{ fontSize: '65px' }}>{AVATARS[profile.avatar_index]}</span>
           </div>
+          <p className="font-bold tracking-tight" style={{ fontSize: '20px', color: 'white', lineHeight: '1.2' }}>
+            {profile.display_name || 'Cinéfilo'}
+          </p>
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
+            @{profile.username || 'usuario'}
+          </p>
+        </div>
 
         <div className="px-4 flex flex-col gap-5">
 
           {/* Meta */}
           <div style={{ position: 'relative', zIndex: 10 }}>
-            {/* Título + Ações fora do Box */}
             <div className="flex items-center justify-between mb-3">
-              <SectionTitle className={goalComplete ? "text-amber-400" : ""}>
+              <SectionTitle className={goalComplete ? 'text-amber-400' : ''}>
                 {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
               </SectionTitle>
               <div className="flex items-center gap-2">
-                
-                {/* Dropdown Meta (Liquid Glass - 43px) */}
+
+                {/* Dropdown Meta */}
                 <div style={{ position: 'relative' }}>
                   <button onClick={() => setGoalDropdownOpen(!goalDropdownOpen)}
-                    className="flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
-                    style={{ 
-                      height: '43px', /* 85px pela metade */
-                      background: 'rgba(120,120,128,0.18)', 
-                      backdropFilter: 'blur(48px) saturate(200%)',
-                      WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-                      border: '1px solid rgba(255,255,255,0.25)', 
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.9)' 
-                    }}>
-                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.6)' }}>▾</span>
+                    className="lg-btn flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold"
+                    style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)' }}>
+                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
                   </button>
-                  
                   {goalDropdownOpen && (
                     <>
                       <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setGoalDropdownOpen(false)}/>
-                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52 overflow-hidden shadow-2xl" 
-                        style={{ 
-                          background: 'rgba(20,20,25,0.65)', 
-                          backdropFilter: 'blur(48px) saturate(200%)',
-                          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
-                          zIndex: 99 
-                        }}>
+                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52 overflow-hidden"
+                        style={{ ...ddStyle, zIndex: 99 }}>
                         {GOAL_OPTIONS.map(g => (
-                          <button key={g.category} onClick={() => updateGoal(g.category)}
-                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
-                            style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
-                            {g.label}
-                          </button>
+                          <div key={g.category}>
+                            <button onClick={() => updateGoal(g.category)}
+                              className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
+                              style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
+                              {g.label}
+                            </button>
+                            {/* Input numérico inline para meta personalizada */}
+                            {g.category === 'custom' && profile.goal_category === 'custom' && (
+                              <div className="px-4 pb-3 flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min={1} max={999}
+                                  value={customGoalInput}
+                                  onChange={e => {
+                                    setCustomGoalInput(e.target.value)
+                                    const n = parseInt(e.target.value)
+                                    if (!isNaN(n) && n > 0) setCustomGoalCount(n)
+                                  }}
+                                  className="rounded-lg px-3 py-1.5 text-sm text-right"
+                                  style={{
+                                    background: 'rgba(255,255,255,0.08)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                    color: 'white', outline: 'none', width: 72
+                                  }}
+                                />
+                                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>filmes</span>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </>
                   )}
                 </div>
 
-                {/* Botão Compartilhar (Liquid Glass 43px/24px) */}
-                <button onClick={() => setMetaOpen(true)} 
-                  className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
-                  style={{ 
-                    width: '43px', height: '43px', /* 85px pela metade */
-                    background: 'rgba(120,120,128,0.18)', 
-                    backdropFilter: 'blur(48px) saturate(200%)',
-                    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-                    border: '1px solid rgba(255,255,255,0.25)', 
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-                    color: 'white' 
-                  }}>
+                {/* Compartilhar meta */}
+                <button onClick={() => setMetaOpen(true)}
+                  className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ ...lgStyle, width: 43, height: 43, color: 'white' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '-2px' }}>
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                     <polyline points="16 6 12 2 8 6"/>
                     <line x1="12" y1="2" x2="12" y2="15"/>
                   </svg>
                 </button>
-
               </div>
             </div>
 
-            {/* Box da Meta (Glass Card) */}
-            <div className="rounded-3xl p-5" style={{ 
-              ...glass, 
+            {/* Box da Meta */}
+            <div className="rounded-3xl p-5" style={{
+              ...glass,
               background: goalComplete ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.06)',
               border: goalComplete ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.1)'
             }}>
               <div className="flex items-end gap-2 mb-3">
                 <span className="text-4xl font-bold tabular-nums" style={{ color: goalComplete ? '#fbbf24' : 'white' }}>{watchedGoal}</span>
-                <span className="text-xl mb-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {goalFilms.length}</span>
+                <span className="text-xl mb-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {customTarget}</span>
                 <span className="text-[10px] uppercase tracking-wider mb-1.5 ml-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>assistidos</span>
               </div>
               <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -574,12 +603,14 @@ export default function EstantePage() {
                   style={{ width: `${progress * 100}%`, background: goalComplete ? 'linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)' }}/>
               </div>
               <p className="text-[11px] mt-3 font-medium" style={{ color: goalComplete ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.3)' }}>
-                {goalComplete ? 'Você assistiu tudo! Incrível 🌟' : `${goalFilms.length - watchedGoal} ${goalFilms.length - watchedGoal === 1 ? 'falta' : 'faltam'} pra cravar a meta 🎯`}
+                {goalComplete
+                  ? 'Você assistiu tudo! Incrível 🌟'
+                  : `${customTarget - watchedGoal} ${customTarget - watchedGoal === 1 ? 'falta' : 'faltam'} pra cravar a meta 🎯`}
               </p>
             </div>
           </div>
 
-          {/* Grid filmes */}
+          {/* Grid filmes assistidos */}
           {watchedFilms.length > 0 ? (
             <div>
               <SectionTitle className="mb-3">O que você assistiu</SectionTitle>
@@ -620,52 +651,42 @@ export default function EstantePage() {
         </div>
       </main>
 
-      {/* Sheet Configurações */}
-      {/* Settings Sheet */}
-      <BottomSheet
-  open={configOpen}
-  onClose={() => setConfigOpen(false)}
-  title="Configurações"
-  onAction={saveConfig}
-  actionLabel={savingConfig ? '...' : 'Concluído'}
->
+      {/* ── Sheet Configurações ──────────────────────────────────── */}
+      <BottomSheet open={configOpen} onClose={() => setConfigOpen(false)} title="Configurações"
+        onAction={saveConfig} actionLabel={savingConfig ? '...' : 'Concluído'}>
         <div className="flex flex-col gap-6 px-5 pt-2">
-          
-          {/* Seletor de Avatar Movido pra Cá */}
           <div>
-            <p className="text-sm font-semibold mb-3 text-white">Avatar</p>
+            <p className="text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>Avatar</p>
             <div className="flex flex-wrap gap-3 justify-start">
               {AVATARS.map((emoji, i) => (
-                <button key={i} 
-                  onClick={() => setTempAvatarIndex(i)}
+                <button key={i} onClick={() => setTempAvatarIndex(i)}
                   className={`w-[50px] h-[50px] rounded-full text-2xl flex items-center justify-center transition-all ${
                     tempAvatarIndex === i ? 'scale-110 ring-2 ring-white z-10 shadow-lg' : 'opacity-60 scale-95 hover:opacity-100'
                   }`}
-                  style={{ 
-                    background: `linear-gradient(135deg, ${AVATAR_COLORS[i][0]}, ${AVATAR_COLORS[i][1]})`,
-                  }}>
+                  style={{ background: `linear-gradient(135deg, ${AVATAR_COLORS[i][0]}, ${AVATAR_COLORS[i][1]})` }}>
                   {emoji}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Divisor Visual */}
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-          {[
-            { label: 'Nome de exibição', value: editDisplayName, onChange: setEditDisplayName, placeholder: 'Como você quer ser chamado' },
-            { label: 'Nome de usuário', value: editUsername, onChange: setEditUsername, placeholder: '@usuario' },
-            { label: 'Email', value: editEmail, onChange: setEditEmail, placeholder: 'email@exemplo.com', type: 'email' },
-            { label: 'Nova senha', value: editPassword, onChange: setEditPassword, placeholder: 'Deixe em branco pra manter', type: 'password' },
-          ].map(field => (
-            <div key={field.label}>
-              <p className="text-xs mb-2 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>{field.label}</p>
-              <input type={field.type ?? 'text'} value={field.value} onChange={e => field.onChange(e.target.value)}
-                placeholder={field.placeholder} className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}/>
-            </div>
-          ))}
-          
+          <div className="form-rows">
+            {[
+              { label: 'Nome', value: editDisplayName, onChange: setEditDisplayName, placeholder: 'Como quer ser chamado', type: 'text' },
+              { label: 'Usuário', value: editUsername, onChange: setEditUsername, placeholder: '@usuario', type: 'text' },
+              { label: 'Email', value: editEmail, onChange: setEditEmail, placeholder: 'email@exemplo.com', type: 'email' },
+              { label: 'Senha', value: editPassword, onChange: setEditPassword, placeholder: '••••••••', type: 'password' },
+            ].map(field => (
+              <div key={field.label} className="form-row">
+                <span className="form-row-label">{field.label}</span>
+                <input type={field.type} value={field.value} onChange={e => field.onChange(e.target.value)}
+                  placeholder={field.placeholder} className="form-row-input"/>
+              </div>
+            ))}
+          </div>
+          {configMsg && (
+            <p className="text-xs text-center font-medium" style={{ color: 'rgba(251,191,36,0.8)' }}>{configMsg}</p>
+          )}
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
           <button onClick={async () => { const sb = createClient(); if (sb) await sb.auth.signOut(); router.push('/') }}
             className="w-full py-3.5 rounded-full text-sm font-semibold"
@@ -675,102 +696,164 @@ export default function EstantePage() {
         </div>
       </BottomSheet>
 
-      {/* Sheet Meta + Share */}
+      {/* ── Sheet Meta + Share ───────────────────────────────────── */}
       <BottomSheet open={metaOpen} onClose={() => setMetaOpen(false)} title="Minha Meta">
         <div className="px-5 py-4 flex flex-col gap-5">
 
-          {/* Card Story 9:16 — estilo checklist, sem imagens */}
+          {/* ── Card Story 9:16 ── */}
+          {/* Wrapper visual: cantos arredondados só na UI */}
+          <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
           <div ref={shareRef}
             style={{
-              width: '100%', aspectRatio: '9/16',
+              width: '100%', height: '100%',
               background: bgGradient,
-              borderRadius: 24, overflow: 'hidden',
+              borderRadius: 0,
               display: 'flex', flexDirection: 'column',
-              padding: '32px 28px', gap: 0,
+              padding: '36px 28px',
+              position: 'relative',
               fontFamily: 'Inter, system-ui, sans-serif',
             }}>
 
-            {/* Topo */}
-            <div style={{ marginBottom: 24 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: `${accentColor}99`, marginBottom: 16 }}>
-                Goes To... · Oscar 2026
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 99, background: `${accentColor}22`, border: `2px solid ${accentColor}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-                  {AVATARS[profile.avatar_index]}
-                </div>
-                <div>
-                  <p style={{ fontSize: 17, fontWeight: 800, color: 'white', lineHeight: 1.2 }}>{profile.display_name ?? 'Cinéfilo'}</p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>@{profile.username}</p>
-                </div>
+            {/* Orbes decorativos */}
+            <div style={{
+              position: 'absolute', top: '-8%', right: '-12%',
+              width: '65%', height: '40%', borderRadius: '50%',
+              background: `radial-gradient(circle, ${accentColor}30 0%, transparent 70%)`,
+              filter: 'blur(40px)', pointerEvents: 'none',
+            }}/>
+            <div style={{
+              position: 'absolute', bottom: '10%', left: '-15%',
+              width: '55%', height: '30%', borderRadius: '50%',
+              background: `radial-gradient(circle, ${accentColor}18 0%, transparent 70%)`,
+              filter: 'blur(32px)', pointerEvents: 'none',
+            }}/>
+
+            {/* Topo: ícone do app */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.4)', flexShrink: 0,
+              }}>
+                {iconDataUrl
+                  ? <img src={iconDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                  : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
+                }
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>Goes To...</p>
+            </div>
+
+            {/* Perfil */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 99,
+                background: `${accentColor}22`,
+                border: `2px solid ${accentColor}55`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, flexShrink: 0,
+              }}>
+                {AVATARS[profile.avatar_index]}
+              </div>
+              <div>
+                <p style={{ fontSize: 17, fontWeight: 800, color: 'white', lineHeight: 1.2 }}>
+                  {profile.display_name ?? 'Cinéfilo'}
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                  @{profile.username}
+                </p>
               </div>
             </div>
 
-            {/* Barra progresso */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>{goalLabel}</p>
-                <p style={{ fontSize: 28, fontWeight: 900, color: accentColor, lineHeight: 1 }}>{Math.round(progress * 100)}%</p>
-              </div>
-              <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'rgba(255,255,255,0.1)' }}>
-                <div style={{ height: '100%', borderRadius: 99, width: `${progress * 100}%`, background: `linear-gradient(90deg, ${accentColor}99, ${accentColor})` }}/>
-              </div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                {watchedGoal} de {goalFilms.length} assistidos {goalComplete ? '🏆' : ''}
-              </p>
-            </div>
+            {/* Conteúdo central */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
-            {/* Divider */}
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 20 }}/>
-
-            {/* Lista checklist */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, overflow: 'hidden' }}>
-              {goalFilms.slice(0, 12).map((film, i) => {
-                const uf = userFilms.find(u => u.film_id === film.id)
-                const watched = uf?.watched ?? false
-                const rating = uf?.rating ?? 0
-                return (
-                  <div key={film.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '9px 0',
-                    borderBottom: i < Math.min(goalFilms.length, 12) - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              {goalComplete ? (
+                /* ── CELEBRAÇÃO ────────────────────────────────── */
+                <>
+                  <p style={{ fontSize: 56, marginBottom: 12, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.5))', lineHeight: 1 }}>
+                    🏆✨
+                  </p>
+                  <p style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.18em',
+                    textTransform: 'uppercase', color: `${accentColor}99`, marginBottom: 12,
                   }}>
-                    {/* Checkbox */}
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 99, flexShrink: 0,
-                      background: watched ? accentColor : 'rgba(255,255,255,0.08)',
-                      border: watched ? 'none' : '1.5px solid rgba(255,255,255,0.15)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {watched && <span style={{ fontSize: 10, fontWeight: 900, color: '#1a0a00' }}>✓</span>}
+                    Meta concluída!
+                  </p>
+                  <p style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.25, marginBottom: 8 }}>
+                    Assisti todos os <span style={{ color: accentColor }}>{customTarget}</span> filmes da minha meta
+                  </p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 28 }}>
+                    {goalLabel} · Oscar 2026
+                  </p>
+
+                  {/* Barra cheia dourada */}
+                  <div style={{ marginBottom: 28 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Progresso</p>
+                      <p style={{ fontSize: 13, fontWeight: 800, color: accentColor }}>100%</p>
                     </div>
-                    {/* Título */}
-                    <p style={{
-                      flex: 1, fontSize: 12, fontWeight: watched ? 600 : 400,
-                      color: watched ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
-                      lineHeight: 1.3,
-                      textDecoration: !watched ? 'none' : 'none',
-                    }}>
-                      {film.title}
-                    </p>
-                    {/* Estrelas */}
-                    {rating > 0 && (
-                      <p style={{ fontSize: 10, color: accentColor, flexShrink: 0 }}>{'★'.repeat(rating)}</p>
-                    )}
+                    <div style={{ width: '100%', height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.1)' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 99, width: '100%',
+                        background: 'linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a)',
+                        boxShadow: '0 0 12px rgba(251,191,36,0.5)',
+                      }}/>
+                    </div>
                   </div>
-                )
-              })}
-              {goalFilms.length > 12 && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', paddingTop: 8 }}>+{goalFilms.length - 12} filmes</p>
+
+                  <p style={{ fontSize: 28, letterSpacing: 6, textAlign: 'center' }}>🌟🎬🌟🎬🌟</p>
+                </>
+              ) : (
+                /* ── PROGRESSO ─────────────────────────────────── */
+                <>
+                  
+
+                  <p style={{ fontSize: 21, fontWeight: 800, color: 'white', lineHeight: 1.35, marginBottom: 28 }}>
+                    Já bati{' '}
+                    <span style={{ color: accentColor }}>{watchedGoal}/{customTarget}</span>
+                    {' '}da minha meta de{' '}
+                    <span style={{ color: 'rgba(255,255,255,0.8)' }}>{goalLabel}</span>
+                    {' '}dos indicados ao Oscar 2026
+                  </p>
+
+                  {/* Barra de progresso */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Progresso</p>
+                      <p style={{ fontSize: 14, fontWeight: 800, color: accentColor }}>{Math.round(progress * 100)}%</p>
+                    </div>
+                    {/* Track */}
+                    <div style={{ width: '100%', height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.1)', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 99,
+                        width: `${progress * 100}%`,
+                        background: `linear-gradient(90deg, ${accentColor}88, ${accentColor})`,
+                      }}/>
+                    </div>
+                    {/* Tick marks */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                      {[0, 25, 50, 75, 100].map(pct => (
+                        <p key={pct} style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{pct}%</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
+                    {customTarget - watchedGoal} {customTarget - watchedGoal === 1 ? 'falta' : 'faltam'} pra cravar 🎯
+                  </p>
+                </>
               )}
             </div>
 
             {/* Rodapé */}
-            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 20 }}>goesto.app</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 24, letterSpacing: '0.05em' }}>
+              goes-to.vercel.app
+            </p>
           </div>
+          </div>{/* end visual wrapper */}
 
-          {/* Botão compartilhar */}
-          <button onClick={shareGoal} className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+          <button onClick={shareGoal}
+            className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
             style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round"/>
@@ -779,6 +862,8 @@ export default function EstantePage() {
           </button>
         </div>
       </BottomSheet>
+
+      {showInstallGate && <InstallGate onClose={() => setShowInstallGate(false)} />}
     </>
   )
 }

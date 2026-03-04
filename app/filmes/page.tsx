@@ -46,25 +46,23 @@ type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type MovieData = { poster: string | null; backdrop: string | null; overview: string | null }
 
-// ── Liquid Glass styles (idênticos ao Estante / Descobrir) ─────────────
-const liquidGlass: React.CSSProperties = {
+// Liquid glass — tudo inline igual ao BottomNav (Tailwind v4 interfere via CSS)
+const lgStyle: React.CSSProperties = {
   background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(48px) saturate(200%)',
-  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
   border: '1px solid rgba(255,255,255,0.25)',
   boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
 }
-
-const dropdownGlass: React.CSSProperties = {
+const ddStyle: React.CSSProperties = {
   background: 'rgba(20,20,25,0.65)',
-  backdropFilter: 'blur(48px) saturate(200%)',
-  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
   border: '1px solid rgba(255,255,255,0.15)',
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
 
 function useCountdown() {
-  // avoid impure Date.now() call in render by initializing lazily
   const [diff, setDiff] = useState(() => OSCAR_DATE.getTime() - Date.now())
   useEffect(() => {
     const t = setInterval(() => setDiff(OSCAR_DATE.getTime() - Date.now()), 1000)
@@ -242,7 +240,6 @@ export default function FilmesPage() {
   }, [])
 
   useEffect(() => {
-    // reset values on category change
     requestAnimationFrame(() => setHeroProgress(0))
     requestAnimationFrame(() => setTextVisible(false))
     const fadeIn = setTimeout(() => setTextVisible(true), 180)
@@ -323,6 +320,9 @@ export default function FilmesPage() {
     ? Math.max(0, 1 - Math.abs(dragX) / 120)
     : textVisible ? 1 : 0
 
+  // suppress unused warning
+  void catRatings
+
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
@@ -344,6 +344,14 @@ export default function FilmesPage() {
         onTouchMove={e => { e.preventDefault(); onHeroDragMove(e.touches[0].clientX) }}
         onTouchEnd={onHeroDragEnd}
       >
+
+        {/* App icon — top left, mesmo nível do título "Descobrir" */}
+        <div className="absolute left-4 z-20 pointer-events-none"
+          style={{ top: 'max(env(safe-area-inset-top), 52px)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.png" alt="Goes To" className="w-10 h-10 rounded-xl"
+            style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}/>
+        </div>
         <div
           className="absolute inset-y-0 left-0 flex"
           style={{
@@ -410,12 +418,12 @@ export default function FilmesPage() {
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           <p className="text-lg font-semibold tracking-tight" style={{ color: 'white' }}>Indicados a</p>
 
-          {/* ── Liquid glass dropdown ─────────────────────────────── */}
+          {/* Dropdown — liquid glass */}
           <div className="relative">
             <button
               onClick={() => setListDropdownOpen(!listDropdownOpen)}
-              className="flex items-center gap-2 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
-              style={{ ...liquidGlass, height: 43, color: 'white' }}
+              className="lg-btn flex items-center gap-2 px-4 rounded-full text-sm font-semibold"
+              style={{ ...lgStyle, position: 'relative', height: 43, color: 'white' }}
             >
               {CATEGORY_LABELS[listCategory] ?? listCategory}
               <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
@@ -423,14 +431,14 @@ export default function FilmesPage() {
 
             {listDropdownOpen && (
               <>
-                <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setListDropdownOpen(false)}/>
+                <div className="fixed inset-0" style={{ zIndex: 48 }} onClick={() => setListDropdownOpen(false)}/>
                 <div
-                  className="absolute top-full mt-2 left-0 rounded-2xl py-2 w-60 max-h-72 overflow-y-auto"
-                  style={{ ...dropdownGlass, zIndex: 99 }}
+                  className="absolute top-full mt-2 left-0 rounded-xl py-1.5 w-52 overflow-y-auto"
+                  style={{ ...ddStyle, zIndex: 49, maxHeight: '40vh' }}
                 >
                   {ALL_CATEGORIES.map(cat => (
                     <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
-                      className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
+                      className="w-full px-4 py-1.5 text-sm text-left hover:bg-white/10 transition-colors"
                       style={{ color: cat === listCategory ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
                       {CATEGORY_LABELS[cat] ?? cat}
                     </button>
@@ -514,13 +522,13 @@ export default function FilmesPage() {
             )}
           </div>
 
-          {/* ── Liquid glass calendar button ──────────────────────── */}
+          {/* Botão adicionar ao calendário */}
           <a
             href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
             download="oscar2026.ics"
             title="Adicionar ao calendário"
-            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
-            style={{ ...liquidGlass, color: 'rgba(255,255,255,0.85)' }}
+            className="lg-btn w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ ...lgStyle, position: 'relative', color: 'rgba(255,255,255,0.85)' }}
           >
             <CalendarIcon/>
           </a>

@@ -1,5 +1,4 @@
 'use client'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchSimilarMovies, fetchPersonPhoto } from '@/lib/tmdb'
@@ -124,13 +123,178 @@ function HScrollRow({ children }: { children: React.ReactNode }) {
   )
 }
 
-const liquidGlassBtn = {
+
+
+// Liquid glass — tudo inline igual ao BottomNav (Tailwind v4 interfere via CSS)
+const lgStyle: React.CSSProperties = {
   background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(48px) saturate(200%)',
-  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
   border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
-} as React.CSSProperties
+  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+}
+const ddStyle: React.CSSProperties = {
+  background: 'rgba(20,20,25,0.65)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
+}
+
+// ── PWA detection ──────────────────────────────────────────────────────
+function useIsPWA() {
+  const [isPWA, setIsPWA] = useState(false)
+  useEffect(() => {
+    setIsPWA(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    )
+  }, [])
+  return isPWA
+}
+
+function detectOS(): 'ios' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other'
+  const ua = navigator.userAgent
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios'
+  if (/android/i.test(ua)) return 'android'
+  return 'other'
+}
+
+// ── Install Gate Popup ─────────────────────────────────────────────────
+function InstallGate({ onClose }: { onClose: () => void }) {
+  const os = detectOS()
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true))
+  }, [])
+
+  function dismiss() {
+    setVisible(false)
+    setTimeout(onClose, 280)
+  }
+
+  const instructions =
+    os === 'ios'
+      ? 'No Safari, toque em  ⬡  (Compartilhar) → "Adicionar à Tela de Início" → "Adicionar".'
+      : os === 'android'
+      ? 'No Chrome, toque em  ⋮  (Menu) → "Adicionar à tela inicial" → "Instalar".'
+      : 'No seu navegador, procure a opção "Instalar app" ou "Adicionar à tela inicial".'
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-5"
+      style={{
+        backdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(18px) saturate(160%)' : 'blur(0px)',
+        background: visible ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+        transition: 'backdrop-filter 0.3s ease, background 0.3s ease',
+      }}
+      onClick={dismiss}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'rgba(12,12,18,0.72)',
+          backdropFilter: 'blur(48px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.08)',
+          borderRadius: 28,
+          padding: '28px 24px 24px',
+          width: '100%',
+          maxWidth: 360,
+          transform: visible ? 'scale(1)' : 'scale(0.92)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease',
+          position: 'relative',
+        }}
+      >
+        {/* X — liquid glass padrão 43×43 */}
+        <button
+          onClick={dismiss}
+          className="lg-btn rounded-full flex items-center justify-center"
+          style={{
+            position: 'absolute', top: 16, right: 16,
+            width: 43, height: 43,
+            background: 'rgba(120,120,128,0.18)',
+            backdropFilter: 'blur(32px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        {/* Emojis empilhados */}
+        <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 16 }}>
+          <span style={{ fontSize: 52, lineHeight: 1, display: 'block' }}>👮</span>
+          <span style={{
+            fontSize: 26, position: 'absolute',
+            bottom: 0, right: -4,
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
+          }}>🔦</span>
+        </div>
+
+        <p style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 10, lineHeight: 1.2 }}>
+          Pego pelo lanterninha!
+        </p>
+
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 20 }}>
+          Para compartilhar nos Stories, você precisa adicionar o atalho do app no seu celular.
+        </p>
+
+        {/* Instrução OS */}
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16,
+          padding: '12px 14px',
+          marginBottom: 20,
+        }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {os === 'ios' ? 'iPhone / iPad' : os === 'android' ? 'Android' : 'Como instalar'}
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>
+            {instructions}
+          </p>
+        </div>
+
+        {/* Botões */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <button
+            onClick={dismiss}
+            className="accent-btn"
+            style={{
+              background: 'rgba(251,191,36,0.13)',
+              border: '1px solid rgba(251,191,36,0.28)',
+              color: '#fbbf24',
+              fontSize: 15,
+              fontWeight: 700,
+            }}
+          >
+            OK, entendi!
+          </button>
+
+          <button
+            onClick={dismiss}
+            style={{
+              background: 'none', border: 'none',
+              color: 'rgba(255,255,255,0.25)',
+              fontSize: 13, cursor: 'pointer', padding: '4px',
+            }}
+          >
+            Não, obrigado
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Bottom Sheet — mesmo estilo da Estante ─────────────────────────────
 function BottomSheet({ open, onClose, title, onAction, children }: {
@@ -191,10 +355,6 @@ function BottomSheet({ open, onClose, title, onAction, children }: {
           currentY.current = 0
         }}>
 
-        {/* Gradiente sobre o header */}
-        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
-          style={{ height: '100px', background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' }}/>
-
         {/* Handle */}
         <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
@@ -204,8 +364,8 @@ function BottomSheet({ open, onClose, title, onAction, children }: {
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30">
           {/* Fechar */}
           <button onClick={onClose}
-            className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
-            style={{ ...liquidGlassBtn, width: 43, height: 43 }}>
+            className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
@@ -220,8 +380,8 @@ function BottomSheet({ open, onClose, title, onAction, children }: {
           {/* Compartilhar (quando disponível) */}
           {hasAction ? (
             <button onClick={onAction}
-              className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
-              style={{ ...liquidGlassBtn, width: 43, height: 43 }}>
+              className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                 <polyline points="16 6 12 2 8 6"/>
@@ -229,10 +389,12 @@ function BottomSheet({ open, onClose, title, onAction, children }: {
               </svg>
             </button>
           ) : (
-            // Espaçador para manter título centrado
             <div style={{ width: 43 }}/>
           )}
         </div>
+
+        {/* Fade mask — abaixo do header, mascara o conteúdo ao rolar */}
+        <div className="sheet-content-fade"/>
 
         {/* Conteúdo */}
         <div className="overflow-y-auto flex-1 z-10 w-full"
@@ -261,6 +423,8 @@ export default function DescobrirPage() {
   const [nomineeSheet, setNomineeSheet] = useState<string | null>(null)
   const factShareRef = useRef<HTMLDivElement>(null)
   const [iconDataUrl, setIconDataUrl] = useState<string>('')
+  const [showInstallGate, setShowInstallGate] = useState(false)
+  const isPWA = useIsPWA()
 
   // Pre-load app icon as base64 for html2canvas
   useEffect(() => {
@@ -348,29 +512,12 @@ export default function DescobrirPage() {
     boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
   }
 
-  // ── Liquid Glass style (igual Estante) ──────────────────────────────
-  const liquidGlass = {
-    background: 'rgba(120,120,128,0.18)',
-    backdropFilter: 'blur(48px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-  }
-
-  // ── Dropdown glass (igual Estante) ──────────────────────────────────
-  const dropdownGlass = {
-    background: 'rgba(20,20,25,0.65)',
-    backdropFilter: 'blur(48px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
-  }
-
   async function shareFact() {
+    if (!isPWA) { setShowInstallGate(true); return }
     if (!factShareRef.current) return
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(factShareRef.current, {
-      backgroundColor: null, scale: 3, useCORS: false, allowTaint: false, logging: false,
+      backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false, onclone: (doc: Document) => { doc.documentElement.style.fontFeatureSettings = 'normal' },
     })
     canvas.toBlob(async blob => {
       if (!blob) return
@@ -422,8 +569,8 @@ export default function DescobrirPage() {
               {/* Dropdown — liquid glass igual Estante */}
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  className="flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
-                  style={{ ...liquidGlass, height: 43, color: 'rgba(255,255,255,0.9)' }}>
+                  className="lg-btn flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold"
+                  style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)' }}>
                   {CATEGORY_LABELS[selectedCat]}
                   <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
                 </button>
@@ -431,8 +578,8 @@ export default function DescobrirPage() {
                 {catDropdownOpen && (
                   <>
                     <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setCatDropdownOpen(false)}/>
-                    <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
-                      style={{ ...dropdownGlass, zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
+                    <div className="dropdown-glass absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
+                      style={{ ...ddStyle, zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
                       {Object.keys(CATEGORY_LABELS).map(cat => (
                         <button key={cat} onClick={() => { setSelectedCat(cat); setCatDropdownOpen(false) }}
                           className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
@@ -597,13 +744,14 @@ export default function DescobrirPage() {
           <div className="flex flex-col gap-5 px-4 pt-2 pb-2">
 
             {/* Card que será capturado e compartilhado */}
+            {/* Wrapper visual: cantos arredondados só na UI */}
+            <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
             <div ref={factShareRef}
               style={{
                 width: '100%',
-                aspectRatio: '9/16',
+                height: '100%',
                 background: `linear-gradient(145deg, ${factSheet.grad[0]}, ${factSheet.grad[1]} 60%, #0a0a0f)`,
-                borderRadius: 24,
-                overflow: 'hidden',
+                borderRadius: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '36px 28px',
@@ -672,9 +820,10 @@ export default function DescobrirPage() {
 
               {/* Rodapé */}
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', letterSpacing: '0.05em' }}>
-                goesto.app
+                goes-to.vercel.app
               </p>
             </div>
+            </div>{/* end visual wrapper */}
 
             {/* Botão compartilhar */}
             <button onClick={shareFact}
@@ -690,6 +839,9 @@ export default function DescobrirPage() {
           </div>
         )}
       </BottomSheet>
+
+      {/* ── Install Gate */}
+      {showInstallGate && <InstallGate onClose={() => setShowInstallGate(false)} />}
 
       {/* ── Nominees Bottom Sheet ──────────────────────────────────── */}
       <BottomSheet
