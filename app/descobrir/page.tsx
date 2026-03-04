@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchSimilarMovies, fetchPersonPhoto } from '@/lib/tmdb'
@@ -35,16 +36,16 @@ const PERSON_CATEGORIES = [
 ]
 
 const FACTS = [
-  { emoji: '🏆', title: 'Recorde histórico', text: 'Com 16 indicações, Sinners bate o recorde anterior de 14, compartilhado por A Malvada (1950), Titanic (1997) e La La Land (2016).', grad: ['#78350f','#92400e'] },
-  { emoji: '🌍', title: '4 línguas no páreo', text: 'Recorde: quatro atuações em língua não-inglesa indicadas no mesmo ano — Lilleaas, Moura, Reinsve e Skarsgård.', grad: ['#1e3a5f','#1e40af'] },
-  { emoji: '👩', title: '76 mulheres indicadas', text: 'Novo recorde: 76 mulheres indicadas nesta edição. O anterior era de 71, em 2023.', grad: ['#4a1d96','#6d28d9'] },
-  { emoji: '🎬', title: 'Spielberg faz história', text: 'Com Hamnet, Steven Spielberg acumula 14 indicações de Melhor Filme como produtor — recorde absoluto desde 1951.', grad: ['#064e3b','#065f46'] },
-  { emoji: '🎵', title: 'Diane Warren, 17ª vez', text: 'Diane Warren recebe sua 17ª indicação em Canção Original — 9º ano consecutivo. Ela recebeu o Oscar honorário em 2022.', grad: ['#831843','#9d174d'] },
-  { emoji: '🇧🇷', title: 'Brasil na disputa', text: "The Secret Agent é a 6ª indicação do Brasil. O último foi I'm Still Here (2024), que venceu a categoria.", grad: ['#14532d','#166534'] },
-  { emoji: '🗳️', title: 'Oscar em números', text: '317 filmes elegíveis, 10.136 votantes e mais de 200 países transmitindo a cerimônia em 15 de março.', grad: ['#1c1917','#44403c'] },
-  { emoji: '🗿', title: 'O Oscar', text: '13½ polegadas, 8½ libras. Desde 1929, mais de 3.491 estatuetas entregues. Um cavaleiro com espada sobre um rolo de filme.', grad: ['#312e81','#3730a3'] },
-  { emoji: '⏱️', title: 'Maior e menor cerimônia', text: 'A mais longa foi em 2002: 4h23min. A mais curta em 1959: 1h40min. A transmissão pela ABC começou em 1976.', grad: ['#7c2d12','#9a3412'] },
-  { emoji: '🆕', title: 'Nova categoria', text: 'Achievement in Casting é a primeira nova categoria desde Melhor Filme de Animação, criada em 2001.', grad: ['#0c4a6e','#075985'] },
+  { emoji: '🏆', title: 'Recorde histórico', text: 'No Oscar 2026, Sinners lidera com 16 indicações — batendo o recorde anterior de 14, que pertencia a A Malvada (1950), Titanic (1997) e La La Land (2016).', grad: ['#78350f','#92400e'] },
+  { emoji: '🌍', title: '4 línguas no páreo', text: 'O Oscar 2026 marca um recorde inédito: quatro atuações em língua não-inglesa indicadas no mesmo ano — Lilleaas, Moura, Reinsve e Skarsgård disputam as categorias de interpretação.', grad: ['#1e3a5f','#1e40af'] },
+  { emoji: '👩', title: '76 mulheres indicadas', text: 'O Oscar 2026 estabelece um novo recorde de representatividade: 76 mulheres indicadas nesta edição, superando o anterior de 71, registrado em 2023.', grad: ['#4a1d96','#6d28d9'] },
+  { emoji: '🎬', title: 'Spielberg faz história', text: 'Com Hamnet, Steven Spielberg chega a 14 indicações de Melhor Filme como produtor no Oscar — um recorde absoluto desde 1951, quando o sistema de votação foi reformado.', grad: ['#064e3b','#065f46'] },
+  { emoji: '🎵', title: 'Diane Warren, 17ª vez', text: 'Diane Warren recebe sua 17ª indicação ao Oscar na categoria Canção Original — o 9º ano consecutivo. Apesar dos recordes, ela ainda não levou a estatueta, tendo recebido o Oscar honorário em 2022.', grad: ['#831843','#9d174d'] },
+  { emoji: '🇧🇷', title: 'Brasil na disputa', text: 'The Secret Agent representa o Brasil no Oscar 2026 — a 6ª vez que o país chega à fase final da categoria de Melhor Filme Internacional. O último a disputar foi Ainda Estou Aqui (2024), que venceu a categoria.', grad: ['#14532d','#166534'] },
+  { emoji: '🗳️', title: 'Oscar em números', text: 'No Oscar 2026: 317 filmes elegíveis, 10.136 votantes da Academia e mais de 200 países acompanhando a cerimônia, que acontece em 15 de março.', grad: ['#1c1917','#44403c'] },
+  { emoji: '🗿', title: 'A estatueta', text: 'O troféu do Oscar mede 34 cm, pesa 3,8 kg e representa um cavaleiro com espada sobre um rolo de filme. Desde a primeira cerimônia, em 1929, já foram entregues mais de 3.491 estatuetas.', grad: ['#312e81','#3730a3'] },
+  { emoji: '⏱️', title: 'Maior e menor cerimônia', text: 'A cerimônia do Oscar mais longa da história durou 4h23min, em 2002. A mais curta foi em 1959, com apenas 1h40min. A transmissão pela ABC, nos EUA, começou em 1976.', grad: ['#7c2d12','#9a3412'] },
+  { emoji: '🆕', title: 'Nova categoria', text: 'O Oscar 2026 estreia a categoria Melhor Elenco (Achievement in Casting) — a primeira novidade desde a criação de Melhor Filme de Animação, em 2001.', grad: ['#0c4a6e','#075985'] },
 ]
 
 type Film = { id: string; title: string }
@@ -123,42 +124,119 @@ function HScrollRow({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Reusable bottom sheet wrapper
-function BottomSheet({ open, y, dragging, title, onClose, onTouchStart, onTouchMove, onTouchEnd, children }: {
-  open: boolean; y: number; dragging: boolean; title: string
+const liquidGlassBtn = {
+  background: 'rgba(120,120,128,0.18)',
+  backdropFilter: 'blur(48px) saturate(200%)',
+  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
+} as React.CSSProperties
+
+// ── Bottom Sheet — mesmo estilo da Estante ─────────────────────────────
+function BottomSheet({ open, onClose, title, onAction, children }: {
+  open: boolean
   onClose: () => void
-  onTouchStart: (e: React.TouchEvent) => void
-  onTouchMove: (e: React.TouchEvent) => void
-  onTouchEnd: () => void
+  title: string
+  onAction?: () => void  // botão direito (compartilhar)
   children: React.ReactNode
 }) {
-  if (!open) return null
+  const [translateY, setTranslateY] = useState(100)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStart = useRef<number | null>(null)
+  const currentY = useRef(0)
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      requestAnimationFrame(() => setTranslateY(0))
+    } else {
+      requestAnimationFrame(() => setTranslateY(100))
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  if (!open && translateY >= 100) return null
+
+  const hasAction = !!onAction
+
   return (
     <div className="fixed inset-0 z-[999] flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}/>
-      <div className="relative w-full rounded-t-[32px] flex flex-col"
+      <div className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden"
         style={{
-          background: '#0e0e14', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
-          boxShadow: '0 -8px 48px rgba(0,0,0,0.5)', maxHeight: '88vh',
-          transform: `translateY(${y}%)`,
-          transition: dragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
+          background: '#0e0e14',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderBottom: 'none',
+          boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
+          transform: `translateY(${translateY}%)`,
+          transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
+          maxHeight: '92vh',
         }}
-        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-        <div className="flex justify-center pt-3 pb-1">
+        onTouchStart={e => { dragStart.current = e.touches[0].clientY; setIsDragging(true) }}
+        onTouchMove={e => {
+          if (dragStart.current === null) return
+          const d = e.touches[0].clientY - dragStart.current
+          if (d < 0) return
+          currentY.current = d
+          setTranslateY((d / window.innerHeight) * 100)
+        }}
+        onTouchEnd={() => {
+          setIsDragging(false)
+          if (currentY.current > 120) onClose()
+          else setTranslateY(0)
+          dragStart.current = null
+          currentY.current = 0
+        }}>
+
+        {/* Gradiente sobre o header */}
+        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
+          style={{ height: '100px', background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' }}/>
+
+        {/* Handle */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
         </div>
-        <div className="flex items-center justify-between px-5 pt-2 pb-3">
-          <div className="w-9"/>
-          <p className="text-sm font-semibold" style={{ color: 'white' }}>{title}</p>
-          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
+
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30">
+          {/* Fechar */}
+          <button onClick={onClose}
+            className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+            style={{ ...liquidGlassBtn, width: 43, height: 43 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
+
+          {/* Título centralizado */}
+          <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
+            style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
+            {title}
+          </p>
+
+          {/* Compartilhar (quando disponível) */}
+          {hasAction ? (
+            <button onClick={onAction}
+              className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+              style={{ ...liquidGlassBtn, width: 43, height: 43 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+            </button>
+          ) : (
+            // Espaçador para manter título centrado
+            <div style={{ width: 43 }}/>
+          )}
         </div>
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-        <div className="overflow-y-auto flex-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+
+        {/* Conteúdo */}
+        <div className="overflow-y-auto flex-1 z-10 w-full"
+          style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
           {children}
         </div>
       </div>
@@ -178,19 +256,24 @@ export default function DescobrirPage() {
   const [catDropdownOpen, setCatDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Fact sheet
   const [factSheet, setFactSheet] = useState<typeof FACTS[0] | null>(null)
-  const [factY, setFactY] = useState(100)
-  const [factDragging, setFactDragging] = useState(false)
-  const factDragStart = useRef<number | null>(null)
-  const factDragCurrent = useRef(0)
+  const [isFactDaily, setIsFactDaily] = useState(false)
+  const [nomineeSheet, setNomineeSheet] = useState<string | null>(null)
+  const factShareRef = useRef<HTMLDivElement>(null)
+  const [iconDataUrl, setIconDataUrl] = useState<string>('')
 
-  // Nominees sheet
-  const [nomineeSheet, setNomineeSheet] = useState<string | null>(null) // category key
-  const [nomineeY, setNomineeY] = useState(100)
-  const [nomineeDragging, setNomineeDragging] = useState(false)
-  const nomineeDragStart = useRef<number | null>(null)
-  const nomineeDragCurrent = useRef(0)
+  // Pre-load app icon as base64 for html2canvas
+  useEffect(() => {
+    fetch('/icon.png')
+      .then(r => r.blob())
+      .then(blob => new Promise<string>(resolve => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(blob)
+      }))
+      .then(setIconDataUrl)
+      .catch(() => {})
+  }, [])
 
   const [dailyFact] = useState(() => {
     const now = new Date()
@@ -239,27 +322,6 @@ export default function DescobrirPage() {
     load()
   }, [])
 
-  // Lock scroll when any sheet is open
-  useEffect(() => {
-    if (factSheet || nomineeSheet) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = ''
-    return () => { document.body.style.overflow = '' }
-  }, [factSheet, nomineeSheet])
-
-  // Fact sheet open
-  useEffect(() => {
-    if (factSheet) requestAnimationFrame(() => setFactY(0))
-    else setFactY(100)
-  }, [factSheet])
-
-  function closeFactSheet() { setFactY(100); setTimeout(() => setFactSheet(null), 400) }
-
-  function openNomineeSheet(cat: string) {
-    setNomineeSheet(cat)
-    requestAnimationFrame(() => setNomineeY(0))
-  }
-  function closeNomineeSheet() { setNomineeY(100); setTimeout(() => setNomineeSheet(null), 400) }
-
   const filmsByCategory = (cat: string) => {
     const ids = nominations.filter(n => n.category === cat).map(n => n.film_id)
     return films.filter(f => ids.includes(f.id))
@@ -286,13 +348,50 @@ export default function DescobrirPage() {
     boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
   }
 
+  // ── Liquid Glass style (igual Estante) ──────────────────────────────
+  const liquidGlass = {
+    background: 'rgba(120,120,128,0.18)',
+    backdropFilter: 'blur(48px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+    border: '1px solid rgba(255,255,255,0.25)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  }
+
+  // ── Dropdown glass (igual Estante) ──────────────────────────────────
+  const dropdownGlass = {
+    background: 'rgba(20,20,25,0.65)',
+    backdropFilter: 'blur(48px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
+  }
+
+  async function shareFact() {
+    if (!factShareRef.current) return
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(factShareRef.current, {
+      backgroundColor: null, scale: 3, useCORS: false, allowTaint: false, logging: false,
+    })
+    canvas.toBlob(async blob => {
+      if (!blob) return
+      const file = new File([blob], 'goes-to-curiosidade.png', { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Goes To... · Oscar 2026' })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'goes-to-curiosidade.png'; a.click()
+        URL.revokeObjectURL(url)
+      }
+    }, 'image/png')
+  }
+
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
     </main>
   )
 
-  // Current nominees for the open sheet
   const sheetNoms = nomineeSheet ? nomineesByCategory(nomineeSheet) : []
   const sheetSR = nomineeSheet ? swingRatings(nomineeSheet) : []
   const sheetIsPerson = nomineeSheet ? isPersonCat(nomineeSheet) : false
@@ -301,7 +400,7 @@ export default function DescobrirPage() {
     <>
       <main className="min-h-screen pb-36 relative overflow-x-hidden" style={{ background: '#0a0a0f', color: 'white' }}>
 
-        {/* Luzes de Fundo (agora aplicadas na página toda e não cortadas) */}
+        {/* Background lights */}
         <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
         <div className="absolute top-8 right-0 w-48 h-48 rounded-full pointer-events-none"
@@ -319,21 +418,25 @@ export default function DescobrirPage() {
           <div className="px-4">
             <div className="flex items-center justify-between mb-3">
               <SectionTitle>Termômetro</SectionTitle>
+
+              {/* Dropdown — liquid glass igual Estante */}
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)' }}>
-                  {CATEGORY_LABELS[selectedCat]} <span style={{ color: 'rgba(255,255,255,0.4)' }}>▾</span>
+                  className="flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
+                  style={{ ...liquidGlass, height: 43, color: 'rgba(255,255,255,0.9)' }}>
+                  {CATEGORY_LABELS[selectedCat]}
+                  <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
                 </button>
+
                 {catDropdownOpen && (
                   <>
                     <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setCatDropdownOpen(false)}/>
-                    <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-56"
-                      style={{ ...glass, background: 'rgba(14,14,20,0.98)', zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
+                    <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
+                      style={{ ...dropdownGlass, zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
                       {Object.keys(CATEGORY_LABELS).map(cat => (
                         <button key={cat} onClick={() => { setSelectedCat(cat); setCatDropdownOpen(false) }}
-                          className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
-                          style={{ color: cat === selectedCat ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
+                          className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
+                          style={{ color: cat === selectedCat ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
                           {CATEGORY_LABELS[cat]}
                         </button>
                       ))}
@@ -349,7 +452,7 @@ export default function DescobrirPage() {
 
           {/* ── Curiosidade do dia ─────────────────────────────────── */}
           <div className="px-4">
-            <button onClick={() => setFactSheet(dailyFact)} className="w-full rounded-3xl p-5 text-left relative overflow-hidden"
+            <button onClick={() => { setFactSheet(dailyFact); setIsFactDaily(true) }} className="w-full rounded-3xl p-5 text-left relative overflow-hidden"
               style={{ background: `linear-gradient(135deg, ${dailyFact.grad[0]}, ${dailyFact.grad[1]})`, border: '1px solid rgba(255,255,255,0.12)' }}>
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none"
                 style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
@@ -360,7 +463,7 @@ export default function DescobrirPage() {
             </button>
           </div>
 
-          {/* ── Todos os indicados — grid compacto de categorias ───── */}
+          {/* ── Todos os indicados ─────────────────────────────────── */}
           <div className="px-4">
             <SectionTitle>Todos os indicados</SectionTitle>
             <div className="grid grid-cols-2 gap-2 mt-3">
@@ -370,7 +473,7 @@ export default function DescobrirPage() {
                 const sr = swingRatings(cat)
                 const top = sr[0]
                 return (
-                  <button key={cat} onClick={() => openNomineeSheet(cat)}
+                  <button key={cat} onClick={() => setNomineeSheet(cat)}
                     className="rounded-2xl p-4 text-left flex flex-col gap-1"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <p className="text-[11px] font-semibold uppercase tracking-widest leading-tight"
@@ -456,7 +559,7 @@ export default function DescobrirPage() {
             <SectionTitle>Mais curiosidades</SectionTitle>
             <div className="grid grid-cols-2 gap-3 mt-3">
               {FACTS.map((fact, i) => (
-                <button key={i} onClick={() => setFactSheet(fact)}
+                <button key={i} onClick={() => { setFactSheet(fact); setIsFactDaily(false) }}
                   className="rounded-3xl p-4 text-left relative overflow-hidden"
                   style={{ background: `linear-gradient(135deg, ${fact.grad[0]}, ${fact.grad[1]})`, border: '1px solid rgba(255,255,255,0.1)' }}>
                   <div className="absolute top-0 right-0 w-16 h-16 rounded-full pointer-events-none"
@@ -485,60 +588,114 @@ export default function DescobrirPage() {
 
       {/* ── Fact Bottom Sheet ──────────────────────────────────────── */}
       <BottomSheet
-        open={!!factSheet} y={factY} dragging={factDragging} title="Curiosidade"
-        onClose={closeFactSheet}
-        onTouchStart={e => { factDragStart.current = e.touches[0].clientY; setFactDragging(true) }}
-        onTouchMove={e => {
-          if (factDragStart.current === null) return
-          const d = e.touches[0].clientY - factDragStart.current
-          if (d < 0) return
-          factDragCurrent.current = d
-          setFactY((d / window.innerHeight) * 100)
-        }}
-        onTouchEnd={() => {
-          setFactDragging(false)
-          if (factDragCurrent.current > 120) closeFactSheet()
-          else setFactY(0)
-          factDragStart.current = null
-          factDragCurrent.current = 0
-        }}
+        open={!!factSheet}
+        onClose={() => setFactSheet(null)}
+        title={isFactDaily ? 'Curiosidade do dia' : 'Curiosidade'}
+        onAction={shareFact}
       >
         {factSheet && (
-          <>
-            <div className="mx-4 mt-4 mb-5 rounded-2xl p-5 relative overflow-hidden"
-              style={{ background: `linear-gradient(135deg, ${factSheet.grad[0]}, ${factSheet.grad[1]})` }}>
-              <div className="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
-              <span className="text-5xl block mb-3">{factSheet.emoji}</span>
-              <p className="text-lg font-bold leading-tight">{factSheet.title}</p>
+          <div className="flex flex-col gap-5 px-4 pt-2 pb-2">
+
+            {/* Card que será capturado e compartilhado */}
+            <div ref={factShareRef}
+              style={{
+                width: '100%',
+                aspectRatio: '9/16',
+                background: `linear-gradient(145deg, ${factSheet.grad[0]}, ${factSheet.grad[1]} 60%, #0a0a0f)`,
+                borderRadius: 24,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '36px 28px',
+                position: 'relative',
+                fontFamily: 'Inter, system-ui, sans-serif',
+              }}>
+
+              {/* Orbes decorativos */}
+              <div style={{
+                position: 'absolute', top: '-10%', right: '-10%',
+                width: '60%', height: '40%', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                filter: 'blur(32px)', pointerEvents: 'none',
+              }}/>
+              <div style={{
+                position: 'absolute', bottom: '15%', left: '-15%',
+                width: '50%', height: '30%', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)',
+                filter: 'blur(24px)', pointerEvents: 'none',
+              }}/>
+
+              {/* Topo: ícone do app */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'auto' }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12, overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                  flexShrink: 0,
+                }}>
+                  {iconDataUrl
+                    ? <img src={iconDataUrl} alt="Goes To" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
+                  }
+                </div>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>Goes To...</p>
+              </div>
+
+              {/* Conteúdo central */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingBottom: 24 }}>
+                <span style={{ fontSize: isFactDaily ? 72 : 56, display: 'block', marginBottom: 20, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.5))' }}>
+                  {factSheet.emoji}
+                </span>
+                <p style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.4)',
+                  marginBottom: 10,
+                }}>
+                  {isFactDaily ? 'Curiosidade do dia' : 'Você sabia?'}
+                </p>
+                <p style={{
+                  fontSize: isFactDaily ? 26 : 22,
+                  fontWeight: 800, color: 'white',
+                  lineHeight: 1.25, marginBottom: 20,
+                }}>
+                  {factSheet.title}
+                </p>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.12)', marginBottom: 20 }}/>
+                <p style={{
+                  fontSize: 15, color: 'rgba(255,255,255,0.78)',
+                  lineHeight: 1.65, fontWeight: 400,
+                }}>
+                  {factSheet.text}
+                </p>
+              </div>
+
+              {/* Rodapé */}
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', letterSpacing: '0.05em' }}>
+                goesto.app
+              </p>
             </div>
-            <div className="px-5">
-              <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{factSheet.text}</p>
-            </div>
-          </>
+
+            {/* Botão compartilhar */}
+            <button onClick={shareFact}
+              className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+              Compartilhar nos Stories
+            </button>
+          </div>
         )}
       </BottomSheet>
 
       {/* ── Nominees Bottom Sheet ──────────────────────────────────── */}
       <BottomSheet
-        open={!!nomineeSheet} y={nomineeY} dragging={nomineeDragging}
+        open={!!nomineeSheet}
+        onClose={() => setNomineeSheet(null)}
         title={nomineeSheet ? (CATEGORY_LABELS[nomineeSheet] ?? nomineeSheet) : ''}
-        onClose={closeNomineeSheet}
-        onTouchStart={e => { nomineeDragStart.current = e.touches[0].clientY; setNomineeDragging(true) }}
-        onTouchMove={e => {
-          if (nomineeDragStart.current === null) return
-          const d = e.touches[0].clientY - nomineeDragStart.current
-          if (d < 0) return
-          nomineeDragCurrent.current = d
-          setNomineeY((d / window.innerHeight) * 100)
-        }}
-        onTouchEnd={() => {
-          setNomineeDragging(false)
-          if (nomineeDragCurrent.current > 120) closeNomineeSheet()
-          else setNomineeY(0)
-          nomineeDragStart.current = null
-          nomineeDragCurrent.current = 0
-        }}
       >
         <div className="flex flex-col py-2">
           {sheetNoms.map(({ film, nominee }, i) => {
@@ -547,10 +704,9 @@ export default function DescobrirPage() {
             const filmRating = sheetSR.find(r => r.title === film.title)
             const showPerson = sheetIsPerson && nominee
             return (
-              <Link key={`${film.id}-${i}`} href={`/filmes/${film.id}`} onClick={closeNomineeSheet}>
+              <Link key={`${film.id}-${i}`} href={`/filmes/${film.id}`} onClick={() => setNomineeSheet(null)}>
                 <div className="flex items-center gap-3 px-5 py-3"
                   style={{ borderBottom: i < sheetNoms.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  {/* Poster + pessoa sobreposta */}
                   <div className="relative flex-shrink-0" style={{ width: 40, height: 58 }}>
                     <div className="w-full h-full rounded-xl overflow-hidden"
                       style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)', border: '1px solid rgba(255,255,255,0.07)' }}>

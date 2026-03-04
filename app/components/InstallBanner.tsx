@@ -8,7 +8,7 @@ export default function InstallBanner() {
     // Já está rodando como PWA instalado
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
+      ((window.navigator as unknown as { standalone?: boolean }).standalone === true)
     // Usuário já dispensou
     const dismissed = localStorage.getItem('install-banner-dismissed')
     if (!isStandalone && !dismissed) {

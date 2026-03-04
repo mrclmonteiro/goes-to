@@ -74,8 +74,13 @@ export default function RatingSheet({ open, onClose, filmTitle, categories, nomi
   const currentY = useRef(0)
 
   useEffect(() => {
-    if (open) { document.body.style.overflow = 'hidden'; requestAnimationFrame(() => setTranslateY(0)) }
-    else { setTranslateY(100); document.body.style.overflow = '' }
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      requestAnimationFrame(() => setTranslateY(0))
+    } else {
+      requestAnimationFrame(() => setTranslateY(100))
+      document.body.style.overflow = ''
+    }
     return () => { document.body.style.overflow = '' }
   }, [open])
 

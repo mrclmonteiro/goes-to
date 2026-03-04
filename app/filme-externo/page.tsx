@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useRef, useState, Suspense } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type Cast = { name: string; character: string; photo: string | null }

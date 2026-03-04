@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const BASE = 'https://api.themoviedb.org/3'
 const IMG = (size: string) => `https://image.tmdb.org/t/p/${size}`
 

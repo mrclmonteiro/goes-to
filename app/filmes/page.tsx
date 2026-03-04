@@ -46,8 +46,26 @@ type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type MovieData = { poster: string | null; backdrop: string | null; overview: string | null }
 
+// ── Liquid Glass styles (idênticos ao Estante / Descobrir) ─────────────
+const liquidGlass: React.CSSProperties = {
+  background: 'rgba(120,120,128,0.18)',
+  backdropFilter: 'blur(48px) saturate(200%)',
+  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+}
+
+const dropdownGlass: React.CSSProperties = {
+  background: 'rgba(20,20,25,0.65)',
+  backdropFilter: 'blur(48px) saturate(200%)',
+  WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
+}
+
 function useCountdown() {
-  const [diff, setDiff] = useState(OSCAR_DATE.getTime() - Date.now())
+  // avoid impure Date.now() call in render by initializing lazily
+  const [diff, setDiff] = useState(() => OSCAR_DATE.getTime() - Date.now())
   useEffect(() => {
     const t = setInterval(() => setDiff(OSCAR_DATE.getTime() - Date.now()), 1000)
     return () => clearInterval(t)
@@ -153,28 +171,6 @@ function PosterCard({ film, userFilm, onToggle, poster }: {
   )
 }
 
-function PersonCard({ name, film, photo }: { name: string; film: Film; photo: string | null }) {
-  return (
-    <Link href={`/filmes/${film.id}`} className="flex flex-col items-start gap-2">
-      <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
-        style={{ border: '2px solid rgba(255,255,255,0.12)' }}>
-        {photo
-          ? <img src={photo} alt={name} className="w-full h-full object-cover"/>
-          : <div className="w-full h-full flex items-center justify-center text-lg"
-              style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)' }}>
-              {name.charAt(0)}
-            </div>
-        }
-      </div>
-      <div>
-        <p className="text-xs font-semibold leading-tight" style={{ color: 'white' }}>{name}</p>
-        <p className="text-xs mt-0.5 leading-tight line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{film.title}</p>
-      </div>
-    </Link>
-  )
-}
-
-// Calendar icon SVG
 function CalendarIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -183,7 +179,6 @@ function CalendarIcon() {
       <line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/>
       <line x1="3" y1="10" x2="21" y2="10"/>
-      <line x1="12" y1="3" x2="12" y2="5"/>
       <circle cx="8" cy="15" r="1" fill="currentColor"/>
       <circle cx="12" cy="15" r="1" fill="currentColor"/>
       <circle cx="16" cy="15" r="1" fill="currentColor"/>
@@ -205,7 +200,6 @@ export default function FilmesPage() {
   const [listDropdownOpen, setListDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // ── Hero rotation state ──────────────────────────────────────────
   const [heroIdx, setHeroIdx] = useState(0)
   const [heroProgress, setHeroProgress] = useState(0)
   const [textVisible, setTextVisible] = useState(true)
@@ -216,7 +210,6 @@ export default function FilmesPage() {
 
   const heroCategory = HERO_CATEGORIES[heroIdx]
 
-  // ── Data loading ─────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const supabase = createClient()
@@ -248,11 +241,10 @@ export default function FilmesPage() {
     load()
   }, [])
 
-  // ── Auto-rotate ──────────────────────────────────────────────────
   useEffect(() => {
-    setHeroProgress(0)
-    // Brief fade-out → fade-in on category change
-    setTextVisible(false)
+    // reset values on category change
+    requestAnimationFrame(() => setHeroProgress(0))
+    requestAnimationFrame(() => setTextVisible(false))
     const fadeIn = setTimeout(() => setTextVisible(true), 180)
     const start = Date.now()
     const tick = setInterval(() => {
@@ -267,12 +259,7 @@ export default function FilmesPage() {
     return () => { clearInterval(tick); clearTimeout(fadeIn) }
   }, [heroIdx])
 
-  // ── Drag / swipe handlers ────────────────────────────────────────
-  const onHeroDragStart = (x: number) => {
-    isDraggingRef.current = true
-    setIsDragging(true)
-    dragStartXRef.current = x
-  }
+  const onHeroDragStart = (x: number) => { isDraggingRef.current = true; setIsDragging(true); dragStartXRef.current = x }
   const onHeroDragMove = (x: number) => {
     if (!isDraggingRef.current || dragStartXRef.current === null) return
     setDragX(x - dragStartXRef.current)
@@ -280,17 +267,13 @@ export default function FilmesPage() {
   const onHeroDragEnd = () => {
     if (!isDraggingRef.current) return
     const dx = dragX
-    isDraggingRef.current = false
-    setIsDragging(false)
-    dragStartXRef.current = null
-    setDragX(0)
+    isDraggingRef.current = false; setIsDragging(false); dragStartXRef.current = null; setDragX(0)
     if (Math.abs(dx) > 60) {
       if (dx < 0) setHeroIdx(i => (i + 1) % HERO_CATEGORIES.length)
       else         setHeroIdx(i => (i - 1 + HERO_CATEGORIES.length) % HERO_CATEGORIES.length)
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────
   const getUF = (id: string) => userFilms.find(u => u.film_id === id)
   const isPersonCategory = PERSON_CATEGORIES.includes(listCategory)
 
@@ -315,7 +298,6 @@ export default function FilmesPage() {
       .filter(f => f.rating > 0)
       .sort((a, b) => b.rating - a.rating)
 
-  // Pre-compute all hero backdrops for the sliding strip
   const heroBackdrops = HERO_CATEGORIES.map(cat => {
     const top = swingRatings(cat)[0]
     const catFilms = filmsByCategory(cat)
@@ -337,15 +319,6 @@ export default function FilmesPage() {
     setUserFilms(data ?? [])
   }
 
-  const glass = {
-    background: 'rgba(120,120,128,0.18)',
-    backdropFilter: 'blur(40px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-    border: '1px solid rgba(255,255,255,0.18)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
-  }
-
-  // Text opacity fades with drag distance
   const textOpacity = isDragging
     ? Math.max(0, 1 - Math.abs(dragX) / 120)
     : textVisible ? 1 : 0
@@ -371,7 +344,6 @@ export default function FilmesPage() {
         onTouchMove={e => { e.preventDefault(); onHeroDragMove(e.touches[0].clientX) }}
         onTouchEnd={onHeroDragEnd}
       >
-        {/* Sliding backdrop strip */}
         <div
           className="absolute inset-y-0 left-0 flex"
           style={{
@@ -382,10 +354,7 @@ export default function FilmesPage() {
           }}
         >
           {heroBackdrops.map((backdrop, i) => (
-            <div
-              key={i}
-              style={{ width: `${100 / HERO_CATEGORIES.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}
-            >
+            <div key={i} style={{ width: `${100 / HERO_CATEGORIES.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}>
               {backdrop
                 ? <img src={backdrop} alt="" className="w-full h-full object-cover" draggable={false} style={{ userSelect: 'none' }}/>
                 : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0533, #0a0a0f)'}}/>
@@ -394,64 +363,40 @@ export default function FilmesPage() {
           ))}
         </div>
 
-        {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 38%, rgba(10,10,15,0.82) 72%, #0a0a0f 100%)'
         }}/>
 
-        {/* Text — fades on drag & on category change */}
         <div
           className="absolute bottom-0 left-0 right-0 px-6 pb-12 text-center pointer-events-none"
-          style={{
-            opacity: textOpacity,
-            transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease',
-          }}
+          style={{ opacity: textOpacity, transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease' }}
         >
-          <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Segundo nossos usuários, o Oscar de
-          </p>
-          <p className="text-xl font-bold mb-1" style={{ color: 'rgba(255,255,255,0.88)' }}>
-            {CATEGORY_LABELS[heroCategory] ?? heroCategory}
-          </p>
+          <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Segundo nossos usuários, o Oscar de</p>
+          <p className="text-xl font-bold mb-1" style={{ color: 'rgba(255,255,255,0.88)' }}>{CATEGORY_LABELS[heroCategory] ?? heroCategory}</p>
           <p className="text-2xl font-light mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Goes To…</p>
           <p className="text-4xl font-bold leading-tight">
             {swingRatings(heroCategory)[0]?.title ?? filmsByCategory(heroCategory)[0]?.title ?? '—'}
           </p>
         </div>
 
-        {/* Dot / progress-bar indicators */}
         <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 pointer-events-auto">
           {HERO_CATEGORIES.map((cat, i) => (
-            <button
-              key={cat}
-              onClick={() => setHeroIdx(i)}
+            <button key={cat} onClick={() => setHeroIdx(i)}
               style={{
-                height: 5,
-                width: i === heroIdx ? 36 : 5,
-                borderRadius: 3,
-                background: 'rgba(255,255,255,0.28)',
-                overflow: 'hidden',
+                height: 5, width: i === heroIdx ? 36 : 5, borderRadius: 3,
+                background: 'rgba(255,255,255,0.28)', overflow: 'hidden',
                 transition: 'width 0.3s cubic-bezier(.4,0,.2,1)',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
+                border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0,
+              }}>
               {i === heroIdx && (
-                <div style={{
-                  height: '100%',
-                  width: `${heroProgress}%`,
-                  background: 'white',
-                  transition: 'width 0.05s linear',
-                }}/>
+                <div style={{ height: '100%', width: `${heroProgress}%`, background: 'white', transition: 'width 0.05s linear' }}/>
               )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ── SWINGOMETER — follows heroCategory ────────────────────── */}
+      {/* ── SWINGOMETER ───────────────────────────────────────────── */}
       <div className="mx-4 mt-4 rounded-3xl p-6" style={{
         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
       }}>
@@ -463,30 +408,35 @@ export default function FilmesPage() {
       {/* ── LISTA ─────────────────────────────────────────────────── */}
       <div className="px-4">
         <div className="flex items-center gap-2 mb-5 flex-wrap">
-          {/* Liquid-glass–inspired: bigger, white label */}
           <p className="text-lg font-semibold tracking-tight" style={{ color: 'white' }}>Indicados a</p>
+
+          {/* ── Liquid glass dropdown ─────────────────────────────── */}
           <div className="relative">
             <button
               onClick={() => setListDropdownOpen(!listDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ ...glass, color: 'white' }}
+              className="flex items-center gap-2 px-4 rounded-full text-sm font-semibold transition-all active:scale-95"
+              style={{ ...liquidGlass, height: 43, color: 'white' }}
             >
               {CATEGORY_LABELS[listCategory] ?? listCategory}
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>▾</span>
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
             </button>
+
             {listDropdownOpen && (
-              <div
-                className="absolute top-full mt-2 left-0 rounded-2xl py-2 z-50 w-60 max-h-72 overflow-y-auto"
-                style={{ ...glass, background: 'rgba(20,20,30,0.92)' }}
-              >
-                {ALL_CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
-                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/5"
-                    style={{ color: cat === listCategory ? '#fbbf24' : 'rgba(255,255,255,0.7)' }}>
-                    {CATEGORY_LABELS[cat] ?? cat}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setListDropdownOpen(false)}/>
+                <div
+                  className="absolute top-full mt-2 left-0 rounded-2xl py-2 w-60 max-h-72 overflow-y-auto"
+                  style={{ ...dropdownGlass, zIndex: 99 }}
+                >
+                  {ALL_CATEGORIES.map(cat => (
+                    <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
+                      className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
+                      style={{ color: cat === listCategory ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
+                      {CATEGORY_LABELS[cat] ?? cat}
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -535,10 +485,7 @@ export default function FilmesPage() {
 
       {/* ── COUNTDOWN ─────────────────────────────────────────────── */}
       <div className="px-4">
-        {/* Label outside the box */}
-        <p className="text-lg font-semibold mb-3 px-1" style={{ color: 'white' }}>
-          Oscar 2026 começa em
-        </p>
+        <p className="text-lg font-semibold mb-3 px-1" style={{ color: 'white' }}>Oscar 2026 começa em</p>
         <div className="rounded-3xl p-5 flex items-center gap-4" style={{
           background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
         }}>
@@ -567,13 +514,13 @@ export default function FilmesPage() {
             )}
           </div>
 
-          {/* Add-to-calendar icon button */}
+          {/* ── Liquid glass calendar button ──────────────────────── */}
           <a
             href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
             download="oscar2026.ics"
             title="Adicionar ao calendário"
-            className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ ...glass, color: 'rgba(255,255,255,0.8)' }}
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+            style={{ ...liquidGlass, color: 'rgba(255,255,255,0.85)' }}
           >
             <CalendarIcon/>
           </a>

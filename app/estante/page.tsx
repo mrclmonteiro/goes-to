@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { EasterEgg, EggType } from '@/app/components/EasterEgg'
 
 // Novos avatares adicionados no final
 const AVATARS = [
@@ -11,18 +13,22 @@ const AVATARS = [
   '🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰'
 ]
 const AVATAR_COLORS = [
-  ['#1a0533','#0a0a0f'],['#1a0a00','#0a0a0f'],['#001a1a','#0a0a0f'],
-  ['#1a1500','#0a0a0f'],['#0a001a','#0a0a0f'],['#1a1a00','#0a0a0f'],
-  ['#001a0a','#0a0a0f'],['#1a000a','#0a0a0f'],
-  // Cores para os novos avatares
-  ['#331a00','#0a0a0f'], // Leão
-  ['#001a33','#0a0a0f'], // Up
-  ['#1a1a1a','#0a0a0f'], // 007
-  ['#0d0d0d','#0a0a0f'], // Batman
-  ['#1a0033','#0a0a0f'], // Paris
-  ['#330000','#0a0a0f'], // Clube
-  ['#002233','#0a0a0f'], // Titanic
-  ['#332a00','#0a0a0f'], // Chefão
+  ['#A1C4FD', '#C2E9FB'], // 🎬 Azul pastel
+  ['#B5EAD7', '#83C5BE'], // 🍿 Menta pastel
+  ['#FFDAC1', '#FF9AA2'], // 🎭 Pêssego/Rosa pastel
+  ['#C7CEEA', '#A3B1C6'], // 🏆 Lilás/Azul acinzentado pastel
+  ['#FDFD96', '#F6D365'], // 🎞️ Amarelo pastel
+  ['#E0C3FC', '#8EC5FC'], // ⭐ Violeta/Azul pastel
+  ['#84FAB0', '#8FD3F4'], // 🎪 Ciano pastel
+  ['#E2E2E2', '#C9D6FF'], // 🎨 Cinza/Azul muito claro
+  ['#A18CD1', '#FBC2EB'], // 🦁 Roxo/Rosa (Oposto ao leão)
+  ['#D4FC79', '#96E6A1'], // 🎈 Verde limão (Oposto ao balão vermelho)
+  ['#FBC2EB', '#A6C1EE'], // 🤵 Rosa/Azul claro pastel
+  ['#FF9A9E', '#FECFEF'], // 🦇 Rosa bebê pastel (Contraste leve)
+  ['#89F7FE', '#66A6FF'], // 🗼 Ciano pastel
+  ['#FFECD2', '#FCB69F'], // ☕️ Coral/Pêssego
+  ['#D4FC79', '#96E6A1'], // 🛳 Verde água
+  ['#F3E7E9', '#E3EEFF']  // 💰 Azul e rosa ultraclaros
 ]
 
 const GOAL_OPTIONS = [
@@ -43,8 +49,11 @@ function SectionTitle({ children, className = '' }: { children: React.ReactNode,
   return <p className={`text-lg font-semibold ${className}`} style={{ color: 'white' }}>{children}</p>
 }
 
-function BottomSheet({ open, onClose, children, title }: {
-  open: boolean; onClose: () => void; children: React.ReactNode; title?: string
+function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: {
+  open: boolean; onClose: () => void; children: React.ReactNode
+  title?: string
+  onAction?: () => void   // botão direito (ex: salvar)
+  actionLabel?: string    // texto do botão direito (ex: "Concluído")
 }) {
   const [translateY, setTranslateY] = useState(100)
   const [isDragging, setIsDragging] = useState(false)
@@ -52,16 +61,30 @@ function BottomSheet({ open, onClose, children, title }: {
   const currentY = useRef(0)
 
   useEffect(() => {
-    if (open) { document.body.style.overflow = 'hidden'; requestAnimationFrame(() => setTranslateY(0)) }
-    else { setTranslateY(100); document.body.style.overflow = '' }
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      requestAnimationFrame(() => setTranslateY(0))
+    } else {
+      requestAnimationFrame(() => setTranslateY(100))
+      document.body.style.overflow = ''
+    }
     return () => { document.body.style.overflow = '' }
   }, [open])
 
+  // ensure props are referenced to avoid unused variable warnings
+  useEffect(() => {
+    // no-op: props may be used by future header button implementation
+  }, [onAction, actionLabel])
+
   if (!open && translateY >= 100) return null
+
+  const hasActions = !!onAction  // true = layout Apple 3 colunas
 
   return (
     <div className="fixed inset-0 z-[999] flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}/>
+      <div className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}/>
       <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden"
         style={{
           background: '#0e0e14', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
@@ -84,47 +107,76 @@ function BottomSheet({ open, onClose, children, title }: {
           else setTranslateY(0)
           dragStart.current = null
         }}>
-        
-        {/* GRADIENTE E FUNDO DO HEADER (Fixo passando na frente do conteúdo) */}
-        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
-          style={{ 
-            height: '100px', 
-            background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' 
-          }} 
-        />
 
-        {/* HANDLE DE ARRASTAR */}
-        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 pb-1 z-30 pointer-events-none">
+        {/* Gradiente sobre o conteúdo */}
+        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none"
+          style={{ height: '100px', background: 'linear-gradient(to bottom, #0e0e14 65%, transparent 100%)' }}/>
+
+        {/* Handle */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
         </div>
 
-        {/* HEADER - TÍTULO E BOTÃO DE FECHAR (LIQUID GLASS 43x43) */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30 pointer-events-none">
-          {/* Título grande alinhado à esquerda */}
-          {title && <p className="text-lg font-semibold" style={{ color: 'white' }}>{title}</p>}
-          
-          <button onClick={onClose} className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0 pointer-events-auto"
-            style={{ 
-              background: 'rgba(120,120,128,0.18)', 
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 flex items-center px-5 pt-6 z-30"
+          style={{ justifyContent: hasActions ? 'space-between' : 'flex-end' }}>
+
+          {/* Esquerda: botão fechar (sempre) */}
+          <button onClick={onClose}
+            className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+            style={{
+              background: 'rgba(120,120,128,0.18)',
               backdropFilter: 'blur(48px) saturate(200%)',
               WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-              border: '1px solid rgba(255,255,255,0.25)', 
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
-              width: '43px', height: '43px' 
+              border: '1px solid rgba(255,255,255,0.25)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
+              width: 43, height: 43,
             }}>
-            {/* Ícone fechar com proporção de 24px */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
+
+          {/* Centro: título (só quando há ação à direita) */}
+          {hasActions && title && (
+            <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
+              style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
+              {title}
+            </p>
+          )}
+
+          {/* Sem ação: título à esquerda do X (layout original) */}
+          {!hasActions && title && (
+            <p className="text-lg font-semibold mr-auto ml-0 pointer-events-none"
+              style={{ color: 'white', position: 'absolute', left: 20, top: 'calc(1.5rem + 10px)' }}>
+              {title}
+            </p>
+          )}
+
+          {/* Direita: botão de ação (Concluído / salvar) */}
+          {hasActions && (
+            <button onClick={onAction}
+              className="rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0 text-sm font-semibold"
+              style={{
+                background: 'rgba(120,120,128,0.18)',
+                backdropFilter: 'blur(48px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
+                width: 43, height: 43, color: '#fbbf24', 
+              }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+</svg>
+            </button>
+          )}
         </div>
 
-        {/* ÁREA SCROLLÁVEL - PASSA POR TRÁS DO TÍTULO E GRADIENTE */}
-        <div className="overflow-y-auto flex-1 z-10 w-full" 
-             style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+        {/* Conteúdo */}
+        <div className="overflow-y-auto flex-1 z-10 w-full"
+          style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
           {children}
         </div>
-        
       </div>
     </div>
   )
@@ -146,7 +198,6 @@ export default function EstantePage() {
   const [activeEgg, setActiveEgg] = useState<string | null>(null) // NOVO ESTADO AQUI
   const [configOpen, setConfigOpen] = useState(false)
   const [metaOpen, setMetaOpen] = useState(false)
-  const [editingAvatar, setEditingAvatar] = useState(false)
   const [prevProgress, setPrevProgress] = useState(0)
   const [editDisplayName, setEditDisplayName] = useState('')
   const [editUsername, setEditUsername] = useState('')
@@ -154,6 +205,7 @@ export default function EstantePage() {
   const [editPassword, setEditPassword] = useState('')
   const [savingConfig, setSavingConfig] = useState(false)
   const [configMsg, setConfigMsg] = useState('')
+  const [tempAvatarIndex, setTempAvatarIndex] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -185,7 +237,7 @@ export default function EstantePage() {
       setPosters(Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v.poster])))
     }
     load()
-  }, [])
+  }, [router])
 
   const filmCategories = (filmId: string) => nominations.filter(n => n.film_id === filmId).map(n => n.category)
   const goalFilms = films.filter(f => {
@@ -204,7 +256,7 @@ export default function EstantePage() {
       setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000)
     }
     setPrevProgress(progress)
-  }, [progress])
+  }, [progress, prevProgress, goalFilms.length])
 
   async function updateGoal(cat: string) {
     if (!userId) return
@@ -215,30 +267,53 @@ export default function EstantePage() {
     await supabase.from('user_profiles').update({ goal_category: cat }).eq('id', userId)
   }
 
-  async function updateAvatar(dir: 1 | -1) {
-    if (!userId) return
-    const supabase = createClient()
-    if (!supabase) return
-
-    const next = (profile.avatar_index + dir + AVATARS.length) % AVATARS.length
-    setProfile(p => ({ ...p, avatar_index: next }))
-    await supabase.from('user_profiles').update({ avatar_index: next }).eq('id', userId)
-  }
-
   async function saveConfig() {
     if (!userId) return
+    setSavingConfig(true)
     const supabase = createClient()
-    if (!supabase) return
-
-    setSavingConfig(true); setConfigMsg('')
-    await supabase.from('user_profiles').update({ display_name: editDisplayName, username: editUsername }).eq('id', userId)
-    setProfile(p => ({ ...p, display_name: editDisplayName, username: editUsername }))
-    if (editPassword.length >= 6) {
-      const { error } = await supabase.auth.updateUser({ password: editPassword })
-      if (error) { setConfigMsg('Erro ao atualizar senha'); setSavingConfig(false); return }
+    
+    if (supabase) {
+      if (editEmail && editEmail !== '') await supabase.auth.updateUser({ email: editEmail })
+      if (editPassword && editPassword !== '') await supabase.auth.updateUser({ password: editPassword })
+      
+      await supabase.from('user_profiles').update({ 
+        display_name: editDisplayName, 
+        username: editUsername,
+        avatar_index: tempAvatarIndex
+      }).eq('id', userId)
     }
-    setConfigMsg('Salvo!'); setSavingConfig(false)
-    setTimeout(() => { setConfigMsg(''); setConfigOpen(false) }, 1200)
+    
+    setProfile(p => ({ ...p, display_name: editDisplayName, username: editUsername, avatar_index: tempAvatarIndex }))
+    setConfigMsg('Configurações salvas!')
+    
+    // 1. Primeiro esperamos o tempo da mensagem de sucesso
+    setTimeout(() => { 
+      setConfigMsg('')
+      setSavingConfig(false)
+      setConfigOpen(false) // Fecha o modal
+
+      // 2. Agora, esperamos o modal sumir da tela (aprox 400ms) para disparar o ovo
+      setTimeout(() => {
+        const a = AVATARS[tempAvatarIndex]
+        let egg = null
+        if (a === '🦁') egg = 'lion'
+        else if (a === '🎈') egg = 'up'
+        else if (a === '🤵') egg = '007'
+        else if (a === '🦇') egg = 'batman'
+        else if (a === '🗼') egg = 'paris'
+        else if (a === '☕️') egg = 'clube'
+        else if (a === '🛳') egg = 'titanic'
+        else if (a === '💰') egg = 'chefao'
+
+        if (egg) {
+          setActiveEgg(egg)
+          // Define o tempo que cada animação dura antes de sumir
+          const duration = (egg === 'up' || egg === 'titanic') ? 4000 : 3000
+          setTimeout(() => setActiveEgg(null), duration)
+        }
+      }, 500) // Meio segundo após mandar fechar o modal
+      
+    }, 1500)
   }
 
   async function shareGoal() {
@@ -261,28 +336,11 @@ export default function EstantePage() {
     }, 'image/png')
   }
 
-  // Função para lidar com o click do editar/confirmar avatar
-  const handleToggleAvatarEdit = () => {
-    if (editingAvatar) {
-      setEditingAvatar(false)
-      const currentAvatar = AVATARS[profile.avatar_index]
-      const easterEggAvatars = ['🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰']
-      
-      if (easterEggAvatars.includes(currentAvatar)) {
-        setActiveEgg(currentAvatar)
-        setTimeout(() => setActiveEgg(null), 3000) // reseta após 3s
-      }
-    } else {
-      setEditingAvatar(true)
-    }
-  }
-
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
   }
-  const avatarColors = AVATAR_COLORS[profile.avatar_index]
   const goalLabel = GOAL_OPTIONS.find(g => g.category === profile.goal_category)?.label ?? 'Best Picture'
   const accentColor = goalComplete ? '#fbbf24' : '#a78bfa'
   const bgGradient = goalComplete
@@ -324,6 +382,19 @@ export default function EstantePage() {
       `}</style>
 
       <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
+        <div
+  className="fixed top-0 left-0 right-0 pointer-events-none"
+  style={{
+    height: '220px', // vai até ~metade da foto de perfil
+    zIndex: 0,
+    background: `linear-gradient(to bottom,
+      ${AVATAR_COLORS[profile.avatar_index]?.[0]}4D 0%,
+      ${AVATAR_COLORS[profile.avatar_index]?.[1]}26 55%,
+      transparent 100%
+    )`,
+    transition: 'background 0.6s ease',
+  }}
+/>
 
         {showConfetti && (
           <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
@@ -338,18 +409,12 @@ export default function EstantePage() {
           </div>
         )}
 
-        {/* Easter Egg do Filme Up - Fica fixo cobrindo a tela inteira */}
-        {activeEgg === '🎈' && (
-          <div style={{ position: 'fixed', left: '50%', bottom: -100, marginLeft: -25, fontSize: '3rem', zIndex: 60, animation: 'up-fly 3s linear forwards', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span>🎈</span>
-            <span style={{ marginTop: -15 }}>🏠</span>
-          </div>
-        )}
+        <EasterEgg egg={activeEgg as EggType} />
 
         {/* Botões flutuantes Superiores (Liquid Glass) */}
         
-        {/* Botão Superior Esquerdo (Voltar) */}
-        <button onClick={() => router.back()}
+        {/* Botão Superior Direito (Configurações) */}
+        <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true); }}
           className="fixed z-[100] flex items-center justify-center rounded-full transition-all active:scale-95 pointer-events-auto"
           style={{
             background: 'rgba(120,120,128,0.18)',
@@ -387,96 +452,38 @@ export default function EstantePage() {
           </svg>
         </button>
 
-        {/* Hero perfil */}
-        <div className="relative pt-16 pb-8 flex flex-col items-center px-4"
-          style={{ background: `linear-gradient(to bottom, ${avatarColors[0]}99, transparent)` }}>
-          <div className="relative mb-4 flex items-center gap-3">
-            {editingAvatar && (
-              <button onClick={() => updateAvatar(-1)} className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
-            
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl relative z-10"
-                style={{ background: goalComplete ? 'rgba(251,191,36,0.2)' : `${avatarColors[0]}88`, border: `2.5px solid ${goalComplete ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)'}` }}>
-                
-                {/* Avatar renderizado com animação condicional para Titanic */}
-                <span style={{ display: 'inline-block', animation: activeEgg === '🛳' ? 'titanic-sink 3s ease-in-out forwards' : 'none' }}>
-                  {AVATARS[profile.avatar_index]}
-                </span>
-
-                {/* INÍCIO DOS EASTER EGGS POSICIONADOS NO AVATAR */}
-                {activeEgg === '🦁' && (
-                  <span style={{ position: 'absolute', top: -15, fontSize: '2rem', animation: 'lion-crown 2s ease-out forwards', pointerEvents: 'none' }}>👑</span>
-                )}
-                {activeEgg === '🤵' && (
-                  <span style={{ position: 'absolute', right: -15, top: 15, fontSize: '1.5rem', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>🍸🔫</span>
-                )}
-                {activeEgg === '🦇' && (
-                  <span style={{ position: 'absolute', left: -5, top: 25, fontSize: '1.5rem', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>🃏</span>
-                )}
-                {activeEgg === '🗼' && (
-                  <span style={{ position: 'absolute', width: '140%', height: '140%', display: 'flex', justifyContent: 'space-between', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
-                    <span style={{ position: 'absolute', top: -5, left: 10, fontSize: '1.2rem' }}>🕛</span>
-                    <span style={{ position: 'absolute', top: 20, right: -10, fontSize: '1.2rem' }}>🌃</span>
-                    <span style={{ position: 'absolute', bottom: 5, left: 20, fontSize: '1.2rem' }}>🌙</span>
-                  </span>
-                )}
-                {activeEgg === '☕️' && (
-                  <span style={{ position: 'absolute', width: '140%', height: '140%', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
-                    <span style={{ position: 'absolute', top: -5, left: 20, fontSize: '1.2rem' }}>🍳</span>
-                    <span style={{ position: 'absolute', top: 35, right: -5, fontSize: '1.2rem' }}>🍩</span>
-                    <span style={{ position: 'absolute', bottom: 5, left: 35, fontSize: '1.2rem' }}>♣️</span>
-                  </span>
-                )}
-                {activeEgg === '💰' && (
-                  <span style={{ position: 'absolute', width: '150%', height: '150%', animation: 'pop-in-out 2.5s ease-in-out forwards', pointerEvents: 'none' }}>
-                    <span style={{ position: 'absolute', top: 5, left: 5, fontSize: '1.2rem' }}>🥐</span>
-                    <span style={{ position: 'absolute', top: 15, right: -10, fontSize: '1.2rem' }}>💥</span>
-                    <span style={{ position: 'absolute', bottom: 15, right: 10, fontSize: '1.2rem' }}>🔫</span>
-                    <span style={{ position: 'absolute', bottom: 5, left: 15, fontSize: '1.2rem' }}>🌹</span>
-                  </span>
-                )}
-                {/* FIM DOS EASTER EGGS */}
-                
-              </div>
-              
-              <button onClick={handleToggleAvatarEdit}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-xs z-20"
-                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}>
-                {editingAvatar ? '✓' : '✏️'}
-              </button>
+        {/* Perfil - Avatar e Nomes */}
+          <div 
+            className="flex flex-col items-center relative z-10" 
+            style={{ 
+              marginTop: '100px', 
+              marginBottom: '33px' // <--- ADICIONE ESTA LINHA (65px / 2)
+            }}
+          >
+            {/* Foto de Perfil */}
+            <div 
+              className="relative rounded-full flex items-center justify-center mb-4 shadow-2xl pointer-events-none"
+              style={{ 
+                width: '125px', 
+                height: '125px',
+                background: `linear-gradient(135deg, ${AVATAR_COLORS[profile.avatar_index]?.[0] || '#333'}, ${AVATAR_COLORS[profile.avatar_index]?.[1] || '#111'})`,
+                border: '3px solid rgba(255,255,255,0.6)'
+              }}>
+              <span style={{ fontSize: '65px' }}>
+                {AVATARS[profile.avatar_index]}
+              </span>
             </div>
-            {editingAvatar && (
-              <button onClick={() => updateAvatar(1)} className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
+            
+            {/* Nome de Exibição */}
+            <p className="font-bold tracking-tight" style={{ fontSize: '20px', color: 'white', lineHeight: '1.2' }}>
+              {profile.display_name || 'Cinéfilo'}
+            </p>
+            
+            {/* Username */}
+            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
+              @{profile.username || 'usuario'}
+            </p>
           </div>
-          <div className="text-center mt-2">
-            <p className="text-xl font-bold">{profile.display_name ?? 'Cinéfilo'}</p>
-            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>@{profile.username ?? 'usuário'}</p>
-          </div>
-          <div className="flex gap-8 mt-6">
-            {[
-              { v: watchedFilms.length, l: 'assistidos', gold: false },
-              { v: userFilms.filter(u => u.rating).length, l: 'avaliados', gold: false },
-              { v: `${Math.round(progress * 100)}%`, l: 'da meta', gold: goalComplete },
-            ].map(({ v, l, gold }) => (
-              <div key={l} className="text-center">
-                <p className="text-2xl font-bold" style={{ color: gold ? '#fbbf24' : 'white' }}>{v}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{l}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div className="px-4 flex flex-col gap-5">
 
@@ -583,7 +590,7 @@ export default function EstantePage() {
                     <Link key={film.id} href={`/filmes/${film.id}`} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '2/3' }}>
                       <div className="absolute inset-0">
                         {posters[film.title]
-                          ? <img src={posters[film.title]!} alt={film.title} className="w-full h-full object-cover"/>
+                          ? <Image src={posters[film.title]!} alt={film.title} fill className="object-cover" />
                           : <div className="w-full h-full flex items-end p-3" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)' }}>
                               <p className="text-white text-xs font-semibold leading-tight">{film.title}</p>
                             </div>
@@ -614,8 +621,37 @@ export default function EstantePage() {
       </main>
 
       {/* Sheet Configurações */}
-      <BottomSheet open={configOpen} onClose={() => setConfigOpen(false)} title="Configurações">
-        <div className="px-5 py-4 flex flex-col gap-5">
+      {/* Settings Sheet */}
+      <BottomSheet
+  open={configOpen}
+  onClose={() => setConfigOpen(false)}
+  title="Configurações"
+  onAction={saveConfig}
+  actionLabel={savingConfig ? '...' : 'Concluído'}
+>
+        <div className="flex flex-col gap-6 px-5 pt-2">
+          
+          {/* Seletor de Avatar Movido pra Cá */}
+          <div>
+            <p className="text-sm font-semibold mb-3 text-white">Avatar</p>
+            <div className="flex flex-wrap gap-3 justify-start">
+              {AVATARS.map((emoji, i) => (
+                <button key={i} 
+                  onClick={() => setTempAvatarIndex(i)}
+                  className={`w-[50px] h-[50px] rounded-full text-2xl flex items-center justify-center transition-all ${
+                    tempAvatarIndex === i ? 'scale-110 ring-2 ring-white z-10 shadow-lg' : 'opacity-60 scale-95 hover:opacity-100'
+                  }`}
+                  style={{ 
+                    background: `linear-gradient(135deg, ${AVATAR_COLORS[i][0]}, ${AVATAR_COLORS[i][1]})`,
+                  }}>
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Divisor Visual */}
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
           {[
             { label: 'Nome de exibição', value: editDisplayName, onChange: setEditDisplayName, placeholder: 'Como você quer ser chamado' },
             { label: 'Nome de usuário', value: editUsername, onChange: setEditUsername, placeholder: '@usuario' },
@@ -629,11 +665,7 @@ export default function EstantePage() {
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}/>
             </div>
           ))}
-          {configMsg && <p className="text-xs text-center font-medium" style={{ color: '#fbbf24' }}>{configMsg}</p>}
-          <button onClick={saveConfig} disabled={savingConfig} className="w-full py-3.5 rounded-full text-sm font-semibold"
-            style={{ background: 'rgba(251,191,36,0.9)', color: '#1a0e00' }}>
-            {savingConfig ? 'Salvando...' : 'Salvar alterações'}
-          </button>
+          
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
           <button onClick={async () => { const sb = createClient(); if (sb) await sb.auth.signOut(); router.push('/') }}
             className="w-full py-3.5 rounded-full text-sm font-semibold"
