@@ -715,111 +715,108 @@ export default function FilmePage() {
           <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
           <div ref={shareRef}
   style={{
-    width: '100%', height: '100%',
+    width: '100%', 
+    height: '100%',
     background: 'linear-gradient(160deg, #0f0c29 0%, #1a0533 45%, #0a0a0f 100%)',
-    borderRadius: 0,
-    display: 'flex', flexDirection: 'column',
-    padding: '36px 26px 28px', // Aumentei um pouco o topo
+    display: 'flex', 
+    flexDirection: 'column',
+    padding: '32px 20px 20px', 
     position: 'relative',
-    fontFamily: 'sans-serif', // Forçar uma fonte segura para o canvas
+    fontFamily: '"Inter", sans-serif', // Força a fonte Inter
   }}>
 
-  {/* Orbes de fundo... (mantenha como está) */}
-
   {/* Topo: app + user */}
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: 8, overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0,
-      }}>
-        {iconDataUrl && <img src={iconDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+        {iconDataUrl && <img src={iconDataUrl} alt="" style={{ width: '100%', height: '100%' }}/>}
       </div>
-      <p style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: '32px' }}>Goes To...</p>
+      <span style={{ fontSize: 13, fontWeight: 800, color: 'white', lineHeight: '28px', letterSpacing: '-0.02em' }}>
+        Goes To...
+      </span>
     </div>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <div style={{
-        width: 30, height: 30, borderRadius: 15,
+        width: 26, height: 26, borderRadius: 13,
         background: 'rgba(167,139,250,0.2)',
-        border: '1.5px solid rgba(167,139,250,0.3)',
-        textAlign: 'center', 
-        lineHeight: '27px', // Centraliza o emoji verticalmente no canvas
-        fontSize: 16,
+        border: '1px solid rgba(167,139,250,0.3)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 14,
+        lineHeight: 1 
       }}>
-        {AVATARS[profile.avatar_index]}
+        <span style={{ marginTop: '-1px' }}>{AVATARS[profile.avatar_index]}</span>
       </div>
-      <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)', lineHeight: '30px' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: '26px' }}>
         {profile.display_name ?? 'Cinéfilo'}
-      </p>
+      </span>
     </div>
   </div>
 
   {/* Filme: poster + título */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-    <div style={{
-      width: 58, height: 86, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-    }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+    <div style={{ width: 50, height: 74, borderRadius: 8, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
       {posterDataUrl && <img src={posterDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
     </div>
-    <div style={{ flex: 1 }}>
-      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(167,139,250,0.9)', marginBottom: 4 }}>
-        OSCAR 2026
-      </p>
-      <h2 style={{
-        fontSize: 20, fontWeight: 800, color: 'white',
-        lineHeight: 1.2, margin: 0, paddingBottom: 4 // Padding evita o corte embaixo
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ fontSize: 9, fontWeight: 800, color: '#a78bfa', marginBottom: 2 }}>OSCAR 2026</p>
+      <h2 style={{ 
+        fontSize: 18, fontWeight: 800, color: 'white', lineHeight: 1.1, 
+        margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' 
       }}>
         {details?.ptTitle || film.title}
       </h2>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 18, fontWeight: 900, color: '#fbbf24' }}>{avgRating}</span>
-        <span style={{ fontSize: 12, color: '#fbbf24' }}>★</span>
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>/ 5</span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
+        <span style={{ fontSize: 20, fontWeight: 900, color: '#fbbf24', lineHeight: 1 }}>{avgRating}</span>
+        <span style={{ fontSize: 10, color: '#fbbf24', fontWeight: 700 }}>★</span>
       </div>
     </div>
   </div>
 
-  <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 20 }}/>
-
-  {/* Grid de categorias */}
+  {/* Categorias - Atualizado para Flex Wrap com centralização */}
   <div style={{
     flex: 1,
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 8,
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center', // Isso fará com que a última linha (ex: a 16ª categoria) fique no meio
     alignContent: 'start',
+    gap: 6,
   }}>
     {ratedCategories.map(([cat, stars]) => (
       <div key={cat} style={{
-        padding: '10px 10px', borderRadius: 12,
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', flexDirection: 'column', gap: 6
+        width: 'calc(33.333% - 4px)', // Equivale a 3 colunas, descontando os 6px do gap
+        padding: '6px 6px', 
+        borderRadius: 8,
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', gap: 4
       }}>
         <p style={{
-          fontSize: 10, color: 'rgba(255,255,255,0.5)',
-          fontWeight: 700, lineHeight: 1, textTransform: 'uppercase'
+          fontSize: 7.5, color: 'rgba(255,255,255,0.5)',
+          fontWeight: 700, lineHeight: 1, textTransform: 'uppercase',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
         }}>
           {CAT_SHORT[cat] ?? cat}
         </p>
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
           {[1,2,3,4,5].map(n => (
             <div key={n} style={{
-              height: 4, flex: 1, borderRadius: 2,
+              height: 3, flex: 1, borderRadius: 1,
               background: n <= stars ? '#fbbf24' : 'rgba(255,255,255,0.1)',
             }}/>
           ))}
-          <span style={{ fontSize: 10, fontWeight: 900, color: '#fbbf24', marginLeft: 4 }}>
+          <span style={{ fontSize: 8, fontWeight: 900, color: '#fbbf24', marginLeft: 2 }}>
             {stars}
           </span>
         </div>
       </div>
     ))}
   </div>
-  {/* Rodapé... */}
+
+  {/* Rodapé */}
+  <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 12 }}>
+    goes-to.vercel.app
+  </p>
 </div>
           </div>{/* end visual wrapper */}
 
