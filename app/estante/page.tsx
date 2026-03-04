@@ -447,8 +447,6 @@ export default function EstantePage() {
     const canvas = await html2canvas(el, {
       backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
       scrollX: 0, scrollY: 0,
-      width: el.offsetWidth, height: el.offsetHeight,
-      windowWidth: el.offsetWidth, windowHeight: el.offsetHeight,
       onclone: (doc: Document) => { doc.documentElement.style.fontFeatureSettings = 'normal' },
     })
     canvas.toBlob(async blob => {
@@ -1298,8 +1296,6 @@ export default function EstantePage() {
               const canvas = await html2canvas(el, {
                 backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
                 scrollX: 0, scrollY: 0,
-                width: el.offsetWidth, height: el.offsetHeight,
-                windowWidth: el.offsetWidth, windowHeight: el.offsetHeight,
               })
               canvas.toBlob(async blob => {
                 if (!blob) return
