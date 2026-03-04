@@ -1,62 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏆 Goes To...
 
-## Getting Started
+> *O app para organizar os filmes indicados às grandes premiações de um jeito fácil, leve — e bonito, modéstia à parte.*
 
-First, run the development server:
+## ✨ O que você pode fazer no Goes To...
 
+* **🎬 Acompanhe os indicados:** Um jeito simples de registrar os filmes indicados que você já assistiu.
+* **⭐ Avalie os filmes:** Dê a sua nota em cada categoria na qual o filme está indicado.
+* **🎯 Defina sua meta:** Escolha sua meta na premiação — o importante é fazer parte.
+* **📲 Compartilhe com os amigos:** Compartilhe nos Instagram Stories como anda a sua meta com cards exclusivos.
+* **✨ E muito mais:** Descubra fatos sobre as premiações, recomendações com base no que você assistiu e outros *easter eggs*.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+Este projeto foi construído com as melhores ferramentas do ecossistema moderno:
+
+* **[Next.js](https://nextjs.org)** - Framework React (App Router)
+* **[Supabase](https://supabase.com)** - Autenticação de usuários e Banco de Dados (PostgreSQL)
+* **[TMDB API](https://www.themoviedb.org/)** - Catálogo de filmes e pôsteres
+* **[Vercel](https://vercel.com)** - Hospedagem e Deploy
+* **Tailwind CSS** - Estilização e UI
+
+---
+
+## 🚀 Como rodar localmente
+
+### 1. Pré-requisitos
+Certifique-se de ter o Node.js instalado na sua máquina.
+
+### 2. Clonando o projeto
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-### Environment variables ⚙️
-
-This project relies on Supabase for authentication and TMDB for movie data. Before deploying, define the following **environment variables** in your Vercel dashboard (Project Settings → Environment Variables):
-
-**Required:**
-- `NEXT_PUBLIC_SUPABASE_URL` – your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` – the Supabase anonymous API key
-- `NEXT_PUBLIC_TMDB_TOKEN` – your TMDB API authorization token (Bearer token)
-
-**Getting TMDB Token:**
-1. Go to [TMDB](https://www.themoviedb.org/)
-2. Sign up for a free account
-3. Go to Settings → API
-4. Create an API key (v4 auth token)
-5. Use that token as `NEXT_PUBLIC_TMDB_TOKEN`
-
-**Local Development:**
-Create a `.env.local` file with all variables:
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
-NEXT_PUBLIC_TMDB_TOKEN=your_tmdb_token
-```
-
-Once variables are set in Vercel, trigger a new deployment.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone [https://github.com/seu-usuario/goes-to.git](https://github.com/seu-usuario/goes-to.git)
+cd goes-to
