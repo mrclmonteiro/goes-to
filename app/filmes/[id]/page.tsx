@@ -722,16 +722,17 @@ export default function FilmePage() {
     flexDirection: 'column',
     padding: '32px 20px 20px', 
     position: 'relative',
-    fontFamily: '"Inter", sans-serif', // Força a fonte Inter
+    fontFamily: '"Inter", sans-serif',
   }}>
 
   {/* Topo: app + user */}
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', display: 'flex' }}>
         {iconDataUrl && <img src={iconDataUrl} alt="" style={{ width: '100%', height: '100%' }}/>}
       </div>
-      <span style={{ fontSize: 13, fontWeight: 800, color: 'white', lineHeight: '28px', letterSpacing: '-0.02em' }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center' }}>
         Goes To...
       </span>
     </div>
@@ -743,11 +744,11 @@ export default function FilmePage() {
         border: '1px solid rgba(167,139,250,0.3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 14,
-        lineHeight: 1 
+        paddingBottom: 2 // Compensa o desvio do emoji para baixo
       }}>
-        <span style={{ marginTop: '-1px' }}>{AVATARS[profile.avatar_index]}</span>
+        {AVATARS[profile.avatar_index]}
       </div>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: '26px' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center' }}>
         {profile.display_name ?? 'Cinéfilo'}
       </span>
     </div>
@@ -755,37 +756,38 @@ export default function FilmePage() {
 
   {/* Filme: poster + título */}
   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-    <div style={{ width: 50, height: 74, borderRadius: 8, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+    <div style={{ width: 50, height: 74, borderRadius: 8, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.4)', display: 'flex' }}>
       {posterDataUrl && <img src={posterDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
       <p style={{ fontSize: 9, fontWeight: 800, color: '#a78bfa', marginBottom: 2 }}>OSCAR 2026</p>
       <h2 style={{ 
-        fontSize: 18, fontWeight: 800, color: 'white', lineHeight: 1.1, 
-        margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' 
+        fontSize: 18, fontWeight: 800, color: 'white', lineHeight: 1.2, 
+        margin: 0 
+        /* Removido o nowrap e ellipsis que causavam o corte no canvas */
       }}>
         {details?.ptTitle || film.title}
       </h2>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
-        <span style={{ fontSize: 20, fontWeight: 900, color: '#fbbf24', lineHeight: 1 }}>{avgRating}</span>
-        <span style={{ fontSize: 10, color: '#fbbf24', fontWeight: 700 }}>★</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+        <span style={{ fontSize: 20, fontWeight: 900, color: '#fbbf24', display: 'flex', alignItems: 'center' }}>{avgRating}</span>
+        <span style={{ fontSize: 10, color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center' }}>★</span>
       </div>
     </div>
   </div>
 
-  {/* Categorias - Atualizado para Flex Wrap com centralização */}
+  {/* Categorias - Flex Wrap 3x3 sem usar calc() */}
   <div style={{
     flex: 1,
     display: 'flex',
     flexWrap: 'wrap',
-    justifyContent: 'center', // Isso fará com que a última linha (ex: a 16ª categoria) fique no meio
+    justifyContent: 'center', // Centraliza a última linha órfã
     alignContent: 'start',
-    gap: 6,
+    gap: '6px', // Espaçamento entre os cards
   }}>
     {ratedCategories.map(([cat, stars]) => (
       <div key={cat} style={{
-        width: 'calc(33.333% - 4px)', // Equivale a 3 colunas, descontando os 6px do gap
-        padding: '6px 6px', 
+        width: '31%', // Usa 31% para garantir que 3 caibam lado a lado sem conflito de arredondamento
+        padding: '6px', 
         borderRadius: 8,
         background: 'rgba(255,255,255,0.04)',
         border: '1px solid rgba(255,255,255,0.06)',
@@ -793,8 +795,8 @@ export default function FilmePage() {
       }}>
         <p style={{
           fontSize: 7.5, color: 'rgba(255,255,255,0.5)',
-          fontWeight: 700, lineHeight: 1, textTransform: 'uppercase',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase'
+          /* Removido o nowrap e ellipsis também daqui */
         }}>
           {CAT_SHORT[cat] ?? cat}
         </p>
@@ -805,7 +807,7 @@ export default function FilmePage() {
               background: n <= stars ? '#fbbf24' : 'rgba(255,255,255,0.1)',
             }}/>
           ))}
-          <span style={{ fontSize: 8, fontWeight: 900, color: '#fbbf24', marginLeft: 2 }}>
+          <span style={{ fontSize: 8, fontWeight: 900, color: '#fbbf24', marginLeft: 2, display: 'flex', alignItems: 'center' }}>
             {stars}
           </span>
         </div>

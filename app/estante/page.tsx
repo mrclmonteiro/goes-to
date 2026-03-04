@@ -704,15 +704,16 @@ export default function EstantePage() {
           {/* Wrapper visual: cantos arredondados só na UI */}
           <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
           <div ref={shareRef}
-            style={{
-              width: '100%', height: '100%',
-              background: bgGradient,
-              borderRadius: 0,
-              display: 'flex', flexDirection: 'column',
-              padding: '36px 28px',
-              position: 'relative',
-              fontFamily: 'Inter, system-ui, sans-serif',
-            }}>
+  style={{
+    width: '100%', 
+    height: '100%',
+    background: 'linear-gradient(160deg, #0f0c29 0%, #1a0533 45%, #0a0a0f 100%)',
+    display: 'flex', 
+    flexDirection: 'column',
+    padding: '32px 20px 24px', // Margens seguras
+    position: 'relative',
+    fontFamily: '"Inter", sans-serif', // Força a fonte Inter
+  }}>
 
             {/* Orbes decorativos */}
             <div style={{
