@@ -1,5 +1,4 @@
 'use client'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
@@ -8,7 +7,7 @@ import Link from 'next/link'
 type Film = { id: string; title: string }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
-type MovieData = { poster: string | null }
+type MovieData = { ptTitle?: string | null; poster: string | null }
 
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
@@ -79,11 +78,13 @@ export default function BuscaPage() {
     nominations.filter(n => n.film_id === filmId).map(n => n.category)
 
   const filmNominees = (filmId: string) =>
-    nominations.filter(n => n.film_id === filmId && n.nominee).map(n => n.nominee as string)
+    nominations.filter(n => n.film_id === filmId && n.nominee)
+      .flatMap(n => (n.nominee as string).split(/,| e /).map(s => s.trim()).filter(Boolean))
 
   const q = query.toLowerCase().trim()
   const results = q.length < 2 ? [] : films.filter(f => {
-    const inTitle = f.title.toLowerCase().includes(q)
+    const pt = (movieData[f.title] as any)?.ptTitle ?? ''
+    const inTitle = f.title.toLowerCase().includes(q) || pt.toLowerCase().includes(q)
     const inNominee = filmNominees(f.id).some(n => n.toLowerCase().includes(q))
     const inCategory = filmCategories(f.id).some(c =>
       c.toLowerCase().includes(q) || (CATEGORY_LABELS[c] ?? '').toLowerCase().includes(q)
@@ -153,7 +154,7 @@ export default function BuscaPage() {
                         {(movieData[film.title] as any)?.poster
                           ? <img src={(movieData[film.title] as any).poster} alt={film.title} className="w-full h-full object-cover"/>
                           : <div className="w-full h-full flex items-end p-2" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)' }}>
-                              <p className="text-white text-[10px] font-semibold leading-tight">{film.title}</p>
+                              <p className="text-white text-[10px] font-semibold leading-tight">{(movieData[film.title] as any)?.ptTitle || film.title}</p>
                             </div>
                         }
                       </div>
@@ -164,7 +165,7 @@ export default function BuscaPage() {
                       </div>
                       <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight z-10"
                         style={{ color: 'rgba(255,255,255,0.8)' }}>
-                        {film.title}
+                        {(movieData[film.title] as any)?.ptTitle || film.title}
                       </p>
                     </Link>
                   ))}
@@ -189,7 +190,7 @@ export default function BuscaPage() {
               <div className="flex flex-col items-center py-12 gap-3">
                 <span className="text-5xl">🍿</span>
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Nada encontrado para &quot;{query}&quot;
+                  Nada encontrado para "{query}"
                 </p>
                 <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.25)' }}>
                   Tente buscar pelo nome do filme, ator ou categoria
@@ -217,7 +218,7 @@ export default function BuscaPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-semibold leading-tight" style={{ color: 'white' }}>{film.title}</p>
+                          <p className="text-sm font-semibold leading-tight" style={{ color: 'white' }}>{(movieData[film.title] as any)?.ptTitle || film.title}</p>
                           {uf?.watched && (
                             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                               style={{ background: 'rgba(251,191,36,0.9)' }}>

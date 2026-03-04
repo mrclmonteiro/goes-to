@@ -61,7 +61,8 @@ const TABS = [
   },
 ]
 
-const glass: React.CSSProperties = {
+// Variante com blur mais pesado — exclusiva da nav bar persistente
+const navGlass: React.CSSProperties = {
   background: 'rgba(120,120,128,0.18)',
   backdropFilter: 'blur(48px) saturate(200%)',
   WebkitBackdropFilter: 'blur(48px) saturate(200%)',
@@ -85,14 +86,8 @@ export default function BottomNav() {
   )
 
   const lastActiveIdxRef = useRef(0)
-  const [pinnedIdx, setPinnedIdx] = useState(0)
-  // update ref and pinned state in effect to avoid accessing/modifying refs during render
-  useEffect(() => {
-    if (activeIdx >= 0) {
-      lastActiveIdxRef.current = activeIdx
-      requestAnimationFrame(() => setPinnedIdx(activeIdx))
-    }
-  }, [activeIdx])
+  if (activeIdx >= 0) lastActiveIdxRef.current = activeIdx
+  const pinnedIdx = lastActiveIdxRef.current
 
   const [stage, setStage] = useState<'idle' | 'expanded' | 'focused'>('idle')
   const [query, setQuery] = useState('')
@@ -101,10 +96,7 @@ export default function BottomNav() {
   const isFocused  = stage === 'focused'
 
   useEffect(() => {
-    if (pathname !== '/busca') {
-      requestAnimationFrame(() => setStage('idle'))
-      requestAnimationFrame(() => setQuery(''))
-    }
+    if (pathname !== '/busca') { setStage('idle'); setQuery('') }
   }, [pathname])
 
   function handleSearchBubblePress() {
@@ -147,13 +139,13 @@ export default function BottomNav() {
       <div
         className="relative flex items-center justify-center rounded-[30px]"
         style={{
-          ...glass,
+          ...navGlass,
           height: 60,
           width: isFocused ? 0 : isExpanded ? 60 : undefined,
           minWidth: isFocused ? 0 : isExpanded ? 60 : undefined,
           padding: isFocused ? 0 : 0,
-          border: isFocused ? 'none' : glass.border,
-          boxShadow: isFocused ? 'none' : glass.boxShadow,
+          border: isFocused ? 'none' : navGlass.border,
+          boxShadow: isFocused ? 'none' : navGlass.boxShadow,
           overflow: 'hidden',
           flexShrink: 0,
           transition: 'all 0.4s cubic-bezier(0.32,0.72,0,1)',
@@ -224,7 +216,7 @@ export default function BottomNav() {
         <div
           className="flex items-center gap-3 rounded-[30px]"
           style={{
-            ...glass,
+            ...navGlass,
             height: 60,
             flex: isExpanded ? 1 : 'none',
             width: isExpanded ? undefined : 60,
@@ -267,7 +259,7 @@ export default function BottomNav() {
           <button
             onClick={handleClose}
             className="flex-shrink-0 flex items-center justify-center rounded-full"
-            style={{ ...glass, width: 60, height: 60 }}
+            style={{ ...navGlass, width: 60, height: 60 }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18"

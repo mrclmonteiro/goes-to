@@ -225,22 +225,22 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-8" style={{ background:'rgba(255,255,255,0.025)', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-xs leading-relaxed mb-5" style={{ color:'rgba(255,255,255,0.28)' }}>
+      <div className="px-6 py-6" style={{ background: 'rgba(80,80,88,0.35)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-xs leading-relaxed mb-4" style={{ color:'rgba(255,255,255,0.28)' }}>
           O <span style={{ color:'rgba(255,255,255,0.5)' }}>Goes To...</span> é um app desenvolvido por{' '}
           <span style={{ color:'rgba(255,255,255,0.5)' }}>Marcelo Monteiro</span> com auxílio da{' '}
           <span style={{ color:'rgba(255,255,255,0.5)' }}>Claude</span>.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           {[
-            { href:'https://x.com/mrclmonteiro', label:'X', svg:<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-            { href:'https://www.instagram.com/mrclmonteiro/', label:'Instagram', svg:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
-            { href:'https://letterboxd.com/mrclmonteiro/', label:'Letterboxd', svg:<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 3C3 3 0 6 0 9.7v4.6C0 18 3 21 6.7 21h10.6c3.7 0 6.7-3 6.7-6.7V9.7C24 6 21 3 17.3 3H6.7zm5.3 3.3a5.7 5.7 0 110 11.4 5.7 5.7 0 010-11.4zm-4 1.9a5.7 5.7 0 100 7.6 7 7 0 010-7.6zm8 0a7 7 0 010 7.6 5.7 5.7 0 100-7.6z"/></svg> },
-            { href:'https://github.com/mrclmonteiro/goes-to', label:'GitHub', svg:<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
+            { href:'https://x.com/mrclmonteiro', label:'X', svg:<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+            { href:'https://www.instagram.com/mrclmonteiro/', label:'Instagram', svg:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
+            { href:'https://letterboxd.com/mrclmonteiro/', label:'Letterboxd', svg:<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 3C3 3 0 6 0 9.7v4.6C0 18 3 21 6.7 21h10.6c3.7 0 6.7-3 6.7-6.7V9.7C24 6 21 3 17.3 3H6.7zm5.3 3.3a5.7 5.7 0 110 11.4 5.7 5.7 0 010-11.4zm-4 1.9a5.7 5.7 0 100 7.6 7 7 0 010-7.6zm8 0a7 7 0 010 7.6 5.7 5.7 0 100-7.6z"/></svg> },
+            { href:'https://github.com/mrclmonteiro/goes-to', label:'GitHub', svg:<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
           ].map(({ href, label, svg }) => (
             <a key={label} href={href} target="_blank" rel="noopener noreferrer"
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.38)' }}>
+              className="flex items-center justify-center"
+              style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 0 }}>
               {svg}
             </a>
           ))}

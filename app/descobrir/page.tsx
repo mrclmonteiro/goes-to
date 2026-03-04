@@ -50,7 +50,7 @@ const FACTS = [
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
-type MovieData = { poster: string | null }
+type MovieData = { ptTitle?: string | null; poster: string | null }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-lg font-semibold" style={{ color: 'white' }}>{children}</p>
@@ -133,6 +133,8 @@ const lgStyle: React.CSSProperties = {
   border: '1px solid rgba(255,255,255,0.25)',
   boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
 }
+
+// Dropdown glass style – same as filmes page for consistent blur
 const ddStyle: React.CSSProperties = {
   background: 'rgba(20,20,25,0.65)',
   backdropFilter: 'blur(32px) saturate(180%)',
@@ -140,7 +142,6 @@ const ddStyle: React.CSSProperties = {
   border: '1px solid rgba(255,255,255,0.15)',
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
-
 // ── PWA detection ──────────────────────────────────────────────────────
 function useIsPWA() {
   const [isPWA, setIsPWA] = useState(false)
@@ -329,12 +330,8 @@ function BottomSheet({ open, onClose, title, onAction, children }: {
       <div className="absolute inset-0"
         style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}/>
-      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden"
+      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden sheet"
         style={{
-          background: '#0e0e14',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderBottom: 'none',
-          boxShadow: '0 -8px 48px rgba(0,0,0,0.5)',
           transform: `translateY(${translateY}%)`,
           transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
           maxHeight: '92vh',
@@ -578,7 +575,7 @@ export default function DescobrirPage() {
                 {catDropdownOpen && (
                   <>
                     <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setCatDropdownOpen(false)}/>
-                    <div className="dropdown-glass absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
+                    <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
                       style={{ ...ddStyle, zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
                       {Object.keys(CATEGORY_LABELS).map(cat => (
                         <button key={cat} onClick={() => { setSelectedCat(cat); setCatDropdownOpen(false) }}
@@ -593,7 +590,7 @@ export default function DescobrirPage() {
               </div>
             </div>
             <div className="rounded-3xl p-5" style={glass}>
-              <GaugeChart ratings={swingRatings(selectedCat)}/>
+              <GaugeChart ratings={swingRatings(selectedCat).map(r => ({ ...r, title: (movieData[r.title] as any)?.ptTitle || r.title }))}/>
             </div>
           </div>
 
@@ -632,7 +629,7 @@ export default function DescobrirPage() {
                     </p>
                     {top && (
                       <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        ★ {top.title}
+                        ★ {(movieData[top.title] as any)?.ptTitle || top.title}
                       </p>
                     )}
                   </button>
@@ -656,7 +653,7 @@ export default function DescobrirPage() {
                       {(movieData[film.title] as any)?.poster
                         ? <img src={(movieData[film.title] as any).poster} alt={film.title} className="w-full h-full object-cover"/>
                         : <div className="w-full h-full flex items-end p-2" style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)' }}>
-                            <p className="text-white text-[10px] font-semibold leading-tight">{film.title}</p>
+                            <p className="text-white text-[10px] font-semibold leading-tight">{(movieData[film.title] as any)?.ptTitle || film.title}</p>
                           </div>
                       }
                     </div>
@@ -878,7 +875,7 @@ export default function DescobrirPage() {
 
                   <div className="flex-1 min-w-0" style={{ marginLeft: showPerson ? 10 : 0 }}>
                     <p className="text-sm font-medium leading-tight truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                      {nominee ?? film.title}
+                      {nominee ?? ((movieData[film.title] as any)?.ptTitle || film.title)}
                     </p>
                     {nominee && (
                       <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{film.title}</p>

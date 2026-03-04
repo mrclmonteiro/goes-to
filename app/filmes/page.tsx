@@ -31,12 +31,28 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Documentary Feature': 'Documentário',
 }
 
-const HERO_CATEGORIES = [
-  'Best Picture',
-  'Best International Feature',
-  'Best Animated Feature',
-  'Best Documentary Feature',
+const AVATAR_COLORS = [
+  ['#A1C4FD', '#C2E9FB'], ['#B5EAD7', '#83C5BE'], ['#FFDAC1', '#FF9AA2'],
+  ['#C7CEEA', '#A3B1C6'], ['#FDFD96', '#F6D365'], ['#E0C3FC', '#8EC5FC'],
+  ['#84FAB0', '#8FD3F4'], ['#E2E2E2', '#C9D6FF'], ['#A18CD1', '#FBC2EB'],
+  ['#D4FC79', '#96E6A1'], ['#FBC2EB', '#A6C1EE'], ['#FF9A9E', '#FECFEF'],
+  ['#89F7FE', '#66A6FF'], ['#FFECD2', '#FCB69F'], ['#D4FC79', '#96E6A1'],
+  ['#F3E7E9', '#E3EEFF'], ['#A1C4FD', '#C2E9FB'], ['#E0C3FC', '#8EC5FC'],
+  ['#A8E6CF', '#DCEDC1'], ['#D4FC79', '#96E6A1'], ['#CFD9DF', '#E2EBF0'],
+  ['#FFECD2', '#FCB69F'], ['#FFDAC1', '#FF9AA2'], ['#FBC2EB', '#A6C1EE'],
+  ['#FFDAB9', '#F08080']
 ]
+
+type HeroSlide = { type: 'category'; cat: string } | { type: 'promo'; id: 'bolao' } | { type: 'worst' }
+const HERO_SLIDES: HeroSlide[] = [
+  { type: 'category', cat: 'Best Picture' },
+  { type: 'promo', id: 'bolao' },
+  { type: 'category', cat: 'Best Actress' },
+  { type: 'category', cat: 'Best International Feature' },
+  { type: 'worst' },
+  { type: 'category', cat: 'Best Actor' },
+]
+const HERO_N = HERO_SLIDES.length
 const FILM_CATEGORIES = ['Best Picture','Best Animated Feature','Best International Feature','Best Adapted Screenplay','Best Original Screenplay','Best Cinematography','Best Film Editing','Best Original Score','Best Original Song','Best Costume Design','Best Production Design','Best Makeup and Hairstyling','Best Sound','Best Visual Effects','Best Casting','Best Documentary Feature']
 const PERSON_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
@@ -44,7 +60,7 @@ const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
-type MovieData = { poster: string | null; backdrop: string | null; overview: string | null }
+type MovieData = { ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null }
 
 // Liquid glass — tudo inline igual ao BottomNav (Tailwind v4 interfere via CSS)
 const lgStyle: React.CSSProperties = {
@@ -78,42 +94,69 @@ function useCountdown() {
 }
 
 function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] }) {
-  if (ratings.length === 0) return (
+  const targetPct = ratings.length > 0 ? ratings[0].rating / 5 : 0
+  const [animPct, setAnimPct] = useState(targetPct)
+  const animRef = useRef<number | null>(null)
+  const fromRef = useRef(animPct)
+
+  useEffect(() => {
+    if (animRef.current !== null) cancelAnimationFrame(animRef.current)
+    const from = fromRef.current
+    const to = targetPct
+    const duration = 700
+    const start = performance.now()
+    const easeInOut = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1)
+      const v = from + (to - from) * easeInOut(t)
+      fromRef.current = v
+      setAnimPct(v)
+      if (t < 1) animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+    return () => { if (animRef.current !== null) cancelAnimationFrame(animRef.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetPct])
+
+  const isEmpty = ratings.length === 0
+  const top = ratings[0]
+  const displayRating = top ? Math.round(animPct * 5 * 10) / 10 : 0
+  const r = 72, cx = 100, cy = 92
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const arcX = (a: number) => cx + r * Math.cos(toRad(a))
+  const arcY = (a: number) => cy + r * Math.sin(toRad(a))
+  const needleAngle = 180 + animPct * 180
+  const needleX = cx + (r - 14) * Math.cos(toRad(needleAngle))
+  const needleY = cy + (r - 14) * Math.sin(toRad(needleAngle))
+  const segments = 24
+
+  if (isEmpty) return (
     <div className="flex flex-col items-center py-8">
       <p className="text-sm" style={{ color: 'rgba(128,128,128,0.5)' }}>Ainda sem votos nessa categoria</p>
       <p className="text-xs mt-1" style={{ color: 'rgba(128,128,128,0.3)' }}>Avalie os filmes para ver o favorito</p>
     </div>
   )
-  const top = ratings[0]
-  const pct = top.rating / 5
-  const r = 72, cx = 100, cy = 92
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const arcX = (a: number) => cx + r * Math.cos(toRad(a))
-  const arcY = (a: number) => cy + r * Math.sin(toRad(a))
-  const needleAngle = 180 + pct * 180
-  const needleX = cx + (r - 14) * Math.cos(toRad(needleAngle))
-  const needleY = cy + (r - 14) * Math.sin(toRad(needleAngle))
-  const segments = 24
+
   return (
     <div className="flex flex-col items-center">
       <svg viewBox="0 0 200 110" className="w-64">
         {Array.from({ length: segments }, (_, i) => {
           const sa = 180 + (i / segments) * 180
           const ea = 180 + ((i + 1) / segments) * 180
+          const lit = i / segments < animPct
           return (
             <path key={i}
               d={`M ${arcX(sa)} ${arcY(sa)} A ${r} ${r} 0 0 1 ${arcX(ea)} ${arcY(ea)}`}
-              stroke={i / segments < pct ? `hsl(${30 + (i / segments) * 40},90%,60%)` : 'rgba(128,128,128,0.15)'}
+              stroke={lit ? `hsl(${30 + (i / segments) * 40},90%,60%)` : 'rgba(128,128,128,0.15)'}
               strokeWidth="9" strokeLinecap="butt" fill="none"/>
           )
         })}
         <line x1={cx} y1={cy} x2={needleX} y2={needleY}
-          stroke="white" strokeWidth="2.5" strokeLinecap="round"
-          style={{ transition: 'all 0.8s cubic-bezier(.34,1.56,.64,1)' }}/>
+          stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
         <circle cx={cx} cy={cy} r="4" fill="white"/>
         <text x="28" y="106" fill="rgba(128,128,128,0.4)" fontSize="9" textAnchor="middle">0</text>
         <text x="172" y="106" fill="rgba(128,128,128,0.4)" fontSize="9" textAnchor="middle">5★</text>
-        <text x={cx} y={cy - 18} fill="white" fontSize="26" fontWeight="700" textAnchor="middle">{top.rating}</text>
+        <text x={cx} y={cy - 18} fill="white" fontSize="26" fontWeight="700" textAnchor="middle">{displayRating}</text>
         <text x={cx} y={cy - 4} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle">estrelas</text>
       </svg>
       <p className="font-semibold text-base mt-1" style={{ color: 'white' }}>{top.title}</p>
@@ -135,8 +178,8 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
   )
 }
 
-function PosterCard({ film, userFilm, onToggle, poster }: {
-  film: Film; userFilm?: UserFilm; onToggle: () => void; poster: string | null
+function PosterCard({ film, userFilm, onToggle, poster, ptTitle }: {
+  film: Film; userFilm?: UserFilm; onToggle: () => void; poster: string | null; ptTitle?: string | null
 }) {
   return (
     <Link href={`/filmes/${film.id}`}
@@ -146,7 +189,7 @@ function PosterCard({ film, userFilm, onToggle, poster }: {
         {poster
           ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
           : <div className="w-full h-full flex items-end p-3" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)' }}>
-              <p className="text-white text-xs font-semibold leading-tight">{film.title}</p>
+              <p className="text-white text-xs font-semibold leading-tight">{ptTitle || film.title}</p>
             </div>
         }
       </div>
@@ -166,6 +209,52 @@ function PosterCard({ film, userFilm, onToggle, poster }: {
         <p className="absolute bottom-2 left-3 text-xs z-10" style={{ color: '#fbbf24' }}>{'★'.repeat(userFilm.rating)}</p>
       )}
     </Link>
+  )
+}
+
+function BolaoPromoSlide() {
+  const emojis = ['✍️', '✅', '📲']
+  const [emojiIdx, setEmojiIdx] = useState(0)
+  const [phase, setPhase] = useState<'in' | 'out'>('in')
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setPhase('out')
+      const swap = setTimeout(() => {
+        setEmojiIdx(i => (i + 1) % emojis.length)
+        setPhase('in')
+      }, 420)
+      return () => clearTimeout(swap)
+    }, 1800)
+    return () => clearInterval(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
+      <style>{`
+        @keyframes bolaoFloat {
+          0%   { transform: translateX(-50%) translateY(-50%) scale(1); }
+          40%  { transform: translateX(-50%) translateY(calc(-50% - 14px)) scale(1.05); }
+          70%  { transform: translateX(-50%) translateY(calc(-50% - 7px)) scale(1.02); }
+          100% { transform: translateX(-50%) translateY(-50%) scale(1); }
+        }
+      `}</style>
+      <div style={{
+        position: 'absolute',
+        top: '42%',
+        left: '50%',
+        fontSize: 80,
+        lineHeight: 1,
+        animation: 'bolaoFloat 2.8s ease-in-out infinite',
+        opacity: phase === 'in' ? 1 : 0,
+        transition: 'opacity 0.38s cubic-bezier(.4,0,.2,1)',
+        filter: 'drop-shadow(0 8px 28px rgba(0,0,0,0.45))',
+        userSelect: 'none',
+      }}>
+        {emojis[emojiIdx]}
+      </div>
+    </div>
   )
 }
 
@@ -192,6 +281,7 @@ export default function FilmesPage() {
   const [allUserFilms, setAllUserFilms] = useState<{ film_id: string; rating: number | null }[]>([])
   const [catRatings, setCatRatings] = useState<{ film_id: string; category: string; rating: number }[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  const [avatarIdx, setAvatarIdx] = useState(0)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
   const [listCategory, setListCategory] = useState('Best Picture')
@@ -206,14 +296,24 @@ export default function FilmesPage() {
   const isDraggingRef = useRef(false)
   const dragStartXRef = useRef<number | null>(null)
 
-  const heroCategory = HERO_CATEGORIES[heroIdx]
+  const heroSlide = HERO_SLIDES[heroIdx]
+  // for gauge: use nearest preceding category slide (or first category)
+  const gaugeCategory = heroSlide.type === 'category'
+    ? heroSlide.cat
+    : ([...HERO_SLIDES].slice(0, heroIdx).reverse().find(s => s.type === 'category') as { type: 'category'; cat: string } | undefined)?.cat
+      ?? (HERO_SLIDES.find(s => s.type === 'category') as { type: 'category'; cat: string }).cat
+  const heroCategory = gaugeCategory
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setUserId(user.id)
+      if (user) {
+        setUserId(user.id)
+        const { data: prof } = await supabase.from('user_profiles').select('avatar_index').eq('id', user.id).maybeSingle()
+        if (prof?.avatar_index != null) setAvatarIdx(prof.avatar_index)
+      }
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nominationsData } = await supabase.from('nominations').select('*')
       const { data: userFilmsData } = await supabase.from('user_films').select('*').eq('user_id', user?.id ?? '')
@@ -231,7 +331,7 @@ export default function FilmesPage() {
       const noms = nominationsData ?? []
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
-        .map((n: Nomination) => n.nominee as string)
+        .flatMap((n: Nomination) => (n.nominee as string).split(/,| e /).map(s => s.trim()).filter(Boolean))
       const unique = [...new Set(nominees)] as string[]
       const photoPairs = await Promise.all(unique.map(async name => [name, await fetchPersonPhoto(name)] as const))
       setPersonPhotos(Object.fromEntries(photoPairs))
@@ -250,7 +350,7 @@ export default function FilmesPage() {
       setHeroProgress(pct)
       if (pct >= 100) {
         clearInterval(tick)
-        setHeroIdx(i => (i + 1) % HERO_CATEGORIES.length)
+        setHeroIdx(i => (i + 1) % HERO_N)
       }
     }, 50)
     return () => { clearInterval(tick); clearTimeout(fadeIn) }
@@ -266,13 +366,26 @@ export default function FilmesPage() {
     const dx = dragX
     isDraggingRef.current = false; setIsDragging(false); dragStartXRef.current = null; setDragX(0)
     if (Math.abs(dx) > 60) {
-      if (dx < 0) setHeroIdx(i => (i + 1) % HERO_CATEGORIES.length)
-      else         setHeroIdx(i => (i - 1 + HERO_CATEGORIES.length) % HERO_CATEGORIES.length)
+      if (dx < 0) setHeroIdx(i => (i + 1) % HERO_N)
+      else         setHeroIdx(i => (i - 1 + HERO_N) % HERO_N)
     }
   }
 
   const getUF = (id: string) => userFilms.find(u => u.film_id === id)
   const isPersonCategory = PERSON_CATEGORIES.includes(listCategory)
+  const isHeroPersonCategory = PERSON_CATEGORIES.includes(heroCategory)
+
+  const topPersonForHeroCategory = (cat: string) => {
+    const topRated = swingRatings(cat)[0]
+    const title = topRated?.title ?? filmsByCategory(cat)[0]?.title
+    if (!title) return null
+    const film = films.find(f => f.title === title)
+    if (!film) return null
+    const nom = nominations.find(n => n.category === cat && n.film_id === film.id && n.nominee)
+    if (!nom?.nominee) return null
+    const name = (nom.nominee as string).split(/,| e /)[0].trim()
+    return { name, photo: personPhotos[name] ?? null }
+  }
 
   const filmsByCategory = (cat: string) => {
     const ids = nominations.filter(n => n.category === cat).map(n => n.film_id)
@@ -281,7 +394,10 @@ export default function FilmesPage() {
   const nomineesByCategory = (cat: string) =>
     nominations
       .filter(n => n.category === cat && n.nominee)
-      .map(n => ({ name: n.nominee as string, film: films.find(f => f.id === n.film_id) }))
+      .flatMap(n =>
+        (n.nominee as string).split(/,| e /).map(s => s.trim()).filter(Boolean)
+          .map(name => ({ name, film: films.find(f => f.id === n.film_id) }))
+      )
       .filter(n => n.film) as { name: string; film: Film }[]
 
   const swingRatings = (cat: string) =>
@@ -295,12 +411,35 @@ export default function FilmesPage() {
       .filter(f => f.rating > 0)
       .sort((a, b) => b.rating - a.rating)
 
-  const heroBackdrops = HERO_CATEGORIES.map(cat => {
-    const top = swingRatings(cat)[0]
-    const catFilms = filmsByCategory(cat)
-    const title = top?.title ?? catFilms[0]?.title
-    return title ? (movieData[title]?.backdrop ?? null) : null
-  })
+  // worst-rated film: film whose single lowest rating given is the smallest across all films
+  const worstFilm = (() => {
+    const byFilm = films.map(f => {
+      const rats = allUserFilms.filter(u => u.film_id === f.id && u.rating != null && u.rating > 0)
+      if (rats.length === 0) return null
+      const min = Math.min(...rats.map(u => u.rating ?? 5))
+      return { title: f.title, min }
+    }).filter(Boolean) as { title: string; min: number }[]
+    if (!byFilm.length) return null
+    return byFilm.sort((a, b) => a.min - b.min)[0]
+  })()
+
+  const heroSlideBackdrops = (() => {
+    const usedCount: Record<string, number> = {}
+    return HERO_SLIDES.map((slide) => {
+      if (slide.type === 'promo') return null
+      const title = slide.type === 'worst'
+        ? worstFilm?.title ?? null
+        : (swingRatings(slide.cat)[0]?.title ?? filmsByCategory(slide.cat)[0]?.title ?? null)
+      if (!title) return null
+      const data = movieData[title]
+      if (!data) return null
+      const pool = data.backdrops?.length ? data.backdrops : (data.backdrop ? [data.backdrop] : [])
+      if (!pool.length) return null
+      const idx = usedCount[title] ?? 0
+      usedCount[title] = idx + 1
+      return pool[idx % pool.length]
+    })
+  })()
 
   async function toggleWatched(filmId: string) {
     if (!userId) return
@@ -355,41 +494,127 @@ export default function FilmesPage() {
         <div
           className="absolute inset-y-0 left-0 flex"
           style={{
-            width: `${HERO_CATEGORIES.length * 100}%`,
-            transform: `translateX(calc(-${heroIdx * (100 / HERO_CATEGORIES.length)}% + ${dragX}px))`,
+            width: `${HERO_N * 100}%`,
+            transform: `translateX(calc(-${heroIdx * (100 / HERO_N)}% + ${dragX}px))`,
             transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(.4,0,.2,1)',
             willChange: 'transform',
           }}
         >
-          {heroBackdrops.map((backdrop, i) => (
-            <div key={i} style={{ width: `${100 / HERO_CATEGORIES.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}>
-              {backdrop
-                ? <img src={backdrop} alt="" className="w-full h-full object-cover" draggable={false} style={{ userSelect: 'none' }}/>
-                : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0533, #0a0a0f)'}}/>
-              }
-            </div>
-          ))}
+          {HERO_SLIDES.map((slide, i) => {
+            const backdrop = heroSlideBackdrops[i]
+            if (slide.type === 'promo') {
+              const c0 = AVATAR_COLORS[avatarIdx % AVATAR_COLORS.length][0]
+              const c1 = AVATAR_COLORS[avatarIdx % AVATAR_COLORS.length][1]
+              return (
+                <div key={i} style={{ width: `${100 / HERO_N}%`, height: '100%', flexShrink: 0, position: 'relative',
+                  background: `linear-gradient(145deg, ${c0}33 0%, ${c1}22 40%, #0a0a0f 100%)` }}>
+                  <BolaoPromoSlide/>
+                </div>
+              )
+            }
+            return (
+              <div key={i} style={{ width: `${100 / HERO_N}%`, height: '100%', flexShrink: 0, position: 'relative' }}>
+                {backdrop
+                  ? <img src={backdrop} alt="" className="w-full h-full object-cover" draggable={false} style={{ userSelect: 'none' }}/>
+                  : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0533, #0a0a0f)'}}/>
+                }
+              </div>
+            )
+          })}
         </div>
 
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 38%, rgba(10,10,15,0.82) 72%, #0a0a0f 100%)'
+          background: heroSlide.type === 'promo'
+            ? 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 50%, rgba(10,10,15,0.55) 80%, #0a0a0f 100%)'
+            : 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 38%, rgba(10,10,15,0.82) 72%, #0a0a0f 100%)'
         }}/>
 
+        {/* Texto promo — fora do strip, acima do gradiente */}
+        {heroSlide.type === 'promo' && (() => {
+          const c0 = AVATAR_COLORS[avatarIdx % AVATAR_COLORS.length][0]
+          return (
+            <div
+              className="absolute bottom-0 left-0 right-0 px-8 pb-8 text-center pointer-events-none"
+              style={{ opacity: textOpacity, transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease', zIndex: 2 }}
+            >
+              {/* Novidade pill */}
+              <div style={{
+                background: 'rgba(10,10,15,0.65)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: `1px solid ${c0}66`,
+                borderRadius: 999,
+                padding: '3px 12px',
+                marginBottom: 8,
+                display: 'inline-block',
+              }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.09em', color: c0, textTransform: 'uppercase', margin: 0 }}>Novidade</p>
+              </div>
+              <p style={{ fontSize: 28, fontWeight: 700, color: 'white', lineHeight: 1.2, marginBottom: 4 }}>Faça o seu bolão</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, marginBottom: 6 }}>
+                Escolha seus palpites e compartilhe com os amigos
+              </p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', lineHeight: 1.4 }}>
+                Visite seu perfil e faça o seu
+              </p>
+            </div>
+          )
+        })()}
+
+        {/* Texto categorias */}
         <div
-          className="absolute bottom-0 left-0 right-0 px-6 pb-12 text-center pointer-events-none"
-          style={{ opacity: textOpacity, transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease' }}
+          className="absolute bottom-0 left-0 right-0 px-6 pb-8 text-center pointer-events-none"
+          style={{ opacity: (heroSlide.type === 'promo') ? 0 : textOpacity, transition: isDragging ? 'opacity 0.05s linear' : 'opacity 0.3s ease' }}
         >
-          <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Segundo nossos usuários, o Oscar de</p>
-          <p className="text-xl font-bold mb-1" style={{ color: 'rgba(255,255,255,0.88)' }}>{CATEGORY_LABELS[heroCategory] ?? heroCategory}</p>
-          <p className="text-2xl font-light mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Goes To…</p>
-          <p className="text-4xl font-bold leading-tight">
-            {swingRatings(heroCategory)[0]?.title ?? filmsByCategory(heroCategory)[0]?.title ?? '—'}
-          </p>
+          {heroSlide.type === 'worst' ? (
+            <>
+              <p className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.45)', marginBottom: 6, maxWidth: 280, margin: '0 auto 6px' }}>
+                Segundo nossos usuários, o{' '}
+                <span style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 700, fontSize: '1.05em' }}>pior entre os melhores</span>
+                {' '}<span style={{ color: '#c9a84c', fontWeight: 600 }}>filmes é</span>
+              </p>
+              <p className="text-3xl font-bold leading-tight">
+                {worstFilm ? (movieData[worstFilm.title]?.ptTitle || worstFilm.title) : '—'}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.45)', marginBottom: 6, maxWidth: 280, margin: '0 auto 6px' }}>
+                Segundo nossos usuários, o Oscar de{' '}
+                <span style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 700, fontSize: '1.05em' }}>{CATEGORY_LABELS[heroCategory] ?? heroCategory}</span>
+                {' '}<span style={{ color: '#c9a84c', fontWeight: 600 }}>Goes To…</span>
+              </p>
+              {isHeroPersonCategory ? (() => {
+                const person = topPersonForHeroCategory(heroCategory)
+                const filmTitle = (() => { const t = swingRatings(heroCategory)[0]?.title ?? filmsByCategory(heroCategory)[0]?.title; return t ? (movieData[t]?.ptTitle || t) : null })()
+                return (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0"
+                      style={{ border: '2px solid rgba(255,255,255,0.45)', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                      {person?.photo
+                        ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover"/>
+                        : <div className="w-full h-full flex items-center justify-center text-base font-bold"
+                            style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{person?.name.charAt(0) ?? '?'}</div>
+                      }
+                    </div>
+                    <div className="text-left">
+                      <p className="text-2xl font-bold leading-tight">{person?.name ?? '—'}</p>
+                      {filmTitle && <p className="text-sm font-medium leading-snug mt-0.5" style={{ color: '#fbbf24' }}>{filmTitle}</p>}
+                    </div>
+                  </div>
+                )
+              })() : (
+                <p className="text-3xl font-bold leading-tight">
+                  {(() => { const t = swingRatings(heroCategory)[0]?.title ?? filmsByCategory(heroCategory)[0]?.title; return t ? (movieData[t]?.ptTitle || t) : '—' })()}
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 pointer-events-auto">
-          {HERO_CATEGORIES.map((cat, i) => (
-            <button key={cat} onClick={() => setHeroIdx(i)}
+          {HERO_SLIDES.map((slide, i) => (
+            <button key={i} onClick={() => setHeroIdx(i)}
               style={{
                 height: 5, width: i === heroIdx ? 36 : 5, borderRadius: 3,
                 background: 'rgba(255,255,255,0.28)', overflow: 'hidden',
@@ -408,7 +633,16 @@ export default function FilmesPage() {
       <div className="mx-4 mt-4 rounded-3xl p-6" style={{
         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
       }}>
-        <GaugeChart ratings={swingRatings(heroCategory)}/>
+        <GaugeChart ratings={
+          heroSlide.type === 'worst' && worstFilm
+            ? (() => {
+                const rats = allUserFilms.filter(u => u.film_id === films.find(f => f.title === worstFilm.title)?.id && u.rating)
+                if (!rats.length) return []
+                const avg = Math.round((rats.reduce((s, u) => s + (u.rating ?? 0), 0) / rats.length) * 10) / 10
+                return [{ title: movieData[worstFilm.title]?.ptTitle || worstFilm.title, rating: avg }]
+              })()
+            : swingRatings(gaugeCategory).map(r => ({ ...r, title: movieData[r.title]?.ptTitle || r.title }))
+        }/>
       </div>
 
       <div className="mx-4 my-6" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
@@ -483,7 +717,8 @@ export default function FilmesPage() {
             {filmsByCategory(listCategory).map(film => (
               <PosterCard key={film.id} film={film} userFilm={getUF(film.id)}
                 onToggle={() => toggleWatched(film.id)}
-                poster={movieData[film.title]?.poster ?? null}/>
+                poster={movieData[film.title]?.poster ?? null}
+                ptTitle={movieData[film.title]?.ptTitle}/>
             ))}
           </div>
         )}

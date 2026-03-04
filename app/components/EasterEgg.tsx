@@ -4,7 +4,7 @@
 
 'use client'
 
-export type EggType = 'lion' | 'up' | '007' | 'batman' | 'paris' | 'clube' | 'titanic' | 'chefao' | null
+export type EggType = 'lion' | 'up' | '007' | 'batman' | 'paris' | 'clube' | 'titanic' | 'chefao' | 'compadecida' | 'central' | 'cidadededeus' | 'minhamae' | 'tropa' | 'bacurau' | 'quehoras' | 'palhaco' | 'agente' | null
 
 // Avatar metrics (match your page layout)
 const AV_TOP = 100   // marginTop do container do avatar
@@ -78,7 +78,7 @@ function FadeEmoji({
 //  INDIVIDUAL EGGS
 // =============================================================================
 
-// 👑 REI LEÃO — coroa cai e pousa bem em cima do avatar
+// 👑 REI LEÃO
 function EggLion() {
   const crownY = AV_TOP - 16  // cima da cabeça
   return (
@@ -104,7 +104,7 @@ function EggLion() {
   )
 }
 
-// 🎈🏠 UP — balão+casa flutuam de baixo para cima com deriva lateral
+// 🎈🏠 UP
 function EggUp() {
   return (
     <>
@@ -144,7 +144,7 @@ function EggUp() {
   )
 }
 
-// 🍸🔫 007 — drink à esquerda, arma à direita, nível do peito
+// 🍸🔫 007
 function Egg007() {
   const midY = AV_CY + 20  // nível do "peito"
   return (
@@ -183,7 +183,7 @@ function Egg007() {
   )
 }
 
-// 🃏 BATMAN — carta vira rapidinho perto do avatar
+// 🃏 BATMAN
 function EggBatman() {
   const cardY = AV_CY - 20
   return (
@@ -208,7 +208,7 @@ function EggBatman() {
   )
 }
 
-// 🕛🌙🌃 MEIA-NOITE EM PARIS — relógio embaixo, lua/cidade no fundo
+// 🕛🌙🌃 MEIA-NOITE EM PARIS
 function EggParis() {
   return (
     <>
@@ -226,7 +226,7 @@ function EggParis() {
   )
 }
 
-// 🍳🍩♣️ CLUBE DOS CINCO — café da manhã ao redor
+// 🍳🍩♣️ CLUBE DOS CINCO
 function EggClube() {
   return (
     <>
@@ -244,33 +244,27 @@ function EggClube() {
   )
 }
 
-// 🛳 TITANIC — o barco inclina e afunda, depois volta
+// 🛳 TITANIC
 function EggTitanic() {
   return (
-    <>
-      <EggStyle css={`
-        @keyframes eg-titanic {
-          0%   { transform:rotate(0deg)   translateY(0);    opacity:1; }
-          25%  { transform:rotate(-18deg) translateY(0);    opacity:1; }
-          55%  { transform:rotate(-35deg) translateY(80px); opacity:0.3; }
-          56%  { transform:rotate(0deg)   translateY(80px); opacity:0; }
-          70%  { transform:rotate(0deg)   translateY(0);    opacity:1; }
-          85%  { opacity:1; }
-          100% { opacity:0; }
-        }
-      `} />
-      <Emoji style={{
-        fontSize: 72,
-        top: AV_CY + AV_R + 10,
-        left: 'calc(50% - 36px)',
-        transformOrigin: 'bottom right',
-        animation: 'eg-titanic 4.2s ease-in-out forwards',
-      }}>🛳</Emoji>
-    </>
+    <EggStyle css={`
+      @keyframes eg-titanic {
+        0%   { transform: rotate(0deg)   translateY(0); }
+        20%  { transform: rotate(-25deg) translateY(0); }       /* Empina a proa */
+        50%  { transform: rotate(-45deg) translateY(120px); }   /* Afunda saindo do círculo */
+        70%  { transform: rotate(0deg)   translateY(120px); }   /* Fica escondido lá embaixo */
+        100% { transform: rotate(0deg)   translateY(0); }       /* Emerge intacto */
+      }
+      
+      #avatar-emoji {
+        transform-origin: bottom right; 
+        animation: eg-titanic 4s ease-in-out forwards;
+      }
+    `} />
   )
 }
 
-// 🥐💥🔫🌹 CHEFÃO — os ícones surgem ao redor do avatar
+// 🥐💥🔫🌹 CHEFÃO
 function EggChefao() {
   return (
     <>
@@ -287,6 +281,257 @@ function EggChefao() {
   )
 }
 
+// 🐶🥩🧈📜 O AUTO DA COMPADECIDA — Bife fritando na manteiga e o testamento da cachorra
+function EggCompadecida() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-fry {
+          0% { opacity: 0; transform: scale(0.5) translateY(10px); }
+          20% { opacity: 1; transform: scale(1.1) translateY(0); }
+          30%, 50%, 70% { transform: scale(1) translateX(-3px); }
+          40%, 60%, 80% { transform: scale(1) translateX(3px); }
+          90% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.8) translateY(-10px); }
+        }
+      `} />
+      
+      {/* Bife e manteiga fritando agitados à esquerda */}
+      <Emoji style={{
+        fontSize: 42,
+        top: AV_CY - 10,
+        left: `calc(50% - ${AV_R + 70}px)`,
+        animation: 'eg-fry 2.6s ease-out forwards',
+        opacity: 0,
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
+      }}>🥩🧈</Emoji>
+      
+      {/* Rolo de testamento surgindo à direita */}
+      <FadeEmoji size={46} top={AV_CY - 5} left={`calc(50% + ${AV_R + 15}px)`}
+        delay={0.3} duration={2.6}>📜</FadeEmoji>
+    </>
+  )
+}
+
+// 👵✍️🚌💨 CENTRAL DO BRASIL — Dora escrevendo carta enquanto o ônibus corta a tela
+function EggCentral() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-write {
+          0%   { opacity: 0; transform: translate(20px, 20px) scale(0.5); }
+          15%  { opacity: 1; transform: translate(0, 0) scale(1); }
+          25%  { transform: translate(-4px, 4px) scale(1); }
+          35%  { transform: translate(3px, -3px) scale(1); }
+          45%  { transform: translate(-4px, 4px) scale(1); }
+          55%  { transform: translate(3px, -3px) scale(1); }
+          75%  { opacity: 1; }
+          100% { opacity: 0; transform: translate(10px, 10px) scale(0.8); }
+        }
+        @keyframes eg-bus {
+          0%   { transform: translateX(110vw); }
+          100% { transform: translateX(-50vw); }
+        }
+      `} />
+      
+      {/* Mão escrevendo próxima ao ombro direito */}
+      <Emoji style={{
+        fontSize: 42,
+        top: AV_CY + 5,
+        left: `calc(50% + ${AV_R + 5}px)`,
+        animation: 'eg-write 2.8s ease-out forwards',
+        opacity: 0,
+      }}>✍️</Emoji>
+      
+      {/* Carta de papel sendo escrita */}
+      <FadeEmoji size={32} top={AV_CY - 15} left={`calc(50% + ${AV_R + 45}px)`}
+        delay={0.2} duration={2.6}>✉️</FadeEmoji>
+
+      {/* Ônibus cruzando a tela na parte de baixo */}
+      <div style={{
+        position: 'fixed',
+        bottom: '12vh', // Fica um pouco acima da base da tela
+        left: 0,
+        animation: 'eg-bus 3.8s linear forwards',
+        fontSize: 64,
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        whiteSpace: 'nowrap',
+        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'
+      }}>
+        🚌💨💨
+      </div>
+    </>
+  )
+}
+
+// 🐔📸🏃‍♂️ CIDADE DE DEUS — Flashes do Buscapé e moleque correndo
+function EggCidadeDeDeus() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-flash {
+          0%, 100% { opacity: 0; transform: scale(0.8); }
+          10%, 30%, 50% { opacity: 1; transform: scale(1.2); filter: brightness(2) drop-shadow(0 0 10px white); }
+          20%, 40% { opacity: 0; }
+        }
+        @keyframes eg-run {
+          0% { transform: translateX(50vw) scaleX(-1); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(-50vw) scaleX(-1); opacity: 0; }
+        }
+      `} />
+      <Emoji style={{ fontSize: 50, top: AV_CY - 10, left: `calc(50% - ${AV_R + 60}px)`, animation: 'eg-flash 3s ease-in-out forwards', opacity: 0 }}>📸</Emoji>
+      <Emoji style={{ fontSize: 45, bottom: '20vh', left: '50%', animation: 'eg-run 3.5s linear forwards', opacity: 0, zIndex: 10 }}>🏃🏾‍♂️</Emoji>
+    </>
+  )
+}
+
+// 👩‍🦱🩴💨 MINHA MÃE É UMA PEÇA — Chinelo voando na diagonal e bolsa tremendo
+function EggMinhaMae() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-chinelo {
+          0% { transform: translate(calc(50vw + 50px), ${AV_CY}px) rotate(0deg) scale(0.5); opacity: 0; }
+          10% { opacity: 1; transform: translate(calc(50vw + 20px), ${AV_CY - 20}px) rotate(-45deg) scale(1.5); }
+          100% { transform: translate(-20vw, -20vh) rotate(-720deg) scale(1); opacity: 1; }
+        }
+        @keyframes eg-shake-mad {
+          0%, 100% { transform: rotate(0deg); opacity: 0; }
+          10%, 90% { opacity: 1; }
+          20%, 40%, 60%, 80% { transform: rotate(-15deg); }
+          30%, 50%, 70% { transform: rotate(15deg); }
+        }
+      `} />
+      <Emoji style={{ fontSize: 40, top: AV_CY, left: `calc(50% + ${AV_R + 30}px)`, animation: 'eg-shake-mad 2.8s ease-in-out forwards', opacity: 0 }}>👜</Emoji>
+      <Emoji style={{ fontSize: 50, top: 0, left: 0, animation: 'eg-chinelo 2s cubic-bezier(0.25, 1, 0.5, 1) forwards', opacity: 0, zIndex: 100 }}>🩴</Emoji>
+    </>
+  )
+}
+
+// 💀🧹💢 TROPA DE ELITE — Vassoura batendo no chão ("pede pra sair")
+function EggTropa() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-broom {
+          0%, 100% { opacity: 0; transform: translateY(-20px) rotate(15deg); }
+          10%, 90% { opacity: 1; }
+          20%, 40%, 60%, 80% { transform: translateY(15px) rotate(0deg); }
+          30%, 50%, 70% { transform: translateY(-30px) rotate(20deg); }
+        }
+      `} />
+      <Emoji style={{ fontSize: 55, top: AV_CY - 20, left: `calc(50% - ${AV_R + 60}px)`, animation: 'eg-broom 2.5s ease-in-out forwards', opacity: 0 }}>🧹</Emoji>
+      <FadeEmoji size={40} top={AV_CY - 40} left={`calc(50% + ${AV_R + 10}px)`} delay={0.5} duration={2}>💢</FadeEmoji>
+    </>
+  )
+}
+
+// 🛸💊 BACURAU — Drone flutuando bizarro e pílulas caindo
+function EggBacurau() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-drone {
+          0%, 100% { opacity: 0; transform: translate(0, -50px) scale(0.5); }
+          20% { opacity: 1; transform: translate(-20px, -80px) scale(1); }
+          40% { transform: translate(30px, -70px) scale(1.1) rotate(10deg); }
+          60% { transform: translate(-10px, -90px) scale(0.9) rotate(-10deg); }
+          80% { opacity: 1; transform: translate(20px, -60px) scale(1); }
+        }
+        @keyframes eg-pill {
+          0% { opacity: 0; transform: translateY(-20px) rotate(0deg); }
+          20% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(100px) rotate(360deg); }
+        }
+      `} />
+      <Emoji style={{ fontSize: 50, top: AV_CY, left: '50%', animation: 'eg-drone 3s ease-in-out forwards', opacity: 0, zIndex: 50 }}>🛸</Emoji>
+      <Emoji style={{ fontSize: 25, top: AV_CY - 10, left: `calc(50% - ${AV_R + 40}px)`, animation: 'eg-pill 2s ease-in forwards 0.5s', opacity: 0 }}>💊</Emoji>
+      <Emoji style={{ fontSize: 25, top: AV_CY + 10, left: `calc(50% + ${AV_R + 20}px)`, animation: 'eg-pill 2.5s ease-in forwards 0.2s', opacity: 0 }}>💊</Emoji>
+    </>
+  )
+}
+
+// 🏊‍♀️🫖📚 QUE HORAS ELA VOLTA? — Bule sumindo e livros (vestibular) subindo
+function EggQueHoras() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-teapot {
+          0% { opacity: 0; transform: translateX(0); }
+          20% { opacity: 1; transform: translateX(0); }
+          80% { opacity: 0; transform: translateX(-40px); }
+          100% { opacity: 0; }
+        }
+        @keyframes eg-books {
+          0% { opacity: 0; transform: translateY(40px); }
+          30% { opacity: 1; transform: translateY(0); }
+          90% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(20px); }
+        }
+      `} />
+      <Emoji style={{ fontSize: 45, top: AV_CY, left: `calc(50% - ${AV_R + 50}px)`, animation: 'eg-teapot 2.8s ease-out forwards', opacity: 0 }}>🫖</Emoji>
+      <Emoji style={{ fontSize: 45, top: AV_CY - 10, left: `calc(50% + ${AV_R + 15}px)`, animation: 'eg-books 2.8s ease-out forwards', opacity: 0 }}>📚</Emoji>
+    </>
+  )
+}
+
+// 🤡🌀🐈 O PALHAÇO — Ventilador girando no teto e gatinho
+function EggPalhaco() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-fan {
+          0% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+          15% { opacity: 1; transform: scale(1) rotate(180deg); }
+          85% { opacity: 1; transform: scale(1) rotate(1080deg); }
+          100% { opacity: 0; transform: scale(0.5) rotate(1260deg); }
+        }
+      `} />
+      <Emoji style={{ fontSize: 50, top: AV_TOP - 40, left: 'calc(50% - 25px)', animation: 'eg-fan 3s linear forwards', opacity: 0 }}>🌀</Emoji>
+      <FadeEmoji size={40} top={AV_CY + 15} left={`calc(50% - ${AV_R + 40}px)`} delay={0.2} duration={2.6}>🐈</FadeEmoji>
+    </>
+  )
+}
+
+// 🦈🦵🎊 O AGENTE SECRETO — Perna Cabeluda pulando e bloco de Carnaval no Recife
+function EggAgenteSecreto() {
+  return (
+    <>
+      <EggStyle css={`${fadeKF}
+        @keyframes eg-bounce-leg {
+          0% { transform: translate(-20vw, 80vh) rotate(-30deg); opacity: 0; }
+          10% { opacity: 1; transform: translate(10vw, 40vh) rotate(10deg); }
+          25% { transform: translate(30vw, 80vh) rotate(-20deg); }
+          40% { transform: translate(50vw, 40vh) rotate(15deg); }
+          55% { transform: translate(70vw, 80vh) rotate(-25deg); }
+          70% { transform: translate(90vw, 40vh) rotate(10deg); }
+          85% { opacity: 1; transform: translate(110vw, 80vh) rotate(-20deg); }
+          100% { opacity: 0; transform: translate(130vw, 80vh); }
+        }
+        @keyframes eg-carnival-pop {
+          0% { transform: scale(0) translateY(50px) rotate(-10deg); opacity: 0; }
+          20% { transform: scale(1.2) translateY(0) rotate(5deg); opacity: 1; }
+          80% { transform: scale(1) translateY(0) rotate(-5deg); opacity: 1; }
+          100% { transform: scale(0.5) translateY(-50px) rotate(10deg); opacity: 0; }
+        }
+      `} />
+      
+      {/* Elementos de Carnaval aparecendo em volta (como um bloquinho) */}
+      <Emoji style={{ fontSize: 45, top: AV_CY - 30, left: `calc(50% - ${AV_R + 60}px)`, animation: 'eg-carnival-pop 3.5s ease-out forwards', opacity: 0, animationDelay: '0.1s' }}>🎊</Emoji>
+      <Emoji style={{ fontSize: 50, top: AV_CY + 20, left: `calc(50% + ${AV_R + 30}px)`, animation: 'eg-carnival-pop 3.5s ease-out forwards', opacity: 0, animationDelay: '0.4s' }}>🎺</Emoji>
+      <Emoji style={{ fontSize: 40, top: AV_CY - 60, left: `calc(50% + ${AV_R + 10}px)`, animation: 'eg-carnival-pop 3.5s ease-out forwards', opacity: 0, animationDelay: '0.6s' }}>🎉</Emoji>
+      <Emoji style={{ fontSize: 45, top: AV_CY + 40, left: `calc(50% - ${AV_R + 40}px)`, animation: 'eg-carnival-pop 3.5s ease-out forwards', opacity: 0, animationDelay: '0.2s' }}>🎭</Emoji>
+
+      {/* A lendária Perna Cabeluda quicando pela tela inteira */}
+      <Emoji style={{ fontSize: 80, top: 0, left: 0, animation: 'eg-bounce-leg 3.8s cubic-bezier(0.3, 0.8, 0.7, 1) forwards', opacity: 0, zIndex: 100 }}>🦵</Emoji>
+    </>
+  )
+}
+
 // =============================================================================
 //  EXPORT PRINCIPAL
 // =============================================================================
@@ -298,14 +543,26 @@ export function EasterEgg({ egg }: { egg: EggType }) {
       className="fixed inset-0 pointer-events-none"
       style={{ zIndex: 1000 }}
     >
-      {egg === 'lion'    && <EggLion />}
-      {egg === 'up'      && <EggUp />}
-      {egg === '007'     && <Egg007 />}
-      {egg === 'batman'  && <EggBatman />}
-      {egg === 'paris'   && <EggParis />}
-      {egg === 'clube'   && <EggClube />}
-      {egg === 'titanic' && <EggTitanic />}
-      {egg === 'chefao'  && <EggChefao />}
+      {egg === 'lion'        && <EggLion />}
+      {egg === 'up'          && <EggUp />}
+      {egg === '007'         && <Egg007 />}
+      {egg === 'batman'      && <EggBatman />}
+      {egg === 'paris'       && <EggParis />}
+      {egg === 'clube'       && <EggClube />}
+      {egg === 'titanic'     && <EggTitanic />}
+      {egg === 'chefao'      && <EggChefao />}
+      {egg === 'compadecida' && <EggCompadecida />}
+      {egg === 'central'     && <EggCentral />}
+      {egg === 'compadecida' && <EggCompadecida />}
+      {egg === 'central'     && <EggCentral />}
+      {egg === 'cidadededeus'&& <EggCidadeDeDeus />}
+      {egg === 'minhamae'    && <EggMinhaMae />}
+      {egg === 'tropa'       && <EggTropa />}
+      {egg === 'bacurau'     && <EggBacurau />}
+      {egg === 'quehoras'    && <EggQueHoras />}
+      {egg === 'palhaco'     && <EggPalhaco />}
+      {egg === 'palhaco'     && <EggPalhaco />}
+      {egg === 'agente'      && <EggAgenteSecreto />}
     </div>
   )
 }

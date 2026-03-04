@@ -1,6 +1,6 @@
 'use client'
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type Cast = { name: string; character: string; photo: string | null }
@@ -22,6 +22,92 @@ type FilmDetails = {
   streaming: Streaming[]
   keywords: string[]
   budget: number
+}
+
+const lgStyle: React.CSSProperties = {
+  background: 'rgba(120,120,128,0.18)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+}
+
+function BottomSheet({ open, onClose, title, children }: {
+  open: boolean; onClose: () => void; title: string; children: React.ReactNode
+}) {
+  const [translateY, setTranslateY] = useState(100)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStart = useRef<number | null>(null)
+  const currentY = useRef(0)
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      requestAnimationFrame(() => setTranslateY(0))
+    } else {
+      requestAnimationFrame(() => setTranslateY(100))
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  if (!open && translateY >= 100) return null
+
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col justify-end">
+      <div className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col overflow-hidden sheet"
+        style={{
+          transform: `translateY(${translateY}%)`,
+          transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
+          maxHeight: '92vh',
+        }}
+        onTouchStart={e => { dragStart.current = e.touches[0].clientY; setIsDragging(true) }}
+        onTouchMove={e => {
+          if (dragStart.current === null) return
+          const d = e.touches[0].clientY - dragStart.current
+          if (d < 0) return
+          currentY.current = d
+          setTranslateY((d / window.innerHeight) * 100)
+        }}
+        onTouchEnd={() => {
+          setIsDragging(false)
+          if (currentY.current > 120) onClose()
+          else setTranslateY(0)
+          dragStart.current = null; currentY.current = 0
+        }}>
+
+        {/* Handle */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-30 pointer-events-none">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+        </div>
+
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30">
+          <button onClick={onClose}
+            className="rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+          <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
+            style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
+            {title}
+          </p>
+          <div style={{ width: 43 }}/>
+        </div>
+
+        <div className="sheet-content-fade"/>
+        <div className="overflow-y-auto flex-1 z-10 w-full"
+          style={{ paddingTop: '90px', paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function HScrollRow({ children }: { children: React.ReactNode }) {
@@ -46,7 +132,7 @@ function ExternalFilmContent() {
 
   const [details, setDetails] = useState<FilmDetails | null>(null)
   const [loading, setLoading] = useState(true)
-  const [overviewExpanded, setOverviewExpanded] = useState(false)
+  const [synopsisOpen, setSynopsisOpen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -140,84 +226,85 @@ function ExternalFilmContent() {
 
         {/* Sinopse */}
         {details?.overview && (
-          <div className="mx-4 rounded-3xl p-5" style={glass}>
-            <p className="text-xs uppercase tracking-widest font-medium mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>Sinopse</p>
-            <div className="relative">
-              <p className="text-sm leading-relaxed" style={{
-                color: 'rgba(255,255,255,0.72)',
-                ...(overviewExpanded ? {} : {
-                  display: '-webkit-box',
-                  WebkitLineClamp: 4,
-                  WebkitBoxOrient: 'vertical' as any,
-                  overflow: 'hidden',
-                })
-              }}>
-                {details.overview}
-              </p>
-              {!overviewExpanded && (
-                <div className="absolute bottom-0 left-0 right-0 h-8"
-                  style={{ background: 'linear-gradient(to bottom, transparent, rgba(14,14,20,0.96))' }}/>
-              )}
+          <div className="px-4">
+            <p className="text-lg font-semibold" style={{ color: 'white' }}>Sinopse</p>
+            <div className="mt-3 rounded-3xl px-5 py-5 relative" style={glass}>
+              <div style={{ position: 'relative', maxHeight: '2.8em', overflow: 'hidden', lineHeight: '1.4em' }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', margin: 0 }}>
+                  {details.overview}
+                </p>
+                <div style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  height: '1.4em', width: '55%',
+                  background: 'linear-gradient(to right, transparent, rgba(22,22,30,0.98) 60%)',
+                  pointerEvents: 'none',
+                }}/>
+                <button
+                  onClick={() => setSynopsisOpen(true)}
+                  style={{
+                    position: 'absolute', bottom: 0, right: 0,
+                    background: 'none', border: 'none', padding: 0,
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+                    color: 'rgba(255,255,255,0.72)', cursor: 'pointer', lineHeight: '1.4em',
+                  }}>
+                  MAIS
+                </button>
+              </div>
             </div>
-            <button onClick={() => setOverviewExpanded(!overviewExpanded)}
-              className="mt-3 text-xs font-semibold" style={{ color: 'rgba(251,191,36,0.8)' }}>
-              {overviewExpanded ? 'Ver menos ↑' : 'Ver mais ↓'}
-            </button>
           </div>
         )}
 
         {/* Ficha técnica */}
         {(details?.director || (details?.writers?.length ?? 0) > 0 || (details?.budget ?? 0) > 0) && (
-          <div className="mx-4 rounded-3xl p-5 flex flex-col gap-4" style={glass}>
-            <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Ficha técnica</p>
-
-            {details?.director && (
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0"
-                  style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
-                  {details.director.photo
-                    ? <img src={details.director.photo} alt={details.director.name} className="w-full h-full object-cover"/>
-                    : <div className="w-full h-full flex items-center justify-center text-sm font-bold"
-                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                        {details.director.name.charAt(0)}
-                      </div>
-                  }
+          <div className="px-4">
+            <p className="text-lg font-semibold" style={{ color: 'white' }}>Ficha técnica</p>
+            <div className="mt-4 flex flex-col gap-5">
+              {details?.director && (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0"
+                    style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
+                    {details.director.photo
+                      ? <img src={details.director.photo} alt={details.director.name} className="w-full h-full object-cover"/>
+                      : <div className="w-full h-full flex items-center justify-center text-sm font-bold"
+                          style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                          {details.director.name.charAt(0)}
+                        </div>
+                    }
+                  </div>
+                  <div>
+                    <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Direção</p>
+                    <p className="text-sm font-medium">{details.director.name}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Direção</p>
-                  <p className="text-sm font-medium">{details.director.name}</p>
-                </div>
-              </div>
-            )}
-
-            {(details?.writers?.length ?? 0) > 0 && (
-              <>
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-                <div>
-                  <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Roteiro</p>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                    {details!.writers.map(w => w.name).join(', ')}
-                  </p>
-                </div>
-              </>
-            )}
-
-            {(details?.budget ?? 0) > 0 && (
-              <>
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-                <div className="rounded-2xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Orçamento</p>
-                  <p className="text-sm font-medium">${(details!.budget / 1000000).toFixed(0)}M</p>
-                </div>
-              </>
-            )}
+              )}
+              {(details?.writers?.length ?? 0) > 0 && (
+                <>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
+                  <div>
+                    <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Roteiro</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                      {details!.writers.map(w => w.name).join(', ')}
+                    </p>
+                  </div>
+                </>
+              )}
+              {(details?.budget ?? 0) > 0 && (
+                <>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
+                  <div>
+                    <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Orçamento</p>
+                    <p className="text-sm font-medium">${(details!.budget / 1000000).toFixed(0)}M</p>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
         {/* Elenco */}
         {(details?.cast?.length ?? 0) > 0 && (
           <div>
-            <p className="text-xs uppercase tracking-widest font-medium mb-4 px-5" style={{ color: 'rgba(255,255,255,0.4)' }}>Elenco</p>
+            <p className="px-4 text-lg font-semibold mb-4" style={{ color: 'white' }}>Elenco</p>
             <HScrollRow>
               {details!.cast.map((actor) => (
                 <div key={actor.name} className="flex flex-col items-center flex-shrink-0 w-20">
@@ -245,9 +332,9 @@ function ExternalFilmContent() {
 
         {/* Streaming */}
         {(details?.streaming?.length ?? 0) > 0 && (
-          <div className="mx-4 rounded-3xl p-5" style={glass}>
-            <p className="text-xs uppercase tracking-widest font-medium mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Onde assistir</p>
-            <div className="flex gap-4 flex-wrap">
+          <div className="px-4">
+            <p className="text-lg font-semibold" style={{ color: 'white' }}>Onde assistir</p>
+            <div className="mt-4 flex gap-4 flex-wrap">
               {details!.streaming.map(s => (
                 <div key={s.name} className="flex flex-col items-center gap-1.5">
                   {s.logo
@@ -267,19 +354,17 @@ function ExternalFilmContent() {
           </div>
         )}
 
-        {/* Keywords */}
-        {(details?.keywords?.length ?? 0) > 0 && (
-          <div className="px-4 flex flex-wrap gap-2 pb-2">
-            {details!.keywords.map(kw => (
-              <span key={kw} className="text-xs px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
-                {kw}
-              </span>
-            ))}
-          </div>
-        )}
 
       </div>
+
+      {/* Sinopse Sheet */}
+      <BottomSheet open={synopsisOpen} onClose={() => setSynopsisOpen(false)} title={title}>
+        <div className="px-5 py-2">
+          <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            {details?.overview}
+          </p>
+        </div>
+      </BottomSheet>
     </main>
   )
 }

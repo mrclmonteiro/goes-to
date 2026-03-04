@@ -15,7 +15,7 @@ async function get(path: string) {
       headers: { 
         Authorization: `Bearer ${token}`,
       },
-      next: { revalidate: 3600 } // cache for 1 hour
+      next: { revalidate: 3600 }
     })
     
     if (!res.ok) {
@@ -31,34 +31,101 @@ async function get(path: string) {
 }
 
 export async function fetchMovieData(title: string) {
-  const data = await get(`/search/movie?query=${encodeURIComponent(title)}&language=en-US`)
-  
-  if (!data) {
-    console.warn(`No TMDB data for: ${title}`)
-    return null
-  }
-  
-  const movie = data?.results?.[0]
+  // Tenta buscar em EN primeiro; se não achar, tenta em pt-BR (filmes com título em português no DB)
+  let data = await get(`/search/movie?query=${encodeURIComponent(title)}&language=en-US`)
+  let movie = data?.results?.[0]
+
   if (!movie) {
-    console.warn(`No results for: ${title}`)
+    data = await get(`/search/movie?query=${encodeURIComponent(title)}&language=pt-BR`)
+    movie = data?.results?.[0]
+  }
+
+  if (!movie) {
+    console.warn(`No TMDB results for: ${title}`)
     return null
   }
-  
+
+  // Busca título em pt-BR e imagens em paralelo
+  const [ptDetails, images] = await Promise.all([
+    get(`/movie/${movie.id}?language=pt-BR`),
+    get(`/movie/${movie.id}/images?include_image_language=en,null`),
+  ])
+
+  const posterPath = ptDetails?.poster_path ?? movie.poster_path
+
+  const backdrops: string[] = (images?.backdrops ?? [])
+    .filter((b: any) => b.file_path)
+    .sort((a: any, b: any) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
+    .slice(0, 6)
+    .map((b: any) => IMG('w1280') + b.file_path)
+
+  if (backdrops.length === 0 && movie.backdrop_path) {
+    backdrops.push(IMG('w1280') + movie.backdrop_path)
+  }
+
   return {
-    ptTitle: data.title ?? null,
+    ptTitle: ptDetails?.title ?? movie.title ?? null,
     id: movie.id,
-    poster: movie.poster_path ? IMG('w342') + movie.poster_path : null,
-    backdrop: movie.backdrop_path ? IMG('w1280') + movie.backdrop_path : null,
+    poster: posterPath ? IMG('w342') + posterPath : null,
+    backdrop: backdrops[0] ?? null,
+    backdrops,
     overview: movie.overview ?? null,
   }
 }
 
+// Picks the best logo: always prefer English PNGs (transparent bg).
+// We never use pt logos because TMDB doesn't reliably distinguish pt-BR from pt-PT.
+// The caller must apply filter: brightness(0) invert(1) to guarantee white rendering.
+function pickLogo(images: any): string | null {
+  const logos: any[] = images?.logos ?? []
+  if (!logos.length) return null
+  const scored = logos
+    .filter((l: any) => l.file_path)
+    .map((l: any) => {
+      let score = 0
+      if (l.iso_639_1 === 'en') score += 200
+      // exclude pt logos entirely to avoid showing pt-PT by mistake
+      if (l.iso_639_1 === 'pt') score -= 999
+        if (l.file_path.endsWith('.png')) score += 50
+        score += (l.vote_average ?? 0)
+        return { ...l, score }
+      })
+      .sort((a: any, b: any) => b.score - a.score)
+    const best = scored[0]
+    return best ? IMG('w500') + best.file_path : null
+}
+
+// Picks the best poster image preferring pt-BR/pt language, then English, then highest vote_average
+function pickPoster(images: any, hasPtBR = false): string | null {
+  const posters: any[] = images?.posters ?? []
+  if (!posters.length) return null
+  const scored = posters
+    .filter((p: any) => p.file_path)
+    .map((p: any) => {
+      let score = 0
+      if (p.iso_639_1 === 'en') {
+        score += 100
+      }
+      if (p.iso_639_1 === 'pt') {
+        score += hasPtBR ? 200 : -10
+      }
+      score += (p.vote_average ?? 0)
+      return { ...p, score }
+    })
+    .sort((a: any, b: any) => b.score - a.score)
+  const best = scored[0]
+  return best ? IMG('w342') + best.file_path : null
+}
+
 export async function fetchMovieDetails(tmdbId: number) {
-  const [details, credits, keywords, watchProviders] = await Promise.all([
-    get(`/movie/${tmdbId}?language=pt-BR&append_to_response=releases`),
+  const [details, credits, keywords, watchProviders, images] = await Promise.all([
+    // include translations so we can detect pt-BR vs pt-PT
+    get(`/movie/${tmdbId}?language=pt-BR&append_to_response=releases,translations`),
     get(`/movie/${tmdbId}/credits?language=pt-BR`),
     get(`/movie/${tmdbId}/keywords`),
     get(`/movie/${tmdbId}/watch/providers`),
+    // request posters/logos prioritizing Portuguese, then English, then neutral
+    get(`/movie/${tmdbId}/images?include_image_language=pt-BR,pt,en,null`),
   ])
   if (!details) return null
 
@@ -81,17 +148,24 @@ export async function fetchMovieDetails(tmdbId: number) {
       logo: p.logo_path ? IMG('w92') + p.logo_path : null,
     }))
 
+  const hasPtBR = Boolean(
+    details.translations?.translations?.some((t: any) =>
+      t.iso_639_1 === 'pt' && t.iso_3166_1 === 'BR'
+    )
+  )
   return {
     tmdbId,
     tagline: details.tagline ?? null,
     overview: details.overview ?? null,
+    ptTitle: details.title ?? null,
     genres: details.genres?.map((g: any) => g.name) ?? [],
     runtime: details.runtime ?? null,
     budget: details.budget ?? null,
     revenue: details.revenue ?? null,
     releaseDate: details.release_date ?? null,
     backdrop: details.backdrop_path ? IMG('w1280') + details.backdrop_path : null,
-    poster: details.poster_path ? IMG('w342') + details.poster_path : null,
+    poster: pickPoster(images, hasPtBR) ?? (details.poster_path ? IMG('w342') + details.poster_path : null),
+    logo: pickLogo(images),
     director: director ? { name: director.name, photo: director.profile_path ? IMG('w185') + director.profile_path : null } : null,
     writers: writers.map((w: any) => ({ name: w.name, job: w.job })),
     cast,
@@ -108,10 +182,10 @@ export async function fetchPersonPhoto(name: string): Promise<string | null> {
 }
 
 export async function fetchAllMovieData(titles: string[]): Promise<Record<string, {
-  id: number | null; poster: string | null; backdrop: string | null; overview: string | null
+  ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null
 }>> {
   const pairs = await Promise.all(titles.map(async t => [t, await fetchMovieData(t)] as const))
-  return Object.fromEntries(pairs.map(([t, d]) => [t, d ?? { id: null, poster: null, backdrop: null, overview: null }]))
+  return Object.fromEntries(pairs.map(([t, d]) => [t, d ?? { ptTitle: null, poster: null, backdrop: null, backdrops: [], overview: null }]))
 }
 
 export async function fetchSimilarMovies(tmdbId: number): Promise<{ title: string; poster: string | null; tmdbId: number }[]> {
