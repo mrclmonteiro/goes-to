@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchSimilarMovies, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
+import Spinner from '../components/Spinner'
 
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
@@ -461,9 +462,9 @@ export default function DescobrirPage() {
       setNominations(noms)
       setAllUserFilms(allUF ?? [])
       setMyUserFilms(myUF ?? [])
-      setLoading(false)
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data as any)
+      setLoading(false)
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
         .map((n: Nomination) => n.nominee as string)
@@ -532,7 +533,7 @@ export default function DescobrirPage() {
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+      <Spinner size={44} />
     </main>
   )
 

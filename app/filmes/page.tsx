@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
+import Spinner from '../components/Spinner'
 
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
 const HERO_DURATION = 6000
@@ -325,9 +326,9 @@ export default function FilmesPage() {
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
       setCatRatings(catRatingsData ?? [])
-      setLoading(false)
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data)
+      setLoading(false)
       const noms = nominationsData ?? []
       const nominees = noms
         .filter((n: Nomination) => n.nominee && PERSON_CATEGORIES.includes(n.category))
@@ -464,7 +465,7 @@ export default function FilmesPage() {
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+      <Spinner size={44} />
     </main>
   )
 

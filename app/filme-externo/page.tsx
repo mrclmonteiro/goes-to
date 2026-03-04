@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Spinner from '../components/Spinner'
 
 type Cast = { name: string; character: string; photo: string | null }
 type Streaming = { name: string; logo: string | null }
@@ -153,7 +154,7 @@ function ExternalFilmContent() {
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+      <Spinner size={44} />
     </main>
   )
 
@@ -372,7 +373,7 @@ export default function ExternalFilmPage() {
   return (
     <Suspense fallback={
       <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-        <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+        <Spinner size={44} />
       </main>
     }>
       <ExternalFilmContent />

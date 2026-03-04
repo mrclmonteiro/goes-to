@@ -45,10 +45,24 @@
 * { box-sizing: border-box; }
 
 html, body {
+  height: 100%;
+  overflow: hidden;
   background-color: var(--bg);
   color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior: none;
+}
+
+/* Container de scroll real — único elemento que rola no app */
+#app-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  /* inércia / momentum (iOS WebKit) */
+  -webkit-overflow-scrolling: touch;
+  /* rubber-band nas bordas sem propagar ao browser */
+  overscroll-behavior-y: contain;
+  /* scroll suave para scrollIntoView / links âncora */
+  scroll-behavior: smooth;
 }
 
 ::-webkit-scrollbar { display: none; }

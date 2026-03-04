@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Spinner from '../components/Spinner'
 import Image from 'next/image'
 import { EasterEgg, EggType } from '@/app/components/EasterEgg'
 
@@ -442,8 +443,12 @@ export default function EstantePage() {
     if (!isPWA) { setShowInstallGate(true); return }
     if (!shareRef.current) return
     const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(shareRef.current, {
+    const el = shareRef.current
+    const canvas = await html2canvas(el, {
       backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
+      scrollX: 0, scrollY: 0,
+      width: el.offsetWidth, height: el.offsetHeight,
+      windowWidth: el.offsetWidth, windowHeight: el.offsetHeight,
       onclone: (doc: Document) => { doc.documentElement.style.fontFeatureSettings = 'normal' },
     })
     canvas.toBlob(async blob => {
@@ -504,7 +509,7 @@ export default function EstantePage() {
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+      <Spinner size={44} />
     </main>
   )
 
@@ -1289,8 +1294,12 @@ export default function EstantePage() {
               if (!isPWA) { setBolaoResultsOpen(false); setTimeout(() => setShowInstallGate(true), 420); return }
               if (!bolaoShareRef.current) return
               const { default: html2canvas } = await import('html2canvas')
-              const canvas = await html2canvas(bolaoShareRef.current, {
+              const el = bolaoShareRef.current
+              const canvas = await html2canvas(el, {
                 backgroundColor: '#0a0a0f', scale: 3, useCORS: false, allowTaint: false, logging: false,
+                scrollX: 0, scrollY: 0,
+                width: el.offsetWidth, height: el.offsetHeight,
+                windowWidth: el.offsetWidth, windowHeight: el.offsetHeight,
               })
               canvas.toBlob(async blob => {
                 if (!blob) return

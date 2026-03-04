@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { fetchMovieDetails } from '@/lib/tmdb'
+import Spinner from '../../components/Spinner'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -423,7 +424,7 @@ export default function FilmePage() {
 
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <p className="text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>Carregando...</p>
+      <Spinner size={44} />
     </main>
   )
   if (!film) return (
