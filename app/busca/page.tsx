@@ -3,35 +3,12 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData } from '@/lib/tmdb'
 import Link from 'next/link'
+import { ORDERED_CATEGORIES, CATEGORY_LABELS, categoryCardBg, categorySlug } from '@/lib/categories'
 
 type Film = { id: string; title: string }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type MovieData = { ptTitle?: string | null; poster: string | null }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  'Best Picture': 'Melhor Filme',
-  'Best Director': 'Melhor Direção',
-  'Best Actor': 'Melhor Ator',
-  'Best Actress': 'Melhor Atriz',
-  'Best Supporting Actor': 'Melhor Ator Coadjuvante',
-  'Best Supporting Actress': 'Melhor Atriz Coadjuvante',
-  'Best Animated Feature': 'Melhor Animação',
-  'Best International Feature': 'Melhor Filme Internacional',
-  'Best Adapted Screenplay': 'Roteiro Adaptado',
-  'Best Original Screenplay': 'Roteiro Original',
-  'Best Cinematography': 'Fotografia',
-  'Best Film Editing': 'Montagem',
-  'Best Original Score': 'Trilha Sonora Original',
-  'Best Original Song': 'Canção Original',
-  'Best Costume Design': 'Figurino',
-  'Best Production Design': 'Direção de Arte',
-  'Best Makeup and Hairstyling': 'Maquiagem e Cabelo',
-  'Best Sound': 'Som',
-  'Best Visual Effects': 'Efeitos Visuais',
-  'Best Casting': 'Elenco',
-  'Best Documentary Feature': 'Documentário',
-}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-lg font-semibold" style={{ color: 'white' }}>{children}</p>
@@ -46,6 +23,7 @@ export default function BuscaPage() {
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [loading, setLoading] = useState(true)
+  const [titleOpacity, setTitleOpacity] = useState(1)
 
   const glass = {
     background: 'rgba(255,255,255,0.06)',
@@ -74,6 +52,15 @@ export default function BuscaPage() {
     setTimeout(() => inputRef.current?.focus(), 300)
   }, [])
 
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      setTitleOpacity(Math.max(0, 1 - y / 80))
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const filmCategories = (filmId: string) =>
     nominations.filter(n => n.film_id === filmId).map(n => n.category)
 
@@ -92,7 +79,6 @@ export default function BuscaPage() {
     return inTitle || inNominee || inCategory
   })
 
-  const quickFilters = Object.entries(CATEGORY_LABELS)
   const watchedFilms = films.filter(f => userFilms.find(u => u.film_id === f.id && u.watched))
 
   return (
@@ -105,8 +91,11 @@ export default function BuscaPage() {
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
 
       {/* Header */}
-      <div className="relative px-4 pt-16 pb-6">
-        <h1 className="text-3xl font-bold leading-tight">Buscar</h1>
+      <div className="relative px-4 pt-24 pb-6">
+        <h1 className="text-3xl font-bold leading-tight"
+          style={{ position: 'fixed', left: 16, top: 'max(env(safe-area-inset-top), 52px)', zIndex: 20, pointerEvents: 'none', opacity: titleOpacity, transition: 'opacity 0.2s ease' }}>
+          Buscar
+        </h1>
         <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Filmes, diretores, atores e categorias</p>
       </div>
 
@@ -118,22 +107,18 @@ export default function BuscaPage() {
             {/* Navegar por categoria */}
             <div className="px-4">
               <div className="mb-3">
-                <SectionTitle>Navegar por categoria</SectionTitle>
+                <SectionTitle>Categorias</SectionTitle>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {quickFilters.map(([cat, label]) => {
-                  const catFilms = films.filter(f => nominations.find(n => n.film_id === f.id && n.category === cat))
-                  return (
-                    <button key={cat} onClick={() => setQuery(label)}
-                      className="rounded-2xl p-4 text-left transition-all"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      <p className="text-sm font-semibold mb-0.5" style={{ color: 'white' }}>{label}</p>
-                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                        {catFilms.length} {catFilms.length === 1 ? 'indicado' : 'indicados'}
-                      </p>
-                    </button>
-                  )
-                })}
+              <div className="grid grid-cols-2 gap-3">
+                {ORDERED_CATEGORIES.map(cat => (
+                  <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
+                    className="relative rounded-2xl overflow-hidden flex items-center justify-center p-4 text-center"
+                    style={{ aspectRatio: '1/1', background: categoryCardBg(cat) }}>
+                    <p className="relative z-10 font-bold text-base leading-tight" style={{ color: 'white', textShadow: '0 1px 12px rgba(0,0,0,0.6)' }}>
+                      {CATEGORY_LABELS[cat]}
+                    </p>
+                  </Link>
+                ))}
               </div>
             </div>
 

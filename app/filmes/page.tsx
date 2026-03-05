@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
 import Spinner from '../components/Spinner'
+import { categoryCardBg, categorySlug } from '@/lib/categories'
 
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
 const HERO_DURATION = 6000
@@ -57,6 +58,7 @@ const HERO_N = HERO_SLIDES.length
 const FILM_CATEGORIES = ['Best Picture','Best Animated Feature','Best International Feature','Best Adapted Screenplay','Best Original Screenplay','Best Cinematography','Best Film Editing','Best Original Score','Best Original Song','Best Costume Design','Best Production Design','Best Makeup and Hairstyling','Best Sound','Best Visual Effects','Best Casting','Best Documentary Feature']
 const PERSON_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
+const FEATURED_CATEGORIES = ['Best Picture', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
@@ -79,22 +81,7 @@ const ddStyle: React.CSSProperties = {
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
 
-function useCountdown() {
-  const [diff, setDiff] = useState(() => OSCAR_DATE.getTime() - Date.now())
-  useEffect(() => {
-    const t = setInterval(() => setDiff(OSCAR_DATE.getTime() - Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [])
-  if (diff <= 0) return null
-  return {
-    d: Math.floor(diff / 86400000),
-    h: Math.floor((diff % 86400000) / 3600000),
-    m: Math.floor((diff % 3600000) / 60000),
-    s: Math.floor((diff % 60000) / 1000),
-  }
-}
-
-function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] }) {
+function GaugeChart({ ratings }: { ratings: { title: string; subtitle?: string; rating: number }[] }) {
   const targetPct = ratings.length > 0 ? ratings[0].rating / 5 : 0
   const [animPct, setAnimPct] = useState(targetPct)
   const animRef = useRef<number | null>(null)
@@ -161,6 +148,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
         <text x={cx} y={cy - 4} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle">estrelas</text>
       </svg>
       <p className="font-semibold text-base mt-1" style={{ color: 'white' }}>{top.title}</p>
+      {top.subtitle && <p className="text-xs font-medium mt-0.5" style={{ color: '#fbbf24' }}>{top.subtitle}</p>}
       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>favorito dos usuários</p>
       {ratings.length > 1 && (
         <div className="flex gap-2 mt-4 w-full max-w-xs">
@@ -170,6 +158,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
             }}>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>#{i + 2}</p>
               <p className="text-xs font-medium mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.7)' }}>{f.title}</p>
+              {f.subtitle && <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.subtitle}</p>}
               <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>{'★'.repeat(f.rating)}</p>
             </div>
           ))}
@@ -259,6 +248,21 @@ function BolaoPromoSlide() {
   )
 }
 
+function useCountdown() {
+  const [diff, setDiff] = useState(() => OSCAR_DATE.getTime() - Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setDiff(OSCAR_DATE.getTime() - Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  if (diff <= 0) return null
+  return {
+    d: Math.floor(diff / 86400000),
+    h: Math.floor((diff % 86400000) / 3600000),
+    m: Math.floor((diff % 3600000) / 60000),
+    s: Math.floor((diff % 60000) / 1000),
+  }
+}
+
 function CalendarIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -274,6 +278,20 @@ function CalendarIcon() {
   )
 }
 
+function HScrollRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <div className="flex gap-3 overflow-x-auto pl-4 pr-4"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        {children}
+        <div style={{ minWidth: 4, flexShrink: 0 }}/>
+      </div>
+      <div className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, transparent, #0a0a0f)' }}/>
+    </div>
+  )
+}
+
 export default function FilmesPage() {
   const countdown = useCountdown()
   const [films, setFilms] = useState<Film[]>([])
@@ -285,8 +303,6 @@ export default function FilmesPage() {
   const [avatarIdx, setAvatarIdx] = useState(0)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
-  const [listCategory, setListCategory] = useState('Best Picture')
-  const [listDropdownOpen, setListDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const [heroIdx, setHeroIdx] = useState(0)
@@ -296,6 +312,7 @@ export default function FilmesPage() {
   const [dragX, setDragX] = useState(0)
   const isDraggingRef = useRef(false)
   const dragStartXRef = useRef<number | null>(null)
+  const [titleOpacity, setTitleOpacity] = useState(1)
 
   const heroSlide = HERO_SLIDES[heroIdx]
   // for gauge: use nearest preceding category slide (or first category)
@@ -357,6 +374,15 @@ export default function FilmesPage() {
     return () => { clearInterval(tick); clearTimeout(fadeIn) }
   }, [heroIdx])
 
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      setTitleOpacity(Math.max(0, 1 - y / 80))
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const onHeroDragStart = (x: number) => { isDraggingRef.current = true; setIsDragging(true); dragStartXRef.current = x }
   const onHeroDragMove = (x: number) => {
     if (!isDraggingRef.current || dragStartXRef.current === null) return
@@ -373,7 +399,6 @@ export default function FilmesPage() {
   }
 
   const getUF = (id: string) => userFilms.find(u => u.film_id === id)
-  const isPersonCategory = PERSON_CATEGORIES.includes(listCategory)
   const isHeroPersonCategory = PERSON_CATEGORIES.includes(heroCategory)
 
   const topPersonForHeroCategory = (cat: string) => {
@@ -463,6 +488,16 @@ export default function FilmesPage() {
   // suppress unused warning
   void catRatings
 
+  const top10Films = (() => {
+    const counts: Record<string, number> = {}
+    allUserFilms.forEach(u => { counts[u.film_id] = (counts[u.film_id] ?? 0) + 1 })
+    return films
+      .map(f => ({ film: f, count: counts[f.id] ?? 0 }))
+      .filter(f => f.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+  })()
+
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <Spinner size={44} />
@@ -485,12 +520,10 @@ export default function FilmesPage() {
         onTouchEnd={onHeroDragEnd}
       >
 
-        {/* App icon — top left, mesmo nível do título "Descobrir" */}
-        <div className="absolute left-4 z-20 pointer-events-none"
-          style={{ top: 'max(env(safe-area-inset-top), 52px)' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.png" alt="Goes To" className="w-10 h-10 rounded-xl"
-            style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}/>
+        {/* Page title — Início */}
+        <div className="fixed left-4 z-20 pointer-events-none"
+          style={{ top: 'max(env(safe-area-inset-top), 52px)', opacity: titleOpacity, transition: 'opacity 0.2s ease' }}>
+          <h1 className="text-3xl font-bold leading-tight">Início</h1>
         </div>
         <div
           className="absolute inset-y-0 left-0 flex"
@@ -642,94 +675,92 @@ export default function FilmesPage() {
                 const avg = Math.round((rats.reduce((s, u) => s + (u.rating ?? 0), 0) / rats.length) * 10) / 10
                 return [{ title: movieData[worstFilm.title]?.ptTitle || worstFilm.title, rating: avg }]
               })()
-            : swingRatings(gaugeCategory).map(r => ({ ...r, title: movieData[r.title]?.ptTitle || r.title }))
+            : PERSON_CATEGORIES.includes(gaugeCategory)
+              ? swingRatings(gaugeCategory).map(r => {
+                  const film = films.find(f => f.title === r.title)
+                  const nom = film ? nominations.find(n => n.category === gaugeCategory && n.film_id === film.id && n.nominee) : null
+                  const name = nom?.nominee ? (nom.nominee as string).split(/,| e /)[0].trim() : null
+                  const ptTitle = movieData[r.title]?.ptTitle || r.title
+                  return { ...r, title: name ?? ptTitle, subtitle: name ? ptTitle : undefined }
+                })
+              : swingRatings(gaugeCategory).map(r => ({ ...r, title: movieData[r.title]?.ptTitle || r.title }))
         }/>
       </div>
 
-      <div className="mx-4 my-6" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
 
-      {/* ── LISTA ─────────────────────────────────────────────────── */}
-      <div className="px-4">
-        <div className="flex items-center gap-2 mb-5 flex-wrap">
-          <p className="text-lg font-semibold tracking-tight" style={{ color: 'white' }}>Indicados a</p>
-
-          {/* Dropdown — liquid glass */}
-          <div className="relative">
-            <button
-              onClick={() => setListDropdownOpen(!listDropdownOpen)}
-              className="lg-btn flex items-center gap-2 px-4 rounded-full text-sm font-semibold"
-              style={{ ...lgStyle, position: 'relative', height: 43, color: 'white' }}
-            >
-              {CATEGORY_LABELS[listCategory] ?? listCategory}
-              <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
-            </button>
-
-            {listDropdownOpen && (
-              <>
-                <div className="fixed inset-0" style={{ zIndex: 48 }} onClick={() => setListDropdownOpen(false)}/>
-                <div
-                  className="absolute top-full mt-2 left-0 rounded-xl py-1.5 w-52 overflow-y-auto"
-                  style={{ ...ddStyle, zIndex: 49, maxHeight: '40vh' }}
-                >
-                  {ALL_CATEGORIES.map(cat => (
-                    <button key={cat} onClick={() => { setListCategory(cat); setListDropdownOpen(false) }}
-                      className="w-full px-4 py-1.5 text-sm text-left hover:bg-white/10 transition-colors"
-                      style={{ color: cat === listCategory ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
-                      {CATEGORY_LABELS[cat] ?? cat}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Grid */}
-        {isPersonCategory ? (
-          <div className="grid grid-cols-3 gap-3">
-            {nomineesByCategory(listCategory).map(({ name, film }) => (
-              <Link key={name} href={`/filmes/${film.id}`}
-                className="relative flex flex-col rounded-2xl overflow-hidden"
-                style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* ── TOP 10 ─────────────────────────────────────────────────── */}
+      {top10Films.length > 0 && (
+        <div className="mt-6 pb-4">
+          <p className="text-lg font-semibold tracking-tight px-4 mb-4" style={{ color: 'white' }}>Top 10 mais registrados</p>
+          <HScrollRow>
+            {top10Films.map(({ film }, i) => (
+              <Link key={film.id} href={`/filmes/${film.id}`}
+                className="flex-shrink-0 relative rounded-2xl overflow-hidden"
+                style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="absolute inset-0">
                   {movieData[film.title]?.poster
                     ? <img src={movieData[film.title].poster!} alt={film.title} className="w-full h-full object-cover"/>
-                    : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2d1b69, #0a0a0f)'}}/>
+                    : <div className="w-full h-full flex items-end p-2" style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)' }}>
+                        <p className="text-white text-xs font-semibold leading-tight">{movieData[film.title]?.ptTitle || film.title}</p>
+                      </div>
                   }
                 </div>
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%)' }}/>
-                <div className="absolute bottom-0 left-0 right-0 p-3 z-10 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
-                    style={{ border: '1.5px solid rgba(255,255,255,0.4)' }}>
-                    {personPhotos[name]
-                      ? <img src={personPhotos[name]!} alt={name} className="w-full h-full object-cover"/>
-                      : <div className="w-full h-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{name.charAt(0)}</div>
-                    }
-                  </div>
-                  <p className="text-xs font-semibold leading-tight"
-                    style={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{name}</p>
-                </div>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 40%, rgba(0,0,0,0.25) 100%)' }}/>
+                <p className="absolute top-2 left-2.5 z-10 font-black"
+                  style={{
+                    fontSize: 30, lineHeight: 1,
+                    background: 'linear-gradient(160deg, rgba(255,255,255,1) 0%, rgba(180,200,255,0.75) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.5)) drop-shadow(0 2px 10px rgba(0,0,0,0.9))',
+                  }}>
+                  {i + 1}
+                </p>
               </Link>
             ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3">
-            {filmsByCategory(listCategory).map(film => (
-              <PosterCard key={film.id} film={film} userFilm={getUF(film.id)}
-                onToggle={() => toggleWatched(film.id)}
-                poster={movieData[film.title]?.poster ?? null}
-                ptTitle={movieData[film.title]?.ptTitle}/>
-            ))}
-          </div>
-        )}
+          </HScrollRow>
+        </div>
+      )}
+
+      {/* ── CATEGORIAS ───────────────────────────────────────────── */}
+      <div className="mt-6">
+        <div className="flex items-center gap-1 px-4 mb-4">
+          <p className="text-lg font-semibold" style={{ color: 'white' }}>Categorias</p>
+          <Link href="/descobrir" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18L15 12L9 6"/>
+            </svg>
+          </Link>
+        </div>
+        <HScrollRow>
+          {FEATURED_CATEGORIES.map(cat => (
+            <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
+              className="flex-shrink-0 relative rounded-2xl overflow-hidden flex items-center justify-center p-3 text-center"
+              style={{ width: 130, height: 130, background: categoryCardBg(cat) }}>
+              <p className="relative z-10 font-bold text-base leading-tight" style={{ color: 'white', textShadow: '0 1px 12px rgba(0,0,0,0.6)' }}>
+                {CATEGORY_LABELS[cat]}
+              </p>
+            </Link>
+          ))}
+          <Link href="/descobrir"
+            className="flex-shrink-0 flex items-center justify-center rounded-2xl text-center px-4"
+            style={{
+              width: 130, height: 130, flexShrink: 0,
+              background: 'rgba(120,120,128,0.18)',
+              backdropFilter: 'blur(32px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.3)',
+            }}>
+            <p className="text-xs font-semibold leading-snug" style={{ color: 'rgba(255,255,255,0.7)' }}>Ver todas as categorias</p>
+          </Link>
+        </HScrollRow>
       </div>
 
-      <div className="mx-4 my-6" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
-
       {/* ── COUNTDOWN ─────────────────────────────────────────────── */}
-      <div className="px-4">
-        <p className="text-lg font-semibold mb-3 px-1" style={{ color: 'white' }}>Oscar 2026 começa em</p>
+      <div className="px-4 mt-6 mb-4">
+        <p className="text-lg font-semibold mb-3" style={{ color: 'white' }}>Oscar 2026 começa em</p>
         <div className="rounded-3xl p-5 flex items-center gap-4" style={{
           background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
         }}>

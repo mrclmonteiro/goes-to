@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase'
 import { fetchAllMovieData, fetchSimilarMovies, fetchPersonPhoto } from '@/lib/tmdb'
 import Link from 'next/link'
 import Spinner from '../components/Spinner'
+import { ORDERED_CATEGORIES, categoryCardBg, categorySlug } from '@/lib/categories'
 
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
@@ -415,14 +416,23 @@ export default function DescobrirPage() {
   const [selectedCat, setSelectedCat] = useState('Best Picture')
   const [catDropdownOpen, setCatDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [titleOpacity, setTitleOpacity] = useState(1)
 
   const [factSheet, setFactSheet] = useState<typeof FACTS[0] | null>(null)
   const [isFactDaily, setIsFactDaily] = useState(false)
-  const [nomineeSheet, setNomineeSheet] = useState<string | null>(null)
   const factShareRef = useRef<HTMLDivElement>(null)
   const [iconDataUrl, setIconDataUrl] = useState<string>('')
   const [showInstallGate, setShowInstallGate] = useState(false)
   const isPWA = useIsPWA()
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      setTitleOpacity(Math.max(0, 1 - y / 80))
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   // Pre-load app icon as base64 for html2canvas
   useEffect(() => {
@@ -537,10 +547,6 @@ export default function DescobrirPage() {
     </main>
   )
 
-  const sheetNoms = nomineeSheet ? nomineesByCategory(nomineeSheet) : []
-  const sheetSR = nomineeSheet ? swingRatings(nomineeSheet) : []
-  const sheetIsPerson = nomineeSheet ? isPersonCat(nomineeSheet) : false
-
   return (
     <>
       <main className="min-h-screen pb-36 relative overflow-x-hidden" style={{ background: '#0a0a0f', color: 'white' }}>
@@ -552,8 +558,11 @@ export default function DescobrirPage() {
           style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
 
         {/* Header */}
-        <div className="relative px-4 pt-16 pb-6">
-          <h1 className="text-3xl font-bold leading-tight">Descobrir</h1>
+        <div className="relative px-4 pt-24 pb-6">
+          <h1 className="text-3xl font-bold leading-tight"
+            style={{ position: 'fixed', left: 16, top: 'max(env(safe-area-inset-top), 52px)', zIndex: 20, pointerEvents: 'none', opacity: titleOpacity, transition: 'opacity 0.2s ease' }}>
+            Descobrir
+          </h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Termômetro, indicados e curiosidades</p>
         </div>
 
@@ -608,34 +617,19 @@ export default function DescobrirPage() {
             </button>
           </div>
 
-          {/* ── Todos os indicados ─────────────────────────────────── */}
+          {/* ── Todas as categorias ────────────────────────────────── */}
           <div className="px-4">
-            <SectionTitle>Todos os indicados</SectionTitle>
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              {Object.keys(CATEGORY_LABELS).map(cat => {
-                const noms = nomineesByCategory(cat)
-                if (!noms.length) return null
-                const sr = swingRatings(cat)
-                const top = sr[0]
-                return (
-                  <button key={cat} onClick={() => setNomineeSheet(cat)}
-                    className="rounded-2xl p-4 text-left flex flex-col gap-1"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest leading-tight"
-                      style={{ color: 'rgba(251,191,36,0.65)' }}>
-                      {CATEGORY_LABELS[cat]}
-                    </p>
-                    <p className="text-xs font-medium leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                      {noms.length} indicado{noms.length !== 1 ? 's' : ''}
-                    </p>
-                    {top && (
-                      <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        ★ {(movieData[top.title] as any)?.ptTitle || top.title}
-                      </p>
-                    )}
-                  </button>
-                )
-              })}
+            <SectionTitle>Categorias</SectionTitle>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              {ORDERED_CATEGORIES.map(cat => (
+                <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
+                  className="relative rounded-2xl overflow-hidden flex items-center justify-center p-4 text-center"
+                  style={{ aspectRatio: '1/1', background: categoryCardBg(cat) }}>
+                  <p className="relative z-10 font-bold text-base leading-tight" style={{ color: 'white', textShadow: '0 1px 12px rgba(0,0,0,0.6)' }}>
+                    {CATEGORY_LABELS[cat]}
+                  </p>
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -841,60 +835,6 @@ export default function DescobrirPage() {
       {/* ── Install Gate */}
       {showInstallGate && <InstallGate onClose={() => setShowInstallGate(false)} />}
 
-      {/* ── Nominees Bottom Sheet ──────────────────────────────────── */}
-      <BottomSheet
-        open={!!nomineeSheet}
-        onClose={() => setNomineeSheet(null)}
-        title={nomineeSheet ? (CATEGORY_LABELS[nomineeSheet] ?? nomineeSheet) : ''}
-      >
-        <div className="flex flex-col py-2">
-          {sheetNoms.map(({ film, nominee }, i) => {
-            const poster = (movieData[film.title] as any)?.poster
-            const personPhoto = nominee ? personPhotos[nominee] : null
-            const filmRating = sheetSR.find(r => r.title === film.title)
-            const showPerson = sheetIsPerson && nominee
-            return (
-              <Link key={`${film.id}-${i}`} href={`/filmes/${film.id}`} onClick={() => setNomineeSheet(null)}>
-                <div className="flex items-center gap-3 px-5 py-3"
-                  style={{ borderBottom: i < sheetNoms.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <div className="relative flex-shrink-0" style={{ width: 40, height: 58 }}>
-                    <div className="w-full h-full rounded-xl overflow-hidden"
-                      style={{ background: 'linear-gradient(135deg,#2d1b69,#0a0a0f)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      {poster && <img src={poster} alt={film.title} className="w-full h-full object-cover"/>}
-                    </div>
-                    {showPerson && (
-                      <div className="absolute rounded-full overflow-hidden"
-                        style={{ width: 24, height: 24, bottom: -4, right: -8, border: '2px solid #0e0e14' }}>
-                        {personPhoto
-                          ? <img src={personPhoto} alt={nominee} className="w-full h-full object-cover"/>
-                          : <div className="w-full h-full flex items-center justify-center text-[8px] font-bold"
-                              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>{nominee.charAt(0)}</div>
-                        }
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0" style={{ marginLeft: showPerson ? 10 : 0 }}>
-                    <p className="text-sm font-medium leading-tight truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                      {nominee ?? ((movieData[film.title] as any)?.ptTitle || film.title)}
-                    </p>
-                    {nominee && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{film.title}</p>
-                    )}
-                  </div>
-
-                  {filmRating && (
-                    <p className="text-xs flex-shrink-0" style={{ color: '#fbbf24' }}>{filmRating.rating}★</p>
-                  )}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M9 18L15 12L9 6" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      </BottomSheet>
     </>
   )
 }
