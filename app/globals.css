@@ -77,6 +77,13 @@ body {
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
 
+/* Tailwind gera min-height:100vh para .min-h-screen, mas 100vh no iOS Safari
+   não inclui a área do home indicator. Sobrescrever para 100dvh garante que
+   as páginas preencham a tela inteira em qualquer dispositivo. */
+.min-h-screen {
+  min-height: 100dvh;
+}
+
 /* ── Utility classes ────────────────────────────────────────────────── */
 @layer utilities {
 
