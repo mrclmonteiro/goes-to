@@ -44,15 +44,18 @@
 /* ── Base ───────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
-/* html NÃO deve ter overflow:hidden — isso impede o background de pintar
-   atrás das safe-areas (home indicator / status bar) no iOS/Android */
+/* html só define a cor de fundo — ela se propaga para o canvas do browser
+   e pinta atrás das safe-areas (home indicator / status bar) em qualquer dispositivo */
 html {
-  height: 100dvh;
   background-color: var(--bg);
 }
 
+/* position:fixed + inset:0 ancora o body nos edges físicos da tela.
+   Com viewport-fit:cover, isso inclui as safe-areas de iOS e Android.
+   É mais confiável que height:100dvh, que pode não incluir a barra de gestos. */
 body {
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   background-color: var(--bg);
   color: var(--fg);
@@ -60,9 +63,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Container de scroll real — único elemento que rola no app */
+/* Container de scroll real — ocupa todo o body */
 #app-scroll {
-  height: 100dvh;
+  position: absolute;
+  inset: 0;
   overflow-y: scroll;
   /* rubber-band nas bordas sem propagar ao browser */
   overscroll-behavior-y: contain;
