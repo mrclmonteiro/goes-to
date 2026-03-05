@@ -12,44 +12,48 @@ function HalfStarRating({ value, onChange }: { value: number; onChange: (v: numb
   const displayed = hover ?? value
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(star => {
         const leftVal = star - 0.5
         const rightVal = star
         const leftFilled = displayed >= leftVal
         const rightFilled = displayed >= rightVal
         return (
-          <div key={star} className="relative w-8 h-8 cursor-pointer flex items-center justify-center"
+          // 44pt touch target (HIG minimum) com estrela 32pt visual
+          <div key={star} className="relative cursor-pointer flex items-center justify-center"
+            style={{ width: 44, height: 44 }}
             onMouseLeave={() => setHover(null)}>
             {/* Estrela base (vazia) */}
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="absolute">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="absolute" style={{ pointerEvents: 'none' }}>
               <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"
                 stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeLinejoin="round"/>
             </svg>
             {/* Metade esquerda preenchida */}
             {leftFilled && (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="absolute" style={{ clipPath: 'inset(0 50% 0 0)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="absolute" style={{ clipPath: 'inset(0 50% 0 0)', pointerEvents: 'none' }}>
                 <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"
-                  fill="#fbbf24" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  fill="#FF453A" stroke="#FF453A" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
             )}
             {/* Metade direita preenchida */}
             {rightFilled && (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="absolute" style={{ clipPath: 'inset(0 0 0 50%)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="absolute" style={{ clipPath: 'inset(0 0 0 50%)', pointerEvents: 'none' }}>
                 <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"
-                  fill="#fbbf24" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  fill="#FF453A" stroke="#FF453A" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
             )}
-            {/* Áreas de clique: metade esquerda e direita */}
+            {/* Áreas de clique: 44pt por metade (HIG touch target) */}
             <div className="absolute inset-0 flex">
-              <div className="flex-1 h-full" onMouseEnter={() => setHover(leftVal)} onClick={() => onChange(leftVal)}/>
-              <div className="flex-1 h-full" onMouseEnter={() => setHover(rightVal)} onClick={() => onChange(rightVal)}/>
+              <div className="flex-1 h-full" onMouseEnter={() => setHover(leftVal)}
+                onClick={() => { navigator.vibrate?.(6); onChange(value === leftVal ? 0 : leftVal) }}/>
+              <div className="flex-1 h-full" onMouseEnter={() => setHover(rightVal)}
+                onClick={() => { navigator.vibrate?.(6); onChange(value === rightVal ? 0 : rightVal) }}/>
             </div>
           </div>
         )
       })}
       {displayed > 0 && (
-        <span className="ml-2 text-xs font-medium" style={{ color: 'rgba(251,191,36,0.7)' }}>
+        <span className="ml-1 text-xs font-semibold" style={{ color: 'rgba(255,69,58,0.85)', minWidth: 60 }}>
           {QUALITY[displayed] ?? ''}
         </span>
       )}
@@ -122,14 +126,22 @@ export default function RatingSheet({ open, onClose, filmTitle, categories, nomi
         </div>
 
         <div className="flex items-center justify-between px-5 pt-2 pb-4">
-          <div className="w-9"/>
+          <div style={{ width: 43 }}/>
           <div className="text-center">
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Avaliando</p>
             <p className="text-sm font-semibold">{filmTitle}</p>
+            {/* Progresso — HIG: feedback claro do estado atual */}
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {filledCats.length > 0
+                ? `${filledCats.length} de ${categories.length} avaliadas`
+                : `${categories.length} categorias`}
+            </p>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <button onClick={onClose}
+            className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ width: 43, height: 43, background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(6px) saturate(280%)', WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+              border: '1px solid transparent', boxShadow: 'var(--lg-shadow)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </button>
@@ -147,11 +159,11 @@ export default function RatingSheet({ open, onClose, filmTitle, categories, nomi
                     <div>
                       <p className="text-sm font-semibold">{cat}</p>
                       {nominees[cat] && (
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(251,191,36,0.6)' }}>{nominees[cat]}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,69,58,0.6)' }}>{nominees[cat]}</p>
                       )}
                     </div>
                     {ratings[cat] > 0 && (
-                      <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(251,191,36,0.12)', color: 'rgba(251,191,36,0.8)' }}>
+                      <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(255,69,58,0.12)', color: 'rgba(255,69,58,0.8)' }}>
                         {ratings[cat]}★
                       </span>
                     )}
@@ -165,11 +177,11 @@ export default function RatingSheet({ open, onClose, filmTitle, categories, nomi
             {/* Média geral */}
             {avg > 0 && (
               <div className="mt-3 mb-2 rounded-2xl p-4 flex items-center justify-between"
-                style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                style={{ background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.2)' }}>
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>Sua média geral</p>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-2xl font-black" style={{ color: '#fbbf24' }}>{avg}</span>
-                  <span style={{ color: '#fbbf24' }}>★</span>
+                  <span className="text-2xl font-black" style={{ color: '#FF453A' }}>{avg}</span>
+                  <span style={{ color: '#FF453A' }}>★</span>
                 </div>
               </div>
             )}

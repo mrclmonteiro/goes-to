@@ -29,7 +29,8 @@ export default function BuscaPage() {
     background: 'rgba(255,255,255,0.06)',
     backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: '1px solid var(--glass-border)',
+    boxShadow: 'var(--glass-shadow)',
   }
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function BuscaPage() {
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data as any)
     }
-    load()
+    load().catch(e => console.error('[busca] load error:', e))
     setTimeout(() => inputRef.current?.focus(), 300)
   }, [])
 
@@ -86,7 +87,7 @@ export default function BuscaPage() {
 
       {/* Background lights */}
       <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
+        style={{ background: 'radial-gradient(circle, rgba(255,69,58,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
       <div className="absolute top-8 right-0 w-48 h-48 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
 
@@ -145,7 +146,7 @@ export default function BuscaPage() {
                       </div>
                       <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }}/>
                       <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(251,191,36,0.9)' }}>
+                        style={{ background: 'rgba(255,69,58,0.9)' }}>
                         <span className="text-[8px] font-bold text-black">✓</span>
                       </div>
                       <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight z-10"
@@ -206,7 +207,7 @@ export default function BuscaPage() {
                           <p className="text-sm font-semibold leading-tight" style={{ color: 'white' }}>{(movieData[film.title] as any)?.ptTitle || film.title}</p>
                           {uf?.watched && (
                             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                              style={{ background: 'rgba(251,191,36,0.9)' }}>
+                              style={{ background: 'rgba(255,69,58,0.9)' }}>
                               <span className="text-[9px] font-bold text-black">✓</span>
                             </div>
                           )}
@@ -214,24 +215,24 @@ export default function BuscaPage() {
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {cats.slice(0, 3).map(cat => (
                             <span key={cat} className="text-[10px] px-2 py-0.5 rounded-full"
-                              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)' }}>
+                              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)' }}>
                               {CATEGORY_LABELS[cat] ?? cat}
                             </span>
                           ))}
                           {cats.length > 3 && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full"
-                              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)' }}>
+                              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)' }}>
                               +{cats.length - 3}
                             </span>
                           )}
                         </div>
                         {nominees.length > 0 && (
-                          <p className="text-[11px] mt-1" style={{ color: 'rgba(251,191,36,0.6)' }}>
+                          <p className="text-[11px] mt-1" style={{ color: 'rgba(255,69,58,0.6)' }}>
                             {nominees.slice(0, 2).join(', ')}
                           </p>
                         )}
                         {uf?.rating && (
-                          <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>{'★'.repeat(uf.rating)}</p>
+                          <p className="text-xs mt-1" style={{ color: '#FF453A' }}>{'★'.repeat(uf.rating)}</p>
                         )}
                       </div>
                     </Link>

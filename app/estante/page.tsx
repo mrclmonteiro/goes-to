@@ -62,16 +62,16 @@ function SectionTitle({ children, className = '' }: { children: React.ReactNode,
 
 // Liquid glass — tudo inline (Tailwind v4 interfere via CSS)
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 const ddStyle: React.CSSProperties = {
   background: 'rgba(20,20,25,0.65)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
   border: '1px solid rgba(255,255,255,0.15)',
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
@@ -139,11 +139,11 @@ function InstallGate({ onClose }: { onClose: () => void }) {
           className="lg-btn rounded-full flex items-center justify-center"
           style={{
             position: 'absolute', top: 16, right: 16, width: 43, height: 43,
-            background: 'rgba(120,120,128,0.18)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(6px) saturate(280%)',
+            WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+            border: '1px solid transparent',
+            boxShadow: 'var(--lg-shadow)',
           }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
@@ -165,12 +165,13 @@ function InstallGate({ onClose }: { onClose: () => void }) {
           </p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{instructions}</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <button onClick={dismiss} className="accent-btn"
-            style={{ background: 'rgba(251,191,36,0.13)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24', fontSize: 15, fontWeight: 700 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <button onClick={dismiss} className="primary-btn">
             OK, entendi!
           </button>
-          <button onClick={dismiss} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', padding: '4px' }}>
+          <button onClick={dismiss}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)',
+              fontSize: 13, cursor: 'pointer', padding: '8px', minHeight: 44 }}>
             Não, obrigado
           </button>
         </div>
@@ -253,9 +254,10 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
           {hasActions && (
             <button onClick={onAction}
               className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              style={{ position: 'relative', width: 43, height: 43, background: '#FF453A', border: '1px solid rgba(255,255,255,0.25)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(255,69,58,0.4), inset 1px 1px 0px rgba(255,255,255,0.35), inset -1px -1px 0px rgba(0,0,0,0.15)' }}>
+              <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 3 }}>
+                <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           )}
@@ -296,6 +298,8 @@ export default function EstantePage() {
   const [ptTitles, setPtTitles] = useState<Record<string, string | null>>({})
   const [loading, setLoading] = useState(true)
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
+  const goalBtnRef = useRef<HTMLButtonElement>(null)
+  const [goalBtnAnchor, setGoalBtnAnchor] = useState<{top: number, right: number} | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [activeEgg, setActiveEgg] = useState<string | null>(null)
   const [configOpen, setConfigOpen] = useState(false)
@@ -360,7 +364,7 @@ export default function EstantePage() {
       setPosters(Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v.poster])))
       setPtTitles(Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v.ptTitle ?? null])))
     }
-    load()
+    load().catch(e => console.error('[estante] load error:', e))
   }, [router])
 
   const filmCategories = (filmId: string) => nominations.filter(n => n.film_id === filmId).map(n => n.category)
@@ -496,13 +500,13 @@ export default function EstantePage() {
 
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+    WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid var(--glass-border)',
+    boxShadow: 'var(--glass-shadow)',
   }
 
-  const accentColor = goalComplete ? '#fbbf24' : '#a78bfa'
+  const accentColor = goalComplete ? '#FF453A' : '#a78bfa'
   const bgGradient = goalComplete
-    ? 'linear-gradient(160deg, #78350f 0%, #451a03 55%, #0a0a0f 100%)'
+    ? 'linear-gradient(160deg, #3a0c0a 0%, #1e0908 55%, #0a0a0f 100%)'
     : 'linear-gradient(160deg, #1e1b4b 0%, #0f0c29 55%, #0a0a0f 100%)'
 
   if (loading) return (
@@ -538,7 +542,7 @@ export default function EstantePage() {
               <div key={i} className="absolute" style={{
                 left: `${Math.random() * 100}%`, top: '-10%', width: 8, height: 8,
                 borderRadius: Math.random() > 0.5 ? '50%' : 2,
-                background: ['#fbbf24','#f59e0b','#ffffff','#a78bfa','#60a5fa'][i % 5],
+                background: ['#FF453A','#CC3228','#ffffff','#a78bfa','#60a5fa'][i % 5],
                 animation: `fall ${1 + Math.random() * 2}s ${Math.random() * 2}s linear forwards`,
               }}/>
             ))}
@@ -551,10 +555,12 @@ export default function EstantePage() {
         {/* Botões agrupados: Bolão + Configurações */}
         <div className="lg-btn fixed z-[100] flex items-center pointer-events-auto"
           style={{ ...lgStyle, top: 'max(env(safe-area-inset-top), 45px)', right: '15px',
-                   height: '43px', borderRadius: '21.5px', padding: '0 6px', gap: '4px', position: 'fixed' }}>
+                   height: '44px', borderRadius: '22px', padding: '0 6px', gap: '4px', position: 'fixed', overflow: 'hidden' }}>
+          {/* HIG Toolbar: glare diagonal */}
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
           {/* Bolão */}
           <button onClick={openBolao}
-            className="flex items-center justify-center flex-shrink-0 relative"
+            className="lg-press flex items-center justify-center flex-shrink-0 relative"
             style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
@@ -563,13 +569,13 @@ export default function EstantePage() {
             </svg>
             {BOLAO_CATEGORIES.every(c => bolao[c.cat]) && (
               <div style={{ position: 'absolute', top: 9, right: 9, width: 6, height: 6,
-                borderRadius: '50%', background: '#fbbf24',
-                boxShadow: '0 0 6px rgba(251,191,36,0.8)' }}/>
+                borderRadius: '50%', background: '#FF453A',
+                boxShadow: '0 0 6px rgba(255,69,58,0.8)' }}/>
             )}
           </button>
           {/* Config */}
           <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true) }}
-            className="flex items-center justify-center flex-shrink-0"
+            className="lg-press flex items-center justify-center flex-shrink-0"
             style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="white" strokeWidth="1.8"/>
@@ -601,29 +607,65 @@ export default function EstantePage() {
           {/* Meta */}
           <div style={{ position: 'relative', zIndex: 10 }}>
             <div className="flex items-center justify-between mb-3">
-              <SectionTitle className={goalComplete ? 'text-amber-400' : ''}>
+              <SectionTitle className={goalComplete ? 'text-[#FF453A]' : ''}>
                 {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
               </SectionTitle>
               <div className="flex items-center gap-2">
 
                 {/* Dropdown Meta */}
                 <div style={{ position: 'relative' }}>
-                  <button onClick={() => setGoalDropdownOpen(!goalDropdownOpen)}
-                    className="lg-btn flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold"
-                    style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)' }}>
-                    {goalLabel} <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
+                  <button ref={goalBtnRef} onClick={() => {
+                      const r = goalBtnRef.current?.getBoundingClientRect()
+                      if (r) setGoalBtnAnchor({ top: r.bottom + 6, right: window.innerWidth - r.right })
+                      setGoalDropdownOpen(!goalDropdownOpen)
+                    }}
+                    className="lg-btn flex items-center gap-2 px-4 rounded-full text-sm font-semibold"
+                    style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)',
+                      paddingRight: 12 }}>
+                    <span>{goalLabel}</span>
+                    {/* HIG pop-up button indicator: chevron up+down empilhados */}
+                    <svg width="11" height="16" viewBox="0 0 11 16" fill="none"
+                      style={{ color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                      <path d="M1 6L5.5 1.5L10 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M1 10L5.5 14.5L10 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
-                  {goalDropdownOpen && (
+                  {goalDropdownOpen && goalBtnAnchor && (
                     <>
                       <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setGoalDropdownOpen(false)}/>
-                      <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-52 overflow-hidden"
-                        style={{ ...ddStyle, zIndex: 99 }}>
-                        {GOAL_OPTIONS.map(g => (
+                      <div className="fixed rounded-2xl dropdown-glass"
+                        style={{ zIndex: 99, top: goalBtnAnchor.top, right: goalBtnAnchor.right, minWidth: 200, width: 'max-content',
+                          backdropFilter: 'blur(48px) saturate(200%)', WebkitBackdropFilter: 'blur(48px) saturate(200%)' }}>
+                        {GOAL_OPTIONS.filter(g => g.category !== 'custom').map(g => (
+                          <button key={g.category} onClick={() => updateGoal(g.category)}
+                            className="dd-item"
+                            style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            {/* Placeholder à esquerda — padrão iOS: checkmark reserva espaço fixo */}
+                            <span style={{ width: 18, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {g.category === profile.goal_category && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                  <path d="M5 12L10 17L19 7" stroke="#FF453A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </span>
+                            <span>{g.label}</span>
+                          </button>
+                        ))}
+                        {/* Separador antes da opção personalizada */}
+                        <div className="dd-separator"/>
+                        {GOAL_OPTIONS.filter(g => g.category === 'custom').map(g => (
                           <div key={g.category}>
                             <button onClick={() => updateGoal(g.category)}
-                              className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
-                              style={{ color: g.category === profile.goal_category ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
-                              {g.label}
+                              className="dd-item"
+                              style={{ color: 'rgba(255,255,255,0.85)' }}>
+                              <span style={{ width: 18, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {g.category === profile.goal_category && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12L10 17L19 7" stroke="#FF453A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </span>
+                              <span>{g.label}</span>
                             </button>
                             {/* Input numérico inline para meta personalizada */}
                             {g.category === 'custom' && profile.goal_category === 'custom' && (
@@ -670,19 +712,19 @@ export default function EstantePage() {
             {/* Box da Meta */}
             <div className="rounded-3xl p-5" style={{
               ...glass,
-              background: goalComplete ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.06)',
-              border: goalComplete ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.1)'
+              background: goalComplete ? 'rgba(255,69,58,0.1)' : 'rgba(255,255,255,0.06)',
+              border: goalComplete ? '1px solid rgba(255,69,58,0.25)' : '1px solid rgba(255,255,255,0.1)'
             }}>
               <div className="flex items-end gap-2 mb-3">
-                <span className="text-4xl font-bold tabular-nums" style={{ color: goalComplete ? '#fbbf24' : 'white' }}>{watchedGoal}</span>
+                <span className="text-4xl font-bold tabular-nums" style={{ color: goalComplete ? '#FF453A' : 'white' }}>{watchedGoal}</span>
                 <span className="text-xl mb-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {customTarget}</span>
                 <span className="text-[10px] uppercase tracking-wider mb-1.5 ml-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>assistidos</span>
               </div>
               <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${progress * 100}%`, background: goalComplete ? 'linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)' }}/>
+                  style={{ width: `${progress * 100}%`, background: goalComplete ? 'linear-gradient(90deg, #CC3228, #FF453A, #FF6961)' : 'linear-gradient(90deg, #CC3228, #FF453A)' }}/>
               </div>
-              <p className="text-[11px] mt-3 font-medium" style={{ color: goalComplete ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.3)' }}>
+              <p className="text-[11px] mt-3 font-medium" style={{ color: goalComplete ? 'rgba(255,69,58,0.7)' : 'rgba(255,255,255,0.3)' }}>
                 {goalComplete
                   ? 'Você assistiu tudo! Incrível 🌟'
                   : `${customTarget - watchedGoal} ${customTarget - watchedGoal === 1 ? 'falta' : 'faltam'} pra cravar a meta 🎯`}
@@ -708,8 +750,8 @@ export default function EstantePage() {
                         }
                       </div>
                       <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }}/>
-                      {uf?.rating && <p className="absolute bottom-2 left-3 text-xs z-10" style={{ color: '#fbbf24' }}>{'★'.repeat(uf.rating)}</p>}
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.9)' }}>
+                      {uf?.rating && <p className="absolute bottom-2 left-3 text-xs z-10" style={{ color: '#FF453A' }}>{'★'.repeat(uf.rating)}</p>}
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,69,58,0.9)' }}>
                         <span className="text-[10px] font-bold text-black">✓</span>
                       </div>
                     </Link>
@@ -722,8 +764,8 @@ export default function EstantePage() {
               <span className="text-6xl">🍿</span>
               <p className="text-base font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Sua estante está vazia</p>
               <p className="text-sm text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>Que tal explorar os indicados?</p>
-              <Link href="/filmes" className="mt-2 px-5 py-3 rounded-full text-sm font-semibold"
-                style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
+              <Link href="/filmes" className="lg-btn mt-2 px-5 py-3 rounded-full text-sm font-semibold"
+                style={{ background: 'rgba(255,69,58,0.15)', border: '1px solid rgba(255,69,58,0.3)', color: '#FF453A' }}>
                 Ver indicados a Melhor Filme
               </Link>
             </div>
@@ -740,7 +782,7 @@ export default function EstantePage() {
             <div className="flex flex-wrap gap-3 justify-start">
               {AVATARS.map((emoji, i) => (
                 <button key={i} onClick={() => setTempAvatarIndex(i)}
-                  className={`w-[50px] h-[50px] rounded-full text-2xl flex items-center justify-center transition-all ${
+                  className={`lg-btn w-[50px] h-[50px] rounded-full text-2xl flex items-center justify-center transition-all ${
                     tempAvatarIndex === i ? 'scale-110 ring-2 ring-white z-10 shadow-lg' : 'opacity-60 scale-95 hover:opacity-100'
                   }`}
                   style={{ background: `linear-gradient(135deg, ${AVATAR_COLORS[i][0]}, ${AVATAR_COLORS[i][1]})` }}>
@@ -765,12 +807,12 @@ export default function EstantePage() {
             ))}
           </div>
           {configMsg && (
-            <p className="text-xs text-center font-medium" style={{ color: 'rgba(251,191,36,0.8)' }}>{configMsg}</p>
+            <p className="text-xs text-center font-medium" style={{ color: 'rgba(255,69,58,0.8)' }}>{configMsg}</p>
           )}
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }}/>
           <button onClick={async () => { const sb = createClient(); if (sb) await sb.auth.signOut(); router.push('/') }}
-            className="w-full py-3.5 rounded-full text-sm font-semibold"
-            style={{ background: 'rgba(255,59,48,0.12)', border: '1px solid rgba(255,59,48,0.2)', color: 'rgba(255,99,88,0.9)' }}>
+            className="lg-btn w-full py-3.5 rounded-full text-sm font-semibold"
+            style={{ background: 'rgba(255,59,48,0.12)', border: '1px solid transparent', color: 'rgba(255,99,88,0.9)' }}>
             Sair da conta
           </button>
         </div>
@@ -898,8 +940,8 @@ export default function EstantePage() {
                     <div style={{ width: '100%', height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.1)' }}>
                       <div style={{
                         height: '100%', borderRadius: 99, width: '100%',
-                        background: 'linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a)',
-                        boxShadow: '0 0 12px rgba(251,191,36,0.5)',
+                        background: 'linear-gradient(90deg, #CC3228, #FF453A, #FF6961)',
+                        boxShadow: '0 0 12px rgba(255,69,58,0.5)',
                       }}/>
                     </div>
                   </div>
@@ -961,8 +1003,8 @@ export default function EstantePage() {
           </div>{/* end visual wrapper */}
 
           <button onClick={shareGoal}
-            className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)' }}>
+            className="primary-btn flex items-center justify-center gap-2"
+            style={{ fontSize: 15 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                 <polyline points="16 6 12 2 8 6"/>
@@ -1010,9 +1052,9 @@ export default function EstantePage() {
                     style={{
                       flex: 1, height: 3, borderRadius: 99, border: 'none', cursor: 'pointer',
                       background: i === bolaoStep
-                        ? '#fbbf24'
+                        ? '#FF453A'
                         : bolao[BOLAO_CATEGORIES[i].cat]
-                          ? 'rgba(251,191,36,0.35)'
+                          ? 'rgba(255,69,58,0.35)'
                           : 'rgba(255,255,255,0.1)',
                       transition: 'background 0.2s',
                     }}/>
@@ -1022,7 +1064,7 @@ export default function EstantePage() {
               {/* Category header */}
               <div className="mb-1">
                 <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', color: 'rgba(251,191,36,0.6)', marginBottom: 4 }}>
+                  textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 4 }}>
                   {answered}/{BOLAO_CATEGORIES.length} respondidas
                 </p>
                 <p style={{ fontSize: 24, fontWeight: 900, color: 'white', lineHeight: 1.2 }}>
@@ -1045,11 +1087,11 @@ export default function EstantePage() {
                     const isSelected = bolao[step.cat] === optionKey
                     return (
                       <button key={optionKey} onClick={() => pickFilm(optionKey)}
-                        className="flex items-center gap-3 rounded-2xl text-left transition-all"
+                        className="lg-btn flex items-center gap-3 rounded-2xl text-left transition-all"
                         style={{
                           padding: '10px 12px',
-                          background: isSelected ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.04)',
-                          border: isSelected ? '1px solid rgba(251,191,36,0.4)' : '1px solid transparent',
+                          background: isSelected ? 'rgba(255,69,58,0.12)' : 'rgba(255,255,255,0.04)',
+                          border: isSelected ? '1px solid rgba(255,69,58,0.4)' : '1px solid transparent',
                           cursor: 'pointer',
                         }}>
                         {/* Poster */}
@@ -1068,13 +1110,13 @@ export default function EstantePage() {
                         {/* Title + nominee */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 14, fontWeight: 600,
-                            color: isSelected ? '#fbbf24' : 'rgba(255,255,255,0.85)',
+                            color: isSelected ? '#FF453A' : 'rgba(255,255,255,0.85)',
                             lineHeight: 1.3, marginBottom: 2,
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {opt.filmTitle}
                           </p>
                           {opt.nominee && (
-                          <div style={{ fontSize: 11, color: '#fbbf24', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: 11, color: '#FF453A', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {opt.nominee}
                           </div>
                           )}
@@ -1082,7 +1124,7 @@ export default function EstantePage() {
                         {/* Check */}
                         <div style={{
                           width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                          background: isSelected ? '#fbbf24' : 'rgba(255,255,255,0.08)',
+                          background: isSelected ? '#FF453A' : 'rgba(255,255,255,0.08)',
                           border: isSelected ? 'none' : '1.5px solid rgba(255,255,255,0.15)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'all 0.15s',
@@ -1125,9 +1167,10 @@ export default function EstantePage() {
                   {bolaoStep === BOLAO_CATEGORIES.length - 1 && bolao[step.cat] && (
                     <button onClick={() => { setBolaoOpen(false); setTimeout(() => setBolaoResultsOpen(true), 420) }}
                       className="lg-btn flex items-center justify-center rounded-full flex-shrink-0"
-                      style={{ ...lgStyle, position: 'relative', width: 43, height: 43 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      style={{ position: 'relative', width: 43, height: 43, background: '#FF453A', border: '1px solid rgba(255,255,255,0.25)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(255,69,58,0.4), inset 1px 1px 0px rgba(255,255,255,0.35), inset -1px -1px 0px rgba(0,0,0,0.15)' }}>
+                      <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 3 }}>
+                        <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
                   )}
@@ -1156,7 +1199,7 @@ export default function EstantePage() {
               {/* Orbe */}
               <div style={{ position: 'absolute', top: '-5%', right: '-10%',
                 width: '60%', height: '35%', borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(255,69,58,0.2) 0%, transparent 70%)',
                 filter: 'blur(40px)', pointerEvents: 'none' }}/>
               <div style={{ position: 'absolute', bottom: '8%', left: '-15%',
                 width: '55%', height: '28%', borderRadius: '50%',
@@ -1209,15 +1252,15 @@ export default function EstantePage() {
                 const bpPt = bpFilm ? (ptTitles[bpFilm.title] || bpFilm.title) : '—'
                 return (
                   <div style={{
-                    background: 'rgba(251,191,36,0.1)',
-                    border: '1px solid rgba(251,191,36,0.3)',
+                    background: 'rgba(255,69,58,0.1)',
+                    border: '1px solid rgba(255,69,58,0.3)',
                     borderRadius: 12, padding: '10px 12px', marginBottom: 12,
                   }}>
                     <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.12em',
-                      textTransform: 'uppercase', color: 'rgba(251,191,36,0.6)', marginBottom: 2 }}>
+                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2 }}>
                       🏆 Melhor Filme
                     </p>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: '#fbbf24',
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A',
                       lineHeight: 1.2, overflow: 'hidden',
                       display: '-webkit-box', WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical' as any }}>
@@ -1305,8 +1348,9 @@ export default function EstantePage() {
               }, 'image/png')
             }}
               className="accent-btn flex-1"
-              style={{ background: 'rgba(251,191,36,0.13)', border: '1px solid rgba(251,191,36,0.3)',
-                color: '#fbbf24', fontSize: 14, fontWeight: 700 }}>
+              style={{ background: '#FF453A', border: '1px solid rgba(255,255,255,0.25)',
+                color: 'white', fontSize: 14, fontWeight: 700,
+                boxShadow: '0 4px 20px rgba(255,69,58,0.35), inset 1px 1px 0px rgba(255,255,255,0.3), inset -1px -1px 0px rgba(0,0,0,0.12)' }}>
               Compartilhar
             </button>
           </div>

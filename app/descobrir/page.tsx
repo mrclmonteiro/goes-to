@@ -99,10 +99,10 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
             <div key={f.title} className="flex items-center gap-3">
               <p className="text-xs w-4 text-right" style={{ color: 'rgba(255,255,255,0.25)' }}>#{i+1}</p>
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <div className="h-full rounded-full" style={{ width: `${(f.rating/5)*100}%`, background: i===0 ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'rgba(255,255,255,0.15)' }}/>
+                <div className="h-full rounded-full" style={{ width: `${(f.rating/5)*100}%`, background: i===0 ? 'linear-gradient(90deg,#CC3228,#FF453A)' : 'rgba(255,255,255,0.15)' }}/>
               </div>
               <p className="text-xs w-24 truncate text-right" style={{ color: i===0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.35)' }}>{f.title}</p>
-              <p className="text-xs" style={{ color: '#fbbf24', width: 28, textAlign: 'right' }}>{f.rating}★</p>
+              <p className="text-xs" style={{ color: '#FF453A', width: 28, textAlign: 'right' }}>{f.rating}★</p>
             </div>
           ))}
         </div>
@@ -129,18 +129,18 @@ function HScrollRow({ children }: { children: React.ReactNode }) {
 
 // Liquid glass — tudo inline igual ao BottomNav (Tailwind v4 interfere via CSS)
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 
 // Dropdown glass style – same as filmes page for consistent blur
 const ddStyle: React.CSSProperties = {
   background: 'rgba(20,20,25,0.65)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
   border: '1px solid rgba(255,255,255,0.15)',
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
@@ -221,11 +221,11 @@ function InstallGate({ onClose }: { onClose: () => void }) {
           style={{
             position: 'absolute', top: 16, right: 16,
             width: 43, height: 43,
-            background: 'rgba(120,120,128,0.18)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(6px) saturate(280%)',
+            WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+            border: '1px solid transparent',
+            boxShadow: 'var(--lg-shadow)',
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -268,17 +268,10 @@ function InstallGate({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Botões */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <button
             onClick={dismiss}
-            className="accent-btn"
-            style={{
-              background: 'rgba(251,191,36,0.13)',
-              border: '1px solid rgba(251,191,36,0.28)',
-              color: '#fbbf24',
-              fontSize: 15,
-              fontWeight: 700,
-            }}
+            className="primary-btn"
           >
             OK, entendi!
           </button>
@@ -288,7 +281,7 @@ function InstallGate({ onClose }: { onClose: () => void }) {
             style={{
               background: 'none', border: 'none',
               color: 'rgba(255,255,255,0.25)',
-              fontSize: 13, cursor: 'pointer', padding: '4px',
+              fontSize: 13, cursor: 'pointer', padding: '8px', minHeight: 44,
             }}
           >
             Não, obrigado
@@ -415,6 +408,8 @@ export default function DescobrirPage() {
   const [similar, setSimilar] = useState<{ title: string; poster: string | null; tmdbId: number }[]>([])
   const [selectedCat, setSelectedCat] = useState('Best Picture')
   const [catDropdownOpen, setCatDropdownOpen] = useState(false)
+  const catBtnRef = useRef<HTMLButtonElement>(null)
+  const [catBtnAnchor, setCatBtnAnchor] = useState<{top: number, right: number} | null>(null)
   const [loading, setLoading] = useState(true)
   const [titleOpacity, setTitleOpacity] = useState(1)
 
@@ -491,7 +486,7 @@ export default function DescobrirPage() {
         }
       }
     }
-    load()
+    load().catch(e => console.error('[descobrir] load error:', e))
   }, [])
 
   const filmsByCategory = (cat: string) => {
@@ -516,8 +511,8 @@ export default function DescobrirPage() {
 
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.1)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+    WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid var(--glass-border)',
+    boxShadow: 'var(--glass-shadow)',
   }
 
   async function shareFact() {
@@ -553,7 +548,7 @@ export default function DescobrirPage() {
 
         {/* Background lights */}
         <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
+          style={{ background: 'radial-gradient(circle, rgba(255,69,58,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }}/>
         <div className="absolute top-8 right-0 w-48 h-48 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)', filter: 'blur(32px)' }}/>
 
@@ -575,23 +570,42 @@ export default function DescobrirPage() {
 
               {/* Dropdown — liquid glass igual Estante */}
               <div style={{ position: 'relative' }}>
-                <button onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  className="lg-btn flex items-center gap-1.5 px-4 rounded-full text-sm font-semibold"
-                  style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)' }}>
-                  {CATEGORY_LABELS[selectedCat]}
-                  <span style={{ color: 'rgba(255,255,255,0.45)' }}>▾</span>
+                <button ref={catBtnRef} onClick={() => {
+                    const r = catBtnRef.current?.getBoundingClientRect()
+                    if (r) setCatBtnAnchor({ top: r.bottom + 6, right: window.innerWidth - r.right })
+                    setCatDropdownOpen(!catDropdownOpen)
+                  }}
+                  className="lg-btn flex items-center gap-2 px-4 rounded-full text-sm font-semibold"
+                  style={{ position: 'relative', ...lgStyle, height: 43, color: 'rgba(255,255,255,0.9)',
+                    paddingRight: 12 }}>
+                  <span>{CATEGORY_LABELS[selectedCat]}</span>
+                  {/* HIG pop-up button indicator: chevron up+down empilhados */}
+                  <svg width="11" height="16" viewBox="0 0 11 16" fill="none"
+                    style={{ color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                    <path d="M1 6L5.5 1.5L10 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1 10L5.5 14.5L10 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
 
-                {catDropdownOpen && (
+                {catDropdownOpen && catBtnAnchor && (
                   <>
                     <div className="fixed inset-0" style={{ zIndex: 98 }} onClick={() => setCatDropdownOpen(false)}/>
-                    <div className="absolute top-full right-0 mt-2 rounded-2xl py-2 w-56 overflow-hidden"
-                      style={{ ...ddStyle, zIndex: 99, maxHeight: 320, overflowY: 'auto' }}>
+                    <div className="fixed rounded-2xl dropdown-glass"
+                      style={{ zIndex: 99, top: catBtnAnchor.top, right: catBtnAnchor.right, minWidth: 210, width: 'max-content', maxHeight: 320, overflowY: 'auto',
+                        backdropFilter: 'blur(48px) saturate(200%)', WebkitBackdropFilter: 'blur(48px) saturate(200%)' }}>
                       {Object.keys(CATEGORY_LABELS).map(cat => (
                         <button key={cat} onClick={() => { setSelectedCat(cat); setCatDropdownOpen(false) }}
-                          className="w-full px-4 py-2.5 text-sm text-left hover:bg-white/10 transition-colors"
-                          style={{ color: cat === selectedCat ? '#fbbf24' : 'rgba(255,255,255,0.85)' }}>
-                          {CATEGORY_LABELS[cat]}
+                          className="dd-item"
+                          style={{ color: 'rgba(255,255,255,0.85)' }}>
+                          {/* Placeholder à esquerda — padrão iOS */}
+                          <span style={{ width: 18, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {cat === selectedCat && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 12L10 17L19 7" stroke="#FF453A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </span>
+                          <span>{CATEGORY_LABELS[cat]}</span>
                         </button>
                       ))}
                     </div>
@@ -606,7 +620,7 @@ export default function DescobrirPage() {
 
           {/* ── Curiosidade do dia ─────────────────────────────────── */}
           <div className="px-4">
-            <button onClick={() => { setFactSheet(dailyFact); setIsFactDaily(true) }} className="w-full rounded-3xl p-5 text-left relative overflow-hidden"
+            <button onClick={() => { setFactSheet(dailyFact); setIsFactDaily(true) }} className="lg-btn w-full rounded-3xl p-5 text-left relative overflow-hidden"
               style={{ background: `linear-gradient(135deg, ${dailyFact.grad[0]}, ${dailyFact.grad[1]})`, border: '1px solid rgba(255,255,255,0.12)' }}>
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none"
                 style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
@@ -699,7 +713,7 @@ export default function DescobrirPage() {
             <div className="grid grid-cols-2 gap-3 mt-3">
               {FACTS.map((fact, i) => (
                 <button key={i} onClick={() => { setFactSheet(fact); setIsFactDaily(false) }}
-                  className="rounded-3xl p-4 text-left relative overflow-hidden"
+                  className="lg-btn rounded-3xl p-4 text-left relative overflow-hidden"
                   style={{ background: `linear-gradient(135deg, ${fact.grad[0]}, ${fact.grad[1]})`, border: '1px solid rgba(255,255,255,0.1)' }}>
                   <div className="absolute top-0 right-0 w-16 h-16 rounded-full pointer-events-none"
                     style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)', transform: 'translate(20%,-20%)' }}/>
@@ -717,7 +731,7 @@ export default function DescobrirPage() {
             <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Conteúdos e análises</p>
             <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.25)' }}>Textos, análises e bastidores do Oscar chegando em breve.</p>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: 'rgba(251,191,36,0.1)', color: 'rgba(251,191,36,0.6)', border: '1px solid rgba(251,191,36,0.15)' }}>
+              style={{ background: 'rgba(255,69,58,0.1)', color: 'rgba(255,69,58,0.6)', border: '1px solid rgba(255,69,58,0.15)' }}>
               Em breve
             </span>
           </div>
@@ -819,7 +833,7 @@ export default function DescobrirPage() {
 
             {/* Botão compartilhar */}
             <button onClick={shareFact}
-              className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+              className="lg-btn w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>

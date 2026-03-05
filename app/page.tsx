@@ -22,7 +22,7 @@ function EmojiScene({ feature }: { feature: typeof FEATURES[0] }) {
         @keyframes orb2 { 0%,100% { transform: translate(-50%,-50%) translateY(0px) rotate(0deg); } 25% { transform: translate(-50%,-50%) translateY(-7px) rotate(10deg); } 75% { transform: translate(-50%,-50%) translateY(9px) rotate(-14deg); } }
       `}</style>
       <div className="absolute inset-0 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(24px)' }}/>
+        style={{ background: 'radial-gradient(circle, rgba(255,69,58,0.12) 0%, transparent 70%)', filter: 'blur(24px)' }}/>
       {feature.orbs.map((orb, i) => {
         const angle = (i / feature.orbs.length) * 2 * Math.PI - Math.PI / 2
         const r = 62
@@ -62,7 +62,7 @@ function FloatInput({ label, type, value, onChange }: { label: string; type: str
           top: lifted ? 8 : '50%',
           transform: lifted ? 'none' : 'translateY(-50%)',
           fontSize: lifted ? 10 : 14,
-          color: focused ? 'rgba(251,191,36,0.9)' : 'rgba(255,255,255,0.35)',
+          color: focused ? 'rgba(255,69,58,0.9)' : 'rgba(255,255,255,0.35)',
           fontWeight: lifted ? 600 : 400,
           letterSpacing: lifted ? '0.05em' : 0,
         }}>
@@ -95,8 +95,8 @@ function SignUpPopup({ onClose }: { onClose: () => void }) {
           </p>
         </div>
         <button onClick={onClose}
-          className="w-full py-3 rounded-full text-sm font-semibold mt-2"
-          style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.95),rgba(245,158,11,0.95))', color: '#1a0e00' }}>
+          className="lg-btn w-full py-3 rounded-full text-sm font-semibold mt-2"
+          style={{ background: 'linear-gradient(135deg,rgba(255,69,58,0.95),rgba(204,50,40,0.95))', color: 'white' }}>
           Entendido!
         </button>
       </div>
@@ -153,7 +153,7 @@ export default function LoginPage() {
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div style={{ position:'absolute', top:'-20%', left:'-10%', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(109,40,217,0.18) 0%, transparent 70%)', filter:'blur(60px)' }}/>
-        <div style={{ position:'absolute', bottom:'-10%', right:'-10%', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle, rgba(251,191,36,0.1) 0%, transparent 70%)', filter:'blur(60px)' }}/>
+        <div style={{ position:'absolute', bottom:'-10%', right:'-10%', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,69,58,0.1) 0%, transparent 70%)', filter:'blur(60px)' }}/>
       </div>
 
       <div className="relative flex flex-col flex-1 px-6 pt-14">
@@ -210,13 +210,13 @@ export default function LoginPage() {
         {/* Botão menor e totalmente arredondado */}
         <div className="flex justify-center mb-3">
           <button onClick={handleSubmit} disabled={loading}
-            className="px-12 py-3 rounded-full text-sm font-semibold transition-opacity disabled:opacity-50"
-            style={{ background:'linear-gradient(135deg,rgba(251,191,36,0.95),rgba(245,158,11,0.95))', color:'#1a0e00', boxShadow:'0 4px 20px rgba(251,191,36,0.2)' }}>
+            className="lg-btn px-12 py-3 rounded-full text-sm font-semibold transition-opacity disabled:opacity-50"
+            style={{ background:'linear-gradient(135deg,rgba(255,69,58,0.95),rgba(204,50,40,0.95))', color:'white', boxShadow:'0 4px 20px rgba(255,69,58,0.2)' }}>
             {loading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}
           </button>
         </div>
 
-        {message && <p className="text-xs text-center mb-3" style={{ color:'rgba(251,191,36,0.8)' }}>{message}</p>}
+        {message && <p className="text-xs text-center mb-3" style={{ color:'rgba(255,69,58,0.8)' }}>{message}</p>}
 
         <button onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-center mb-10"
           style={{ color:'rgba(255,255,255,0.28)' }}>

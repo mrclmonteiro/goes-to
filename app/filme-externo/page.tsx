@@ -26,11 +26,11 @@ type FilmDetails = {
 }
 
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 
 function BottomSheet({ open, onClose, title, children }: {
@@ -88,7 +88,7 @@ function BottomSheet({ open, onClose, title, children }: {
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-6 z-30">
           <button onClick={onClose}
-            className="rounded-full flex items-center justify-center flex-shrink-0"
+            className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
             style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
@@ -166,9 +166,10 @@ function ExternalFilmContent() {
 
       {/* Botão voltar flutuante */}
       <button onClick={() => router.back()}
-        className="fixed top-14 left-4 z-20 w-9 h-9 rounded-full flex items-center justify-center"
-        style={{ ...glass, position: 'fixed' }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        className="lg-btn fixed z-20 flex items-center justify-center rounded-full"
+        style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '44px', height: '44px', overflow: 'hidden' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 3 }}>
           <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>

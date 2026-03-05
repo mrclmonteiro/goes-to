@@ -48,13 +48,13 @@ export const CATEGORY_LABELS: Record<string, string> = {
 
 // [color1, color2, color3, baseColor] — Apple Music-style aura blobs
 export const CATEGORY_AURA: Record<string, readonly [string, string, string, string]> = {
-  'Best Picture':               ['#fbbf24', '#f59e0b', '#ef4444', '#1a0b00'],
+  'Best Picture':               ['#FF453A', '#CC3228', '#ef4444', '#1a0003'],
   'Best Director':              ['#3b82f6', '#6366f1', '#1d4ed8', '#06003d'],
   'Best Actor':                 ['#0ea5e9', '#38bdf8', '#0284c7', '#001432'],
   'Best Actress':               ['#a855f7', '#ec4899', '#f472b6', '#150030'],
   'Best Supporting Actor':      ['#10b981', '#06b6d4', '#34d399', '#001f14'],
   'Best Supporting Actress':    ['#f43f5e', '#fb7185', '#f97316', '#200010'],
-  'Best Animated Feature':      ['#f97316', '#c026d3', '#fbbf24', '#1e0418'],
+  'Best Animated Feature':      ['#f97316', '#c026d3', '#FF453A', '#1e0418'],
   'Best International Feature': ['#059669', '#0d9488', '#6ee7b7', '#001a10'],
   'Best Adapted Screenplay':    ['#b45309', '#d97706', '#f59e0b', '#180e00'],
   'Best Original Screenplay':   ['#8b5cf6', '#a78bfa', '#e879f9', '#0e0028'],
@@ -64,7 +64,7 @@ export const CATEGORY_AURA: Record<string, readonly [string, string, string, str
   'Best Original Song':         ['#db2777', '#ec4899', '#f0abfc', '#1e0018'],
   'Best Costume Design':        ['#9f1239', '#be123c', '#fda4af', '#200014'],
   'Best Production Design':     ['#166534', '#15803d', '#86efac', '#001a08'],
-  'Best Makeup and Hairstyling':['#ea580c', '#fb923c', '#fbbf24', '#1e0800'],
+  'Best Makeup and Hairstyling':['#ea580c', '#fb923c', '#FF453A', '#1e0800'],
   'Best Sound':                 ['#64748b', '#94a3b8', '#38bdf8', '#061020'],
   'Best Visual Effects':        ['#06b6d4', '#3b82f6', '#818cf8', '#00103c'],
   'Best Casting':               ['#d97706', '#f59e0b', '#34d399', '#160c00'],

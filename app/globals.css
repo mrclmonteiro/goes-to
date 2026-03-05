@@ -5,8 +5,8 @@
 :root {
   --bg: #0a0a0f;
   --fg: #ffffff;
-  --accent: #fbbf24;
-  --accent-rgb: 251,191,36;
+  --accent: #FF453A;
+  --accent-rgb: 255,69,58;
   --bg-rgb: 10,10,15;
   --fg-rgb: 255,255,255;
 
@@ -15,27 +15,60 @@
   --glass-border: rgba(255,255,255,0.08);
 
   /* Liquid Glass (botões, pills) */
-  --lg-bg:        rgba(120,120,128,0.18);
-  --lg-border:    rgba(255,255,255,0.25);
-  --lg-shadow:    0 4px 16px rgba(0,0,0,0.1),
-                  inset 0 1px 2px rgba(255,255,255,0.4),
-                  inset 0 -1px 1px rgba(255,255,255,0.1);
+  --lg-bg:        rgba(255,255,255,0.04);
+  --lg-border:    transparent;
+  --lg-shadow:    0 4px 16px rgba(0,0,0,0.22),
+                  /* Fresnel borda: topo-esquerda iluminado */
+                  inset 1px 1px 0px rgba(255,255,255,0.10),
+                  /* Fresnel borda: baixo-direita frio */
+                  inset -1px -1px 0px rgba(0,0,0,0.20),
+                  /* Dispersão cromática R */
+                  inset 1px 0px 0px rgba(255,160,120,0.06),
+                  /* Dispersão cromática B */
+                  inset 0px -1px 0px rgba(120,150,255,0.06),
+                  /* Glow corner topo-esquerda — luz direta (quente) */
+                  inset 10px 10px 20px rgba(255,255,255,0.04),
+                  /* Glow corner baixo-direita — reflexo frio */
+                  inset -10px -10px 20px rgba(160,190,255,0.02);
+  --lg-glare:     linear-gradient(
+                    135deg,
+                    rgba(255,255,255,0.07) 0%,
+                    rgba(255,255,255,0.02) 40%,
+                    transparent 62%
+                  );
   --lg-bg-active: rgba(160,160,170,0.32);
   --lg-shadow-active:
                   0 6px 24px rgba(0,0,0,0.15),
                   inset 0 1px 4px rgba(255,255,255,0.65),
-                  inset 0 -1px 2px rgba(255,255,255,0.2);
+                  inset 0 -1px 2px rgba(255,255,255,0.12),
+                  inset 3px 3px 18px rgba(255,255,255,0.12),
+                  inset 1px 1px 0px rgba(255,120,100,0.10),
+                  inset -1px -1px 0px rgba(100,130,255,0.07);
 
   /* Dropdown */
-  --dd-bg:        rgba(20,20,25,0.65);
-  --dd-border:    rgba(255,255,255,0.15);
-  --dd-shadow:    0 16px 48px rgba(0,0,0,0.5),
-                  inset 0 1px 1px rgba(255,255,255,0.15);
+  --dd-bg:        rgba(28,28,34,0.42);
+  --dd-border:    rgba(255,255,255,0.14);
+  --dd-shadow:    0 16px 56px rgba(0,0,0,0.55),
+                  inset 0 1px 0px rgba(255,255,255,0.18),
+                  inset 0 -1px 0px rgba(0,0,0,0.12);
 
   /* Cards */
   --card-bg:      rgba(255,255,255,0.05);
   --card-border:  rgba(255,255,255,0.07);
   --muted:        rgba(255,255,255,0.35);
+
+  /* Glass card panels — Fresnel + glare subtil + dispersão cromática */
+  --glass-shadow: 0 4px 24px rgba(0,0,0,0.3),
+                  /* Fresnel: borda superior */
+                  inset 0 1px 0 rgba(255,255,255,0.14),
+                  /* Fresnel: borda inferior */
+                  inset 0 -1px 0 rgba(255,255,255,0.04),
+                  /* Glare diagonal (mais suave que pills) */
+                  inset 2px 2px 10px rgba(255,255,255,0.04),
+                  /* Dispersão cromática R */
+                  inset 1px 1px 0px rgba(255,120,100,0.04),
+                  /* Dispersão cromática B */
+                  inset -1px -1px 0px rgba(100,130,255,0.03);
 
   /* Sheet */
   --sheet-bg:     #0e0e14;
@@ -86,39 +119,204 @@ html, body {
   box-shadow: var(--lg-shadow);
 }
 
-/* cursor e transition ficam aqui; visual (bg/border/shadow) fica inline nos componentes */
+} /* end @layer utilities */
+
+/* ── lg-btn: borda cromática + press feedback ─────────────────────── */
+/* ::before: anel de 1px com gradiente de aberração cromática (R→W→B)   */
+/* backdrop-filter supersatura o fundo atrás; gradient tinta a borda.    */
 .lg-btn {
   cursor: pointer;
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.08s ease;
 }
 
-/* overlay branco que "acende" no press */
+.lg-btn:active {
+  transform: scale(1.07);
+  transition: transform 0.06s ease, filter 0.06s ease;
+  filter: brightness(1.55); /* Chrome/Firefox */
+}
+
+/* Overlay branco no :active — funciona em WebKit onde filter+backdrop-filter  */
+/* conflitam (stacking context), e também em icons já brancos (brightness noop) */
 .lg-btn::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(255,255,255,0);
+  background: transparent;
   transition: background 0.08s ease;
   pointer-events: none;
-}
-
-.lg-btn:active {
-  transform: scale(1.07);
-  transition: transform 0.06s ease;
+  z-index: 5;
 }
 
 .lg-btn:active::after {
+  background: rgba(255,255,255,0.28);
+}
+
+.lg-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 70, 58, 0.50) 0%,
+    rgba(255,255,255, 0.30) 45%,
+    rgba(80, 120, 255, 0.50) 100%
+  );
+  backdrop-filter: saturate(700%) brightness(1.2);
+  -webkit-backdrop-filter: saturate(700%) brightness(1.2);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ── lg-press: press feedback sem borda cromática ─────────────────── */
+/* Para botões dentro de containers que já têm lg-btn (ex: pill da toolbar) */
+.lg-press {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.08s ease;
+}
+
+.lg-press:active {
+  transform: scale(1.07);
+  filter: brightness(1.55);
+  transition: transform 0.06s ease, filter 0.06s ease;
+}
+
+/* Mesmo overlay branco do lg-btn — garante efeito visível em ícones brancos */
+.lg-press::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: transparent;
+  transition: background 0.08s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lg-press:active::after {
   background: rgba(255,255,255,0.22);
 }
 
-/* ── Dropdown glass ───────────────────────────────────────────────── */
+/* ── nav-press: press feedback para itens da BottomNav ────────────── */
+/* Sem borda cromática, sem backdrop-filter próprio — flash + escala  */
+.nav-press {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-press:active {
+  transform: scale(1.1);
+  transition: transform 0.06s ease;
+}
+
+.nav-press::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: transparent;
+  transition: background 0.08s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.nav-press:active::after {
+  background: rgba(255,255,255,0.20);
+}
+
+@keyframes nav-bubble-pop {
+  0%   { transform: scale(0.88); opacity: 0.4; }
+  60%  { transform: scale(1.20); opacity: 1;   }
+  100% { transform: scale(1.16); opacity: 0.6;   }
+}
+
+/* Borda cromática da bubble — mesmo padrão do lg-btn::before */
+.nav-bubble {
+  position: relative;
+}
+.nav-bubble::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 70, 58, 0.65) 0%,
+    rgba(255,210, 80, 0.35) 30%,
+    rgba(255,255,255, 0.60) 50%,
+    rgba(80, 200, 255, 0.45) 70%,
+    rgba(180,100, 255, 0.55) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
+}
+
 .dropdown-glass {
   background: var(--dd-bg);
   border: 1px solid var(--dd-border);
   box-shadow: var(--dd-shadow);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  padding: 5px 0;
+  animation: dropdown-open 0.15s ease-out both;
+}
+
+@keyframes dropdown-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* HIG: cada item deve ter área mínima de 44pt de altura */
+.dd-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  position: relative;
+  gap: 10px;
+}
+
+.dd-item:active {
+  background: rgba(255,255,255,0.14);
+  filter: brightness(1.5);
+}
+
+/* Separador entre grupos de itens */
+.dd-separator {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 4px 0;
 }
 
 /* ── Bottom sheet ─────────────────────────────────────────────────── */
@@ -190,6 +388,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 13px 28px;
+  min-height: 44px;        /* HIG: minimum tappable height */
   border-radius: 99px;
   cursor: pointer;
   transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -210,11 +409,145 @@ html, body {
 
 .accent-btn:active {
   transform: scale(1.07);
-  transition: transform 0.06s ease;
+  filter: brightness(1.4);
+  transition: transform 0.06s ease, filter 0.06s ease;
 }
 
 .accent-btn:active::after {
   background: rgba(255,255,255,0.18);
 }
 
-} /* end @layer utilities */
+/* HIG: Primary action button — filled accent, full-width, glare overlay */
+/* Role: única ação primária por contexto (modal/alert/gate)             */
+.primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  min-height: 50px;        /* mais alto que secondary — hierarquia visual clara */
+  border-radius: 99px;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  background: #FF453A;
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 20px rgba(255,69,58,0.4),
+              inset 1px 1px 0px rgba(255,255,255,0.35),
+              inset -1px -1px 0px rgba(0,0,0,0.15);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.primary-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 52%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.primary-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0);
+  transition: background 0.08s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.primary-btn:active {
+  transform: scale(0.97);
+  transition: transform 0.06s ease;
+}
+
+.primary-btn:active::after {
+  background: rgba(0,0,0,0.1);
+}
+
+.primary-btn > * { position: relative; z-index: 3; }
+
+/* HIG: Disabled state — 38% opacity para todos os botões             */
+button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* ── nav-glass-border: borda cromática para BottomNav pills ─────────── */
+/* Mesmo princípio do lg-btn::before, mas sem estados :active (nav não escala) */
+.nav-glass-border {
+  position: relative;
+}
+
+.nav-glass-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* Glare diagonal via ::after — z-index abaixo do conteúdo (z-index 2)  */
+  /* para pills grandes: streak mais suave que nos botões pequenos          */
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.09) 0%,
+    rgba(255,255,255,0.02) 45%,
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.nav-glass-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 70, 58, 0.50) 0%,
+    rgba(255,255,255, 0.30) 45%,
+    rgba(80, 120, 255, 0.50) 100%
+  );
+  backdrop-filter: saturate(700%) brightness(1.2);
+  -webkit-backdrop-filter: saturate(700%) brightness(1.2);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ── Liquid Glass: glare overlay para painéis ──────────────────────── */
+/* Uso: adicione .glass-glare a qualquer elemento com position:relative  */
+/* e overflow:hidden para obter o streak especular diagonal do shader.   */
+.glass-glare {
+  position: relative;
+  overflow: hidden;
+}
+.glass-glare::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lg-glare);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Liquid Glass: shape-merging gooey (smoothUnion do shader Metal) ── */
+/* Aplique .lg-gooey num wrapper para fundir visualmente elementos glass */
+.lg-gooey {
+  filter: url(#lg-gooey);
+}

@@ -19,11 +19,11 @@ type UserFilm = { film_id: string; rating: number | null; watched: boolean }
 type MovieData = { ptTitle: string | null; poster: string | null }
 
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 
 // ── Animated GaugeChart (identical to filmes/page.tsx) ──────────────
@@ -94,7 +94,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; subtitle?: string; 
         <text x={cx} y={cy - 4} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle">estrelas</text>
       </svg>
       <p className="font-semibold text-base mt-1 text-center" style={{ color: 'white' }}>{top.title}</p>
-      {top.subtitle && <p className="text-xs font-medium mt-0.5 text-center" style={{ color: '#fbbf24' }}>{top.subtitle}</p>}
+      {top.subtitle && <p className="text-xs font-medium mt-0.5 text-center" style={{ color: '#FF453A' }}>{top.subtitle}</p>}
       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>favorito dos usuários</p>
       {ratings.length > 1 && (
         <div className="flex gap-2 mt-4 w-full max-w-xs">
@@ -105,7 +105,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; subtitle?: string; 
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>#{i + 2}</p>
               <p className="text-xs font-medium mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.7)' }}>{f.title}</p>
               {f.subtitle && <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.subtitle}</p>}
-              <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>{f.rating}★</p>
+              <p className="text-xs mt-1" style={{ color: '#FF453A' }}>{f.rating}★</p>
             </div>
           ))}
         </div>
@@ -167,7 +167,7 @@ export default function CategoriaPage() {
         setPersonPhotos(Object.fromEntries(photoPairs))
       }
     }
-    load()
+    load().catch(e => console.error('[categoria] load error:', e))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category])
 
@@ -239,9 +239,10 @@ export default function CategoriaPage() {
       <button
         onClick={() => router.back()}
         className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
-        style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '43px', height: '43px' }}
+        style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '44px', height: '44px', overflow: 'hidden' }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]" style={{ position: 'relative', zIndex: 3 }}>
           <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
@@ -320,8 +321,8 @@ export default function CategoriaPage() {
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 55%)' }}/>
                   {(() => { const uf = getMyUF(film.id); return (
                     <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
-                      style={{ background: uf?.watched ? 'rgba(251,191,36,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
+                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid transparent' }}>
                       <span className="text-xs font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
                     </button>
                   )})()}
@@ -361,8 +362,8 @@ export default function CategoriaPage() {
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }}/>
                   {(() => { const uf = getMyUF(film.id); return (
                     <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
-                      style={{ background: uf?.watched ? 'rgba(251,191,36,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
+                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid transparent' }}>
                       <span className="text-xs font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
                     </button>
                   )})()}

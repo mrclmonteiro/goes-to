@@ -28,11 +28,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ── Design tokens inline (Tailwind v4 override pattern) ──────────────
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 
 // ── PWA gate ─────────────────────────────────────────────────────────
@@ -110,12 +110,13 @@ function InstallGate({ onClose }: { onClose: () => void }) {
           </p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{instructions}</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <button onClick={dismiss} className="accent-btn"
-            style={{ background: 'rgba(251,191,36,0.13)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24', fontSize: 15, fontWeight: 700 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <button onClick={dismiss} className="primary-btn">
             OK, entendi!
           </button>
-          <button onClick={dismiss} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', padding: '4px' }}>
+          <button onClick={dismiss}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)',
+              fontSize: 13, cursor: 'pointer', padding: '8px', minHeight: 44 }}>
             Não, obrigado
           </button>
         </div>
@@ -204,6 +205,12 @@ function BottomSheet({ open, onClose, title, children }: {
 }
 
 // ── Data ─────────────────────────────────────────────────────────────
+const QUALITY: Record<number, string> = {
+  0.5: 'Horrível', 1: 'Fraco', 1.5: 'Fraco+', 2: 'Regular',
+  2.5: 'Regular+', 3: 'Bom', 3.5: 'Bom+', 4: 'Ótimo',
+  4.5: 'Ótimo+', 5: 'Imperdível',
+}
+
 const CATEGORY_LABELS: Record<string, string> = {
   'Best Picture': 'Melhor Filme',
   'Best Director': 'Melhor Direção',
@@ -352,7 +359,7 @@ export default function FilmePage() {
       }
       setLoading(false)
     }
-    load()
+    load().catch(e => console.error('[filme] load error:', e))
   }, [id])
 
   async function toggleWatched() {
@@ -412,8 +419,8 @@ export default function FilmePage() {
     background: 'rgba(255,255,255,0.06)',
     backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+    border: '1px solid var(--glass-border)',
+    boxShadow: 'var(--glass-shadow)',
   }
 
   const ratedCategories = Object.entries(ratings).filter(([, v]) => v > 0)
@@ -444,8 +451,10 @@ export default function FilmePage() {
         {/* ── Back button ─────────────────────────────────────── */}
         <button onClick={() => router.back()}
           className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
-          style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '43px', height: '43px' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]">
+          style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '44px', height: '44px', overflow: 'hidden' }}>
+          {/* HIG Toolbar: glare diagonal — mesma luz do BottomNav */}
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]" style={{ position: 'relative', zIndex: 3 }}>
             <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
@@ -454,8 +463,9 @@ export default function FilmePage() {
         {hasRatings && (
           <button onClick={() => setShareOpen(true)}
             className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
-            style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', right: '15px', width: '43px', height: '43px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', right: '15px', width: '44px', height: '44px', overflow: 'hidden' }}>
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative', zIndex: 3 }}>
               <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
               <polyline points="16 6 12 2 8 6"/>
               <line x1="12" y1="2" x2="12" y2="15"/>
@@ -550,14 +560,14 @@ export default function FilmePage() {
                 width: 48,
                 height: 48,
                 ...(userFilm?.watched ? {
-                  background: 'rgba(251,191,36,0.18)',
-                  border: '1px solid rgba(251,191,36,0.35)',
+                  background: 'rgba(255,69,58,0.18)',
+                  border: '1px solid rgba(255,69,58,0.35)',
                 } : {}),
               }}>
               {userFilm?.watched ? (
                 /* Olho preenchido — "já vi" */
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="rgba(251,191,36,0.9)" stroke="rgba(251,191,36,0.9)" strokeWidth="0.5"/>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="rgba(255,69,58,0.9)" stroke="rgba(255,69,58,0.9)" strokeWidth="0.5"/>
                   <circle cx="12" cy="12" r="3" fill="#0a0a0f"/>
                 </svg>
               ) : (
@@ -588,20 +598,20 @@ export default function FilmePage() {
                     <div className="flex items-center gap-3 py-3.5">
                       <svg width="12" height="18" viewBox="0 0 14 20" fill="none" style={{ flexShrink: 0 }}>
                         <path d="M7 1 C5 3 2 5 1 8 C0 11 2 14 4 15 C5 16 6 17 7 19 C8 17 9 16 10 15 C12 14 14 11 13 8 C12 5 9 3 7 1Z"
-                          fill="rgba(251,191,36,0.35)" stroke="rgba(251,191,36,0.25)" strokeWidth="0.5"/>
+                          fill="rgba(255,69,58,0.35)" stroke="rgba(255,69,58,0.25)" strokeWidth="0.5"/>
                       </svg>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                           {CATEGORY_LABELS[nom.category] ?? nom.category}
                         </p>
                         {nom.nominee && nom.nominee.split(/,| e /).map(s => s.trim()).filter(Boolean).map((name, ni) => (
-                          <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(251,191,36,0.6)' }}>{name}</p>
+                          <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(255,69,58,0.6)' }}>{name}</p>
                         ))}
                       </div>
                       {/* Rating badge inline */}
                       {ratings[CATEGORY_LABELS[nom.category] ?? nom.category] > 0 && (
                         <span className="ml-auto text-xs font-bold flex-shrink-0"
-                          style={{ color: '#fbbf24' }}>
+                          style={{ color: '#FF453A' }}>
                           {'★'.repeat(ratings[CATEGORY_LABELS[nom.category] ?? nom.category])}
                         </span>
                       )}
@@ -801,15 +811,22 @@ export default function FilmePage() {
                 <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <p className="text-base font-semibold absolute left-0 right-0 text-center pointer-events-none"
-              style={{ color: 'white', top: 'calc(1.5rem + 10px)' }}>
-              Avaliação
-            </p>
+            {/* Título + contagem de progresso — HIG: feedback contínuo */}
+            <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none"
+              style={{ top: 'calc(1.5rem + 8px)' }}>
+              <p className="text-base font-semibold" style={{ color: 'white' }}>Avaliação</p>
+              {ratedCategories.length > 0 && (
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                  {ratedCategories.length}/{filmNominations.length}
+                </p>
+              )}
+            </div>
             <button onClick={() => setRatingSheetOpen(false)}
               className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ position: 'relative', ...lgStyle, width: 43, height: 43 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12L10 17L19 7" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              style={{ position: 'relative', width: 43, height: 43, background: '#FF453A', border: '1px solid rgba(255,255,255,0.25)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(255,69,58,0.4), inset 1px 1px 0px rgba(255,255,255,0.35), inset -1px -1px 0px rgba(0,0,0,0.15)' }}>
+              <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 3 }}>
+                <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>
@@ -828,43 +845,51 @@ export default function FilmePage() {
                         <div>
                           <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.9)' }}>{cat}</p>
                           {nom.nominee && nom.nominee.split(/,| e /).map(s => s.trim()).filter(Boolean).map((name, ni) => (
-                            <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(251,191,36,0.6)' }}>{name}</p>
+                            <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(255,69,58,0.6)' }}>{name}</p>
                           ))}
                         </div>
                         {stars > 0 && (
-                          <span className="text-xs font-bold" style={{ color: '#fbbf24' }}>{stars}/5</span>
+                          <div className="flex items-center gap-1.5">
+                            {QUALITY[stars] && (
+                              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>{QUALITY[stars]}</span>
+                            )}
+                            <span className="text-xs font-bold" style={{ color: '#FF453A' }}>{stars}/5</span>
+                          </div>
                         )}
                       </div>
-                      {/* 5 estrelas com suporte a meia estrela */}
-                      <div className="flex gap-3">
+                      {/* Estrelas: 44pt touch target (HIG), meia estrela, toggle para limpar */}
+                      <div className="flex gap-0.5">
                         {[1,2,3,4,5].map(n => {
                           const full = stars >= n
                           const half = !full && stars >= n - 0.5 && stars > n - 1
                           return (
                             <button key={n}
-                              style={{ position: 'relative', background: 'none', border: 'none', boxShadow: 'none', padding: '4px 2px', width: 36, height: 36, cursor: 'pointer' }}
+                              className="lg-press"
+                              style={{ position: 'relative', background: 'none', border: 'none', boxShadow: 'none', padding: 0, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                               onClick={e => {
                                 const rect = e.currentTarget.getBoundingClientRect()
                                 const x = e.clientX - rect.left
                                 const val = x < rect.width / 2 ? n - 0.5 : n
-                                saveRating(cat, val)
+                                // toggle: toca o mesmo valor → limpa (HIG: reversível)
+                                navigator.vibrate?.(6)
+                                saveRating(cat, val === stars ? 0 : val)
                               }}>
-                              <svg width="26" height="26" viewBox="0 0 24 24" style={{ pointerEvents: 'none', display: 'block' }}>
+                              <svg width="28" height="28" viewBox="0 0 24 24" style={{ pointerEvents: 'none', display: 'block' }}>
                                 <defs>
                                   <clipPath id={`half-${i}-${cat.replace(/\s/g,'-')}-${n}`}>
                                     <rect x="0" y="0" width="12" height="24"/>
                                   </clipPath>
                                 </defs>
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                  fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinejoin="round"/>
                                 {half && (
                                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="#fbbf24" stroke="none"
+                                    fill="#FF453A" stroke="none"
                                     clipPath={`url(#half-${i}-${cat.replace(/\s/g,'-')}-${n})`}/>
                                 )}
                                 {full && (
                                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="#fbbf24" stroke="none"/>
+                                    fill="#FF453A" stroke="none"/>
                                 )}
                               </svg>
                             </button>
@@ -920,7 +945,7 @@ export default function FilmePage() {
             <div style={{
               position: 'absolute', bottom: '5%', left: '-20%',
               width: '60%', height: '25%', borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,69,58,0.12) 0%, transparent 70%)',
               filter: 'blur(32px)', pointerEvents: 'none',
             }}/>
 
@@ -984,8 +1009,8 @@ export default function FilmePage() {
                   {details?.ptTitle || film.title}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 16, fontWeight: 900, color: '#fbbf24' }}>{avgRating}</span>
-                  <span style={{ fontSize: 11, color: '#fbbf24' }}>★</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: '#FF453A' }}>{avgRating}</span>
+                  <span style={{ fontSize: 11, color: '#FF453A' }}>★</span>
                   <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>/ 5 · média</span>
                 </div>
               </div>
@@ -1029,10 +1054,10 @@ export default function FilmePage() {
                     {[1,2,3,4,5].map(n => (
                       <div key={n} style={{
                         flex: 1, height: 3, borderRadius: 99,
-                        background: n <= stars ? '#fbbf24' : 'rgba(255,255,255,0.1)',
+                        background: n <= stars ? '#FF453A' : 'rgba(255,255,255,0.1)',
                       }}/>
                     ))}
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', marginLeft: 3, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, flexShrink: 0 }}>
                       {stars}
                     </span>
                   </div>
@@ -1048,7 +1073,7 @@ export default function FilmePage() {
           </div>{/* end visual wrapper */}
 
           <button onClick={shareRatings}
-            className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+            className="lg-btn w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>

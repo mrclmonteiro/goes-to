@@ -53,7 +53,7 @@ export default function InstallBanner() {
           </p>
         </div>
         <button onClick={dismiss}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          className="lg-btn w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
             <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round"/>

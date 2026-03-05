@@ -67,16 +67,16 @@ type MovieData = { ptTitle: string | null; poster: string | null; backdrop: stri
 
 // Liquid glass — tudo inline igual ao BottomNav (Tailwind v4 interfere via CSS)
 const lgStyle: React.CSSProperties = {
-  background: 'rgba(120,120,128,0.18)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+  border: '1px solid transparent',
+  boxShadow: 'var(--lg-shadow)',
 }
 const ddStyle: React.CSSProperties = {
   background: 'rgba(20,20,25,0.65)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  backdropFilter: 'blur(6px) saturate(280%)',
+  WebkitBackdropFilter: 'blur(6px) saturate(280%)',
   border: '1px solid rgba(255,255,255,0.15)',
   boxShadow: '0 16px 48px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)',
 }
@@ -148,7 +148,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; subtitle?: string; 
         <text x={cx} y={cy - 4} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle">estrelas</text>
       </svg>
       <p className="font-semibold text-base mt-1" style={{ color: 'white' }}>{top.title}</p>
-      {top.subtitle && <p className="text-xs font-medium mt-0.5" style={{ color: '#fbbf24' }}>{top.subtitle}</p>}
+      {top.subtitle && <p className="text-xs font-medium mt-0.5" style={{ color: '#FF453A' }}>{top.subtitle}</p>}
       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>favorito dos usuários</p>
       {ratings.length > 1 && (
         <div className="flex gap-2 mt-4 w-full max-w-xs">
@@ -159,7 +159,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; subtitle?: string; 
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>#{i + 2}</p>
               <p className="text-xs font-medium mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.7)' }}>{f.title}</p>
               {f.subtitle && <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.subtitle}</p>}
-              <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>{'★'.repeat(f.rating)}</p>
+              <p className="text-xs mt-1" style={{ color: '#FF453A' }}>{'★'.repeat(f.rating)}</p>
             </div>
           ))}
         </div>
@@ -185,18 +185,18 @@ function PosterCard({ film, userFilm, onToggle, poster, ptTitle }: {
       </div>
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }}/>
       <button onClick={e => { e.preventDefault(); onToggle() }}
-        className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
+        className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
         style={{
-          background: userFilm?.watched ? 'rgba(251,191,36,0.95)' : 'rgba(0,0,0,0.45)',
+          background: userFilm?.watched ? 'rgba(255,69,58,0.95)' : 'rgba(0,0,0,0.45)',
           backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.2)',
+          border: '1px solid transparent',
         }}>
         <span className="text-xs font-bold" style={{ color: userFilm?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>
           {userFilm?.watched ? '✓' : '○'}
         </span>
       </button>
       {userFilm?.rating && (
-        <p className="absolute bottom-2 left-3 text-xs z-10" style={{ color: '#fbbf24' }}>{'★'.repeat(userFilm.rating)}</p>
+        <p className="absolute bottom-2 left-3 text-xs z-10" style={{ color: '#FF453A' }}>{'\u2605'.repeat(userFilm.rating)}</p>
       )}
     </Link>
   )
@@ -354,7 +354,7 @@ export default function FilmesPage() {
       const photoPairs = await Promise.all(unique.map(async name => [name, await fetchPersonPhoto(name)] as const))
       setPersonPhotos(Object.fromEntries(photoPairs))
     }
-    load()
+    load().catch(e => console.error('[filmes] load error:', e))
   }, [])
 
   useEffect(() => {
@@ -633,7 +633,7 @@ export default function FilmesPage() {
                     </div>
                     <div className="text-left">
                       <p className="text-2xl font-bold leading-tight">{person?.name ?? '—'}</p>
-                      {filmTitle && <p className="text-sm font-medium leading-snug mt-0.5" style={{ color: '#fbbf24' }}>{filmTitle}</p>}
+                      {filmTitle && <p className="text-sm font-medium leading-snug mt-0.5" style={{ color: '#FF453A' }}>{filmTitle}</p>}
                     </div>
                   </div>
                 )
@@ -747,9 +747,9 @@ export default function FilmesPage() {
             className="flex-shrink-0 flex items-center justify-center rounded-2xl text-center px-4"
             style={{
               width: 130, height: 130, flexShrink: 0,
-              background: 'rgba(120,120,128,0.18)',
-              backdropFilter: 'blur(32px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+              background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(6px) saturate(280%)',
+              WebkitBackdropFilter: 'blur(6px) saturate(280%)',
               border: '1px solid rgba(255,255,255,0.22)',
               boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.3)',
             }}>
@@ -785,7 +785,7 @@ export default function FilmesPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>É hoje! 🎬</p>
+              <p className="text-sm font-semibold" style={{ color: '#FF453A' }}>É hoje! 🎦</p>
             )}
           </div>
 
