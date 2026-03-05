@@ -17,6 +17,11 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Goes To...',
   },
+  // Next.js gera "mobile-web-app-capable" (Chrome) mas não "apple-mobile-web-app-capable" (iOS).
+  // Sem esta tag no iOS, o WebView não expande para cobrir as safe-areas físicas da tela.
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {
