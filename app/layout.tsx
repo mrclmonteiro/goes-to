@@ -37,15 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body>
-        {/* Camada de background fixo — cobre toda a tela física incluindo
-            safe-areas no iOS e barra de navegação no Android */}
-        <div aria-hidden style={{
-          position: 'fixed', inset: 0, zIndex: -1,
-          backgroundColor: '#0a0a0f',
-        }} />
-        <div id="app-scroll">
-          {children}
-        </div>
+        {children}
         {/* gradiente topo — cobre status bar / relógio */}
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,

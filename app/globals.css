@@ -44,33 +44,14 @@
 /* ── Base ───────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
-/* html só define a cor de fundo — ela se propaga para o canvas do browser
-   e pinta atrás das safe-areas (home indicator / status bar) em qualquer dispositivo */
-html {
-  background-color: var(--bg);
-}
-
-/* position:fixed + inset:0 ancora o body nos edges físicos da tela.
-   Com viewport-fit:cover, isso inclui as safe-areas de iOS e Android.
-   É mais confiável que height:100dvh, que pode não incluir a barra de gestos. */
-body {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+/* Scroll acontece no body normalmente — sem wrapper artificial.
+   overscroll-behavior:none impede o bounce do browser sem restringir a altura. */
+html, body {
   background-color: var(--bg);
   color: var(--fg);
   font-family: -apple-system, BlinkMacSystemFont, var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Container de scroll real — ocupa todo o body */
-#app-scroll {
-  position: absolute;
-  inset: 0;
-  overflow-y: scroll;
-  /* rubber-band nas bordas sem propagar ao browser */
-  overscroll-behavior-y: contain;
-  /* scroll suave para scrollIntoView / links âncora */
+  overscroll-behavior: none;
   scroll-behavior: smooth;
 }
 
