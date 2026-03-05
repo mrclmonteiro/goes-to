@@ -44,7 +44,14 @@
 /* ── Base ───────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
-html, body {
+/* html NÃO deve ter overflow:hidden — isso impede o background de pintar
+   atrás das safe-areas (home indicator / status bar) no iOS/Android */
+html {
+  height: 100dvh;
+  background-color: var(--bg);
+}
+
+body {
   height: 100dvh;
   overflow: hidden;
   background-color: var(--bg);

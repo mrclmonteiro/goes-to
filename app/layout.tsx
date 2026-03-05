@@ -25,12 +25,19 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#0a0a0f',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body>
+        {/* Camada de background fixo — cobre toda a tela física incluindo
+            safe-areas no iOS e barra de navegação no Android */}
+        <div aria-hidden style={{
+          position: 'fixed', inset: 0, zIndex: -1,
+          backgroundColor: '#0a0a0f',
+        }} />
         <div id="app-scroll">
           {children}
         </div>

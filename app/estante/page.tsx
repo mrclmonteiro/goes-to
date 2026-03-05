@@ -929,7 +929,7 @@ export default function EstantePage() {
                     <span style={{ color: accentColor }}>{watchedGoal}/{customTarget}</span>
                     {' '}da minha meta de{' '}
                     <span style={{ color: 'rgba(255,255,255,0.8)' }}>{goalLabel}</span>
-                    {' '}filmes indicados ao Oscar 2026
+                    {' '}dos indicados ao Oscar 2026
                   </p>
 
                   {/* Barra de progresso */}
