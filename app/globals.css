@@ -53,6 +53,8 @@ html, body {
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
   scroll-behavior: smooth;
+  /* momentum/inércia no iOS — scroll continua deslizando após soltar o dedo */
+  -webkit-overflow-scrolling: touch;
 }
 
 ::-webkit-scrollbar { display: none; }
