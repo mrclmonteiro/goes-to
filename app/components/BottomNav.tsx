@@ -10,9 +10,9 @@ const TABS = [
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path
           d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          stroke={active ? '#FF453A' : 'white'}
           strokeWidth="1.8" strokeLinejoin="round"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          fill={active ? '#FF453A' : 'white'}
           fillOpacity={active ? 0.9 : 1}
         />
       </svg>
@@ -24,15 +24,15 @@ const TABS = [
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          stroke={active ? '#FF453A' : 'white'}
           strokeWidth="1.8"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          fill={active ? '#FF453A' : 'white'}
           fillOpacity={active ? 0.15 : 0.1}
         />
         <path d="M16 8L13.5 13.5L8 16L10.5 10.5L16 8Z"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          stroke={active ? '#FF453A' : 'white'}
           strokeWidth="1.8" strokeLinejoin="round"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'}
+          fill={active ? '#FF453A' : 'white'}
           fillOpacity={active ? 1 : 1}
         />
       </svg>
@@ -44,17 +44,17 @@ const TABS = [
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="5" height="13" rx="1.5"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} strokeWidth="1.8"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} fillOpacity={active ? 0.9 : 1}/>
+          stroke={active ? '#FF453A' : 'white'} strokeWidth="1.8"
+          fill={active ? '#FF453A' : 'white'} fillOpacity={active ? 0.9 : 1}/>
         <rect x="10" y="4" width="5" height="13" rx="1.5"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} strokeWidth="1.8"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} fillOpacity={active ? 0.9 : 1}/>
+          stroke={active ? '#FF453A' : 'white'} strokeWidth="1.8"
+          fill={active ? '#FF453A' : 'white'} fillOpacity={active ? 0.9 : 1}/>
         <rect x="17" y="4" width="4" height="13" rx="1.5"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} strokeWidth="1.8"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} fillOpacity={active ? 0.9 : 1}/>
+          stroke={active ? '#FF453A' : 'white'} strokeWidth="1.8"
+          fill={active ? '#FF453A' : 'white'} fillOpacity={active ? 0.9 : 1}/>
         <rect x="3" y="19" width="18" height="2" rx="1"
-          stroke={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} strokeWidth="1.8"
-          fill={active ? '#FF453A' : 'rgba(255,255,255,0.55)'} fillOpacity={active ? 0.9 : 1}/>
+          stroke={active ? '#FF453A' : 'white'} strokeWidth="1.8"
+          fill={active ? '#FF453A' : 'white'} fillOpacity={active ? 0.9 : 1}/>
       </svg>
     ),
   },
@@ -148,7 +148,7 @@ export default function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-5"
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)', height: 'auto' }}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 28px)', height: 'auto' }}
     >
 
       {/* ── Main pill + bubble wrapper ─────────────────────────────────── */}
@@ -243,7 +243,7 @@ export default function BottomNav() {
                       {tab.icon(active)}
                       <span
                         className="text-[9px] font-bold tracking-wide"
-                        style={{ color: active ? '#FF453A' : 'rgba(255,255,255,0.6)' }}
+                        style={{ color: active ? '#FF453A' : 'white' }}
                       >
                         {tab.label}
                       </span>
@@ -309,10 +309,11 @@ export default function BottomNav() {
         {/* Wrapper de zoom — mesmo padrão do pill wrapper */}
         <div style={{
           position: 'relative',
-          flex: isExpanded ? 1 : 'none',
+          flexGrow: isExpanded ? 1 : 0,
           flexShrink: 0,
+          flexBasis: isExpanded ? 0 : 'auto',
           minWidth: 0,
-          transform: (!isExpanded && pressedSearch) || (isExpanded && !isFocused && pressedBar) ? 'scale(1.08)' : 'scale(1)',
+          transform: (!isExpanded && pressedSearch) || (isExpanded && !isFocused && pressedBar) ? 'scale(1.15)' : 'scale(1)',
           transition: (!isExpanded && pressedSearch) || (isExpanded && !isFocused && pressedBar)
             ? 'transform 0.06s ease'
             : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
@@ -371,39 +372,33 @@ export default function BottomNav() {
               ref={inputRef}
               type="search"
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={e => {
+            const val = e.target.value
+            setQuery(val)
+            if (pathname === '/busca') {
+              router.replace(`/busca?q=${encodeURIComponent(val)}`, { scroll: false })
+            }
+          }}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               placeholder="Buscar filmes, diretores..."
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="search"
-              className="flex-1 bg-transparent outline-none text-sm min-w-0"
+              className="flex-1 bg-transparent outline-none text-sm min-w-0 [&::-webkit-search-cancel-button]:hidden"
               style={{ color: 'white', pointerEvents: isFocused ? 'auto' : 'none', position: 'relative', zIndex: 3 }}
               readOnly={!isFocused}
             />
           )}
 
-          {/* Botão limpar */}
-          {isFocused && query.length > 0 && (
-            <button
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => { setQuery(''); inputRef.current?.focus() }}
-              style={{ flexShrink: 0, position: 'relative', zIndex: 3, width: 26, height: 26,
-                borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6L18 18" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
+
         </div>
         </div>
 
         {isFocused && (
           <div style={{
             flexShrink: 0,
-            transform: pressedClose ? 'scale(1.08)' : 'scale(1)',
+            transform: pressedClose ? 'scale(1.15)' : 'scale(1)',
             transition: pressedClose
               ? 'transform 0.06s ease'
               : 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',

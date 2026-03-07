@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import BottomNavWrapper from './components/BottomNavWrapper'
 import InstallBanner from './components/InstallBanner'
+import TouchActiveFix from './components/TouchActiveFix'
 
 
 export const dynamic = 'force-dynamic'
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         }} />
         <BottomNavWrapper />
         <InstallBanner/>
+        <TouchActiveFix />
       </body>
     </html>
   )

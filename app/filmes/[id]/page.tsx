@@ -583,7 +583,7 @@ export default function FilmePage() {
           {/* Tagline */}
           {details?.tagline && (
             <p className="px-4 text-center text-xl font-semibold leading-snug"
-              style={{ color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.01em' }}>
+              style={{ color: 'rgba(255,255,255,0.9)' }}>
               {details.tagline}
             </p>
           )}

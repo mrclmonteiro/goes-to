@@ -73,6 +73,30 @@ export async function fetchMovieData(title: string) {
   }
 }
 
+export async function fetchPersonPhoto(name: string): Promise<string | null> {
+  const data = await get(`/search/person?query=${encodeURIComponent(name)}&language=en-US`)
+  const person = data?.results?.[0]
+  if (!person?.profile_path) return null
+  return IMG('w185') + person.profile_path
+}
+
+// Returns TMDB movie credits (id + title) for a person by name
+export async function fetchPersonMovieIds(name: string): Promise<{ id: number; title: string }[]> {
+  const data = await get(`/search/person?query=${encodeURIComponent(name)}&language=en-US`)
+  const person = data?.results?.[0]
+  if (!person?.id) return []
+  const credits = await get(`/person/${person.id}/movie_credits?language=en-US`)
+  const seen = new Set<number>()
+  const result: { id: number; title: string }[] = []
+  for (const c of [...(credits?.cast ?? []), ...(credits?.crew ?? [])]) {
+    if (!seen.has(c.id)) {
+      seen.add(c.id)
+      result.push({ id: c.id, title: c.title ?? '' })
+    }
+  }
+  return result
+}
+
 // Picks the best logo: always prefer English PNGs (transparent bg).
 // We never use pt logos because TMDB doesn't reliably distinguish pt-BR from pt-PT.
 // The caller must apply filter: brightness(0) invert(1) to guarantee white rendering.
@@ -175,17 +199,14 @@ export async function fetchMovieDetails(tmdbId: number) {
   }
 }
 
-export async function fetchPersonPhoto(name: string): Promise<string | null> {
-  const data = await get(`/search/person?query=${encodeURIComponent(name)}&language=en-US`)
-  const person = data?.results?.[0]
-  return person?.profile_path ? IMG('w185') + person.profile_path : null
-}
-
 export async function fetchAllMovieData(titles: string[]): Promise<Record<string, {
-  ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null
+  ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null; tmdbId: number | null
 }>> {
   const pairs = await Promise.all(titles.map(async t => [t, await fetchMovieData(t)] as const))
-  return Object.fromEntries(pairs.map(([t, d]) => [t, d ?? { ptTitle: null, poster: null, backdrop: null, backdrops: [], overview: null }]))
+  return Object.fromEntries(pairs.map(([t, d]) => [t, d
+    ? { ptTitle: d.ptTitle, poster: d.poster, backdrop: d.backdrop, backdrops: d.backdrops, overview: d.overview, tmdbId: d.id ?? null }
+    : { ptTitle: null, poster: null, backdrop: null, backdrops: [], overview: null, tmdbId: null }
+  ]))
 }
 
 export async function fetchSimilarMovies(tmdbId: number): Promise<{ title: string; poster: string | null; tmdbId: number }[]> {

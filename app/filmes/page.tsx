@@ -281,7 +281,7 @@ function CalendarIcon() {
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <div className="flex gap-3 overflow-x-auto pl-4 pr-4"
+      <div className="flex gap-3 overflow-x-auto pl-4 pr-4 py-2"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {children}
         <div style={{ minWidth: 4, flexShrink: 0 }}/>
@@ -691,7 +691,7 @@ export default function FilmesPage() {
       {/* ── TOP 10 ─────────────────────────────────────────────────── */}
       {top10Films.length > 0 && (
         <div className="mt-6 pb-4">
-          <p className="text-lg font-semibold tracking-tight px-4 mb-4" style={{ color: 'white' }}>Top 10 mais registrados</p>
+          <p className="text-lg font-semibold px-4 mb-4" style={{ color: 'white' }}>Top 10 mais assistidos</p>
           <HScrollRow>
             {top10Films.map(({ film }, i) => (
               <Link key={film.id} href={`/filmes/${film.id}`}
@@ -736,7 +736,7 @@ export default function FilmesPage() {
         <HScrollRow>
           {FEATURED_CATEGORIES.map(cat => (
             <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
-              className="flex-shrink-0 relative rounded-2xl overflow-hidden flex items-center justify-center p-3 text-center"
+              className="lg-btn flex-shrink-0 relative rounded-2xl overflow-hidden flex items-center justify-center p-3 text-center"
               style={{ width: 130, height: 130, background: categoryCardBg(cat) }}>
               <p className="relative z-10 font-bold text-base leading-tight" style={{ color: 'white', textShadow: '0 1px 12px rgba(0,0,0,0.6)' }}>
                 {CATEGORY_LABELS[cat]}

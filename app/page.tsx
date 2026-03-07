@@ -169,7 +169,7 @@ export default function LoginPage() {
         {/* Headline centralizada */}
         <div className="text-center mb-10">
           <p className="text-sm font-medium mb-1" style={{ color:'rgba(255,255,255,0.4)' }}>Bem-vindo ao</p>
-          <h1 className="text-4xl font-bold tracking-tight">Goes To...</h1>
+          <h1 className="text-4xl font-bold ">Goes To...</h1>
         </div>
 
         {/* Feature showcase */}

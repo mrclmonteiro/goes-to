@@ -555,12 +555,12 @@ export default function EstantePage() {
         {/* Botões agrupados: Bolão + Configurações */}
         <div className="lg-btn fixed z-[100] flex items-center pointer-events-auto"
           style={{ ...lgStyle, top: 'max(env(safe-area-inset-top), 45px)', right: '15px',
-                   height: '44px', borderRadius: '22px', padding: '0 6px', gap: '4px', position: 'fixed', overflow: 'hidden' }}>
+                   height: '44px', borderRadius: '22px', padding: '0 6px', gap: '4px', position: 'fixed' }}>
           {/* HIG Toolbar: glare diagonal */}
           <div aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
           {/* Bolão */}
           <button onClick={openBolao}
-            className="lg-press flex items-center justify-center flex-shrink-0 relative"
+            className="flex items-center justify-center flex-shrink-0 relative"
             style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
@@ -575,7 +575,7 @@ export default function EstantePage() {
           </button>
           {/* Config */}
           <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true) }}
-            className="lg-press flex items-center justify-center flex-shrink-0"
+            className="flex items-center justify-center flex-shrink-0"
             style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="white" strokeWidth="1.8"/>
@@ -594,10 +594,10 @@ export default function EstantePage() {
             }}>
             <span style={{ fontSize: '65px' }}>{AVATARS[profile.avatar_index]}</span>
           </div>
-          <p className="font-bold tracking-tight" style={{ fontSize: '20px', color: 'white', lineHeight: '1.2' }}>
+          <p className="font-bold" style={{ fontSize: '28px', color: 'white', lineHeight: '1.2' }}>
             {profile.display_name || 'Cinéfilo'}
           </p>
-          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
             @{profile.username || 'usuario'}
           </p>
         </div>

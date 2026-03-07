@@ -637,7 +637,7 @@ export default function DescobrirPage() {
             <div className="grid grid-cols-2 gap-3 mt-3">
               {ORDERED_CATEGORIES.map(cat => (
                 <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
-                  className="relative rounded-2xl overflow-hidden flex items-center justify-center p-4 text-center"
+                  className="lg-btn relative rounded-2xl overflow-hidden flex items-center justify-center p-4 text-center"
                   style={{ aspectRatio: '1/1', background: categoryCardBg(cat) }}>
                   <p className="relative z-10 font-bold text-base leading-tight" style={{ color: 'white', textShadow: '0 1px 12px rgba(0,0,0,0.6)' }}>
                     {CATEGORY_LABELS[cat]}
