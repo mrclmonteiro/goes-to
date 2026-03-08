@@ -148,7 +148,7 @@ export default function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-5"
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 28px)', height: 'auto' }}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)', height: 'auto' }}
     >
 
       {/* ── Main pill + bubble wrapper ─────────────────────────────────── */}
