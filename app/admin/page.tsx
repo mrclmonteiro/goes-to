@@ -35,10 +35,11 @@ export default function AdminPage() {
       const supabase = createClient()
       if (!supabase) { router.replace('/'); return }
 
-      const { data: { session } } = await supabase.auth.getSession()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/'); return }
 
+      // refreshSession garante token fresco (getSession pode retornar null no admin)
+      const { data: { session } } = await supabase.auth.refreshSession()
       if (session?.access_token) setAccessToken(session.access_token)
 
       const { data: profile } = await supabase
@@ -89,10 +90,10 @@ export default function AdminPage() {
     setPushSending(true)
     setPushResult(null)
     try {
-      // Garantir token fresco
+      // Usar token fresco via refreshSession (getSession é não-confiável neste contexto)
       const supabase = createClient()
-      const { data: { session } } = await supabase!.auth.getSession()
-      const token = session?.access_token ?? accessToken
+      const { data: { session: freshSession } } = await supabase!.auth.refreshSession()
+      const token = freshSession?.access_token ?? accessToken
       if (!token) { setPushResult('Erro: sessão expirada, recarregue a página'); return }
       const res = await fetch('/api/push/send', {
         method: 'POST',
