@@ -527,15 +527,29 @@ export default function EstantePage() {
     load().catch(e => console.error('[estante] load error:', e))
   }, [router])
 
-  // Push notifications
+  // Push notifications — ao encontrar subscription existente, garante que está salva no Supabase
   useEffect(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return
     if (Notification.permission === 'denied') { setNotifStatus('denied'); return }
     if (Notification.permission === 'granted') {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.pushManager.getSubscription().then(sub => {
-          if (sub) setNotifStatus('subscribed')
-        })
+      navigator.serviceWorker.ready.then(async reg => {
+        const sub = await reg.pushManager.getSubscription()
+        if (!sub) return
+        setNotifStatus('subscribed')
+        // Re-envia para o Supabase (upsert idempotente) caso não tenha sido salvo antes
+        try {
+          const supabase = createClient()
+          const { data: { session } } = await supabase!.auth.getSession()
+          if (!session?.access_token) return
+          await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ subscription: sub.toJSON() }),
+          })
+        } catch (_) {}
       }).catch(() => {})
     }
   }, [])
