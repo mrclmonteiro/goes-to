@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { ORDERED_CATEGORIES, CATEGORY_LABELS } from '@/lib/categories'
 import Spinner from '../components/Spinner'
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js'
 
 const lgStyle: React.CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
@@ -29,6 +30,17 @@ export default function AdminPage() {
   const [pushSending, setPushSending] = useState(false)
   const [pushResult, setPushResult] = useState<string | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
+
+  // onAuthStateChange é o único método 100% confiável para capturar o token
+  // getSession/refreshSession podem retornar null dependendo do contexto
+  useEffect(() => {
+    const supabase = createClient()
+    if (!supabase) return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_: AuthChangeEvent, session: Session | null) => {
+      if (session?.access_token) setAccessToken(session.access_token)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -87,19 +99,15 @@ export default function AdminPage() {
 
   async function sendPush() {
     if (!pushTitle.trim() || !pushMessage.trim()) return
+    if (!accessToken) { setPushResult('Erro: sessão não carregada, recarregue a página'); return }
     setPushSending(true)
     setPushResult(null)
     try {
-      // Usar token fresco via refreshSession (getSession é não-confiável neste contexto)
-      const supabase = createClient()
-      const { data: { session: freshSession } } = await supabase!.auth.refreshSession()
-      const token = freshSession?.access_token ?? accessToken
-      if (!token) { setPushResult('Erro: sessão expirada, recarregue a página'); return }
       const res = await fetch('/api/push/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ title: pushTitle.trim(), message: pushMessage.trim(), url: '/filmes' }),
       })
