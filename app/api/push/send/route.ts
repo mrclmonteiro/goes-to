@@ -43,21 +43,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `JWT inválido: ${authError?.message ?? 'sem usuário'}` }, { status: 401 })
     }
 
-    // Service role para contornar RLS; cai no anon se não configurado
-    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
-
-    const { data: profile, error: profileError } = await dbClient
+    // Verificar admin com anonClient (usuário lê o próprio perfil, RLS permite)
+    const { data: profile } = await anonClient
       .from('user_profiles')
       .select('is_admin')
       .eq('id', user.id)
       .maybeSingle()
 
     if (!profile?.is_admin) {
-      return NextResponse.json({
-        error: 'Forbidden: não é admin',
-        debug: { userId: user.id, profile, profileError: profileError?.message, hasServiceKey: !!serviceKey }
-      }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden: não é admin' }, { status: 403 })
     }
+
+    // Service role para ler subscriptions de todos os usuários (bypassa RLS)
+    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
 
     const { data: subs, error: subsError } = await dbClient
       .from('push_subscriptions')
