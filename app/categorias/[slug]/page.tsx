@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { fetchAllMovieData, fetchPersonPhoto } from '@/lib/tmdb'
+import { fetchAllMovieData, fetchPersonPhoto, fetchMovieDetails } from '@/lib/tmdb'
 import Link from 'next/link'
 import Spinner from '../../components/Spinner'
 import {
@@ -11,12 +11,14 @@ import {
   CATEGORY_AURA,
   PERSON_CATEGORIES_SET,
   slugToCategory,
+  categoryCardBg,
 } from '@/lib/categories'
 
 type Film = { id: string; title: string }
 type Nomination = { film_id: string; category: string; nominee: string | null; winner: boolean }
 type UserFilm = { film_id: string; rating: number | null; watched: boolean }
-type MovieData = { ptTitle: string | null; poster: string | null }
+type MovieData = { ptTitle: string | null; poster: string | null; backdrop: string | null; tmdbId: number | null }
+type WinnerDetails = { logo: string | null; tagline: string | null }
 
 const lgStyle: React.CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
@@ -130,6 +132,7 @@ export default function CategoriaPage() {
   const [myUserFilms, setMyUserFilms] = useState<UserFilm[]>([])
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
+  const [winnerDetails, setWinnerDetails] = useState<WinnerDetails | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -165,6 +168,18 @@ export default function CategoriaPage() {
           unique.map(async name => [name, await fetchPersonPhoto(name)] as const)
         )
         setPersonPhotos(Object.fromEntries(photoPairs))
+      }
+      // Buscar logo + tagline do vencedor
+      const winnerNomLoad = noms.find((n: Nomination) => n.winner)
+      if (winnerNomLoad) {
+        const winnerF = loaded.find((f: Film) => f.id === winnerNomLoad.film_id)
+        if (winnerF) {
+          const tid = (data as any)[winnerF.title]?.tmdbId
+          if (tid) {
+            const det = await fetchMovieDetails(tid)
+            setWinnerDetails({ logo: det?.logo ?? null, tagline: det?.tagline ?? null })
+          }
+        }
       }
     }
     load().catch(e => console.error('[categoria] load error:', e))
@@ -204,6 +219,11 @@ export default function CategoriaPage() {
     }
     return { ...r, title: ptTitle }
   })
+
+  const winnerNom = nominations.find(n => n.winner)
+  const winnerFilm = winnerNom ? (nomFilms.find(f => f.id === winnerNom.film_id) ?? null) : null
+  const topRatedFilm = swingRatings.length > 0 ? (films.find(f => f.title === swingRatings[0].title) ?? null) : null
+  const usersGuessedRight = !!(winnerFilm && topRatedFilm && winnerFilm.id === topRatedFilm.id)
 
   const getMyUF = (filmId: string) => myUserFilms.find(u => u.film_id === filmId)
 
@@ -293,12 +313,55 @@ export default function CategoriaPage() {
       {/* ── Content ─────────────────────────────────────────────── */}
       <div className="px-4 mt-2">
 
-        {/* Termômetro */}
-        <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>Termômetro</p>
-        <div className="rounded-3xl p-6 mb-8" style={{
+        {/* ── O grande vencedor ────────────────────────────────────── */}
+        {winnerFilm && (
+          <div className="mb-8">
+            <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>O grande vencedor</p>
+            <Link href={`/filmes/${winnerFilm.id}`}
+              className="block relative rounded-3xl overflow-hidden transition-transform duration-150 active:scale-[1.03]"
+              style={{
+                height: 280,
+                border: '1px solid rgba(255,255,255,0.28)',
+                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.35), 0 8px 32px rgba(0,0,0,0.35)',
+              }}>
+              {(movieData[winnerFilm.title] as any)?.backdrop
+                ? <img src={(movieData[winnerFilm.title] as any).backdrop} alt={winnerFilm.title} className="absolute inset-0 w-full h-full object-cover" />
+                : <div className="absolute inset-0" style={{ background: categoryCardBg(category!) }} />
+              }
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.92) 100%)' }} />
+              <div className="absolute top-4 left-4 z-10 text-2xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>🏆</div>
+              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                {winnerDetails?.logo
+                  ? <img src={winnerDetails.logo} alt={winnerFilm.title} className="h-12 mb-2 object-contain object-left" style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} />
+                  : <p className="text-2xl font-bold mb-1 leading-tight" style={{ color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>{(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}</p>
+                }
+                {winnerDetails?.tagline && (
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{winnerDetails.tagline}</p>
+                )}
+              </div>
+            </Link>
+          </div>
+        )}
+
+        {/* A opinião dos usuários */}
+        <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>A opinião dos usuários</p>
+        <div className="rounded-3xl p-6 mb-8 flex flex-col items-center" style={{
           background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
         }}>
           <GaugeChart ratings={gaugeRatings}/>
+          {winnerFilm && swingRatings.length > 0 && (
+            <div className="mt-4 px-4 py-2 rounded-full flex items-center gap-1.5" style={{
+              background: usersGuessedRight ? 'rgba(52,199,89,0.12)' : 'rgba(255,69,58,0.12)',
+              border: `1px solid ${usersGuessedRight ? 'rgba(52,199,89,0.3)' : 'rgba(255,69,58,0.2)'}`,
+            }}>
+              <span className="text-xs">{usersGuessedRight ? '🎯' : '❌'}</span>
+              <span className="text-xs font-medium" style={{ color: usersGuessedRight ? '#34C759' : '#FF453A' }}>
+                {usersGuessedRight
+                  ? 'A galera acertou o vencedor!'
+                  : `A galera errou — venceu ${(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Indicados */}
@@ -312,7 +375,7 @@ export default function CategoriaPage() {
               return (
                 <Link key={`${name}-${i}`} href={`/filmes/${film.id}`}
                   className="poster-press relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: `1px solid ${winner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.14)'}` }}>
+                  style={{ aspectRatio: '2/3', border: `1px solid ${winner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.08)'}`, opacity: winner ? 1 : 0.45 }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -324,10 +387,10 @@ export default function CategoriaPage() {
                     <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(255,69,58,0.9)', color: 'white' }}>🏆</div>
                   )}
                   {(() => { const uf = getMyUF(film.id); return (
-                    <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
-                      className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
-                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid transparent' }}>
-                      <span className="text-xs font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
+                    <button onClick={e => { e.preventDefault(); e.stopPropagation(); toggleWatched(film.id) }}
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center z-10"
+                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.9)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
+                      <span className="text-[10px] font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
                     </button>
                   )})()}
                   <div className="absolute bottom-0 left-0 right-0 p-2.5 flex items-center gap-2 z-10">
@@ -355,7 +418,7 @@ export default function CategoriaPage() {
               return (
                 <Link key={film.id} href={`/filmes/${film.id}`}
                   className="poster-press relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: `1px solid ${isWinner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.14)'}` }}>
+                  style={{ aspectRatio: '2/3', border: `1px solid ${isWinner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.08)'}`, opacity: isWinner ? 1 : 0.45 }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -369,10 +432,10 @@ export default function CategoriaPage() {
                     <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(255,69,58,0.9)', color: 'white' }}>🏆</div>
                   )}
                   {(() => { const uf = getMyUF(film.id); return (
-                    <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
-                      className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
-                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.95)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid transparent' }}>
-                      <span className="text-xs font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
+                    <button onClick={e => { e.preventDefault(); e.stopPropagation(); toggleWatched(film.id) }}
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center z-10"
+                      style={{ background: uf?.watched ? 'rgba(255,69,58,0.9)' : 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
+                      <span className="text-[10px] font-bold" style={{ color: uf?.watched ? '#000' : 'rgba(255,255,255,0.4)' }}>{uf?.watched ? '✓' : '○'}</span>
                     </button>
                   )})()}
                   <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight z-10"

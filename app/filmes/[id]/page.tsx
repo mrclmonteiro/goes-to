@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { fetchMovieDetails } from '@/lib/tmdb'
+import { fetchMovieDetails, fetchAllMovieData } from '@/lib/tmdb'
+import Link from 'next/link'
 import Spinner from '../../components/Spinner'
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -301,6 +302,9 @@ export default function FilmePage() {
   // synopsis sheet
   const [synopsisOpen, setSynopsisOpen] = useState(false)
 
+  // category winners (for non-winner nominations)
+  const [categoryWinners, setCategoryWinners] = useState<Record<string, { id: string; title: string; ptTitle: string | null }>>({}) 
+
   // Pre-load app icon
   useEffect(() => {
     fetch('/icon.png')
@@ -330,6 +334,36 @@ export default function FilmePage() {
       setFilm(filmData)
       setNominations(nomsData ?? [])
       setUserFilm(ufData ?? null)
+
+      // Buscar vencedor de cada categoria (para filmes não-vencedores)
+      const categories = (nomsData ?? []).map((n: Nomination) => n.category)
+      if (categories.length > 0) {
+        const { data: winnerNoms } = await supabase
+          .from('nominations')
+          .select('film_id, category')
+          .in('category', categories)
+          .eq('winner', true)
+          .neq('film_id', id)
+        if (winnerNoms && winnerNoms.length > 0) {
+          const winnerFilmIds = [...new Set(winnerNoms.map((n: any) => n.film_id))]
+          const { data: winnerFilms } = await supabase
+            .from('films')
+            .select('id, title')
+            .in('id', winnerFilmIds)
+          const filmMap: Record<string, { id: string; title: string }> = {}
+          winnerFilms?.forEach((f: any) => { filmMap[f.id] = f })
+          const winnerTitles = winnerFilms?.map((f: any) => f.title) ?? []
+          const ptData = winnerTitles.length > 0 ? await fetchAllMovieData(winnerTitles) : {}
+          const winners: Record<string, { id: string; title: string; ptTitle: string | null }> = {}
+          winnerNoms.forEach((n: any) => {
+            if (filmMap[n.film_id]) {
+              const f = filmMap[n.film_id]
+              winners[n.category] = { ...f, ptTitle: (ptData as any)[f.title]?.ptTitle ?? null }
+            }
+          })
+          setCategoryWinners(winners)
+        }
+      }
       if (ufData?.rating) {
         const cats = nomsData?.map((n: Nomination) => CATEGORY_LABELS[n.category] ?? n.category) ?? []
         const initial: Record<string, number> = {}
@@ -605,10 +639,7 @@ export default function FilmePage() {
                 {filmNominations.map((nom, i) => (
                   <div key={i}>
                     <div className="flex items-center gap-3 py-3.5">
-                      <svg width="12" height="18" viewBox="0 0 14 20" fill="none" style={{ flexShrink: 0 }}>
-                        <path d="M7 1 C5 3 2 5 1 8 C0 11 2 14 4 15 C5 16 6 17 7 19 C8 17 9 16 10 15 C12 14 14 11 13 8 C12 5 9 3 7 1Z"
-                          fill={nom.winner ? 'rgba(255,69,58,0.7)' : 'rgba(255,69,58,0.35)'} stroke={nom.winner ? 'rgba(255,69,58,0.5)' : 'rgba(255,69,58,0.25)'} strokeWidth="0.5"/>
-                      </svg>
+                      <img src="/laurel.svg" width="32" height="32" alt="" style={{ flexShrink: 0, opacity: nom.winner ? 1 : 0.35 }} />
                       <div className="flex-1">
                         <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                           {CATEGORY_LABELS[nom.category] ?? nom.category}
@@ -616,6 +647,14 @@ export default function FilmePage() {
                         {nom.nominee && nom.nominee.split(/,| e /).map(s => s.trim()).filter(Boolean).map((name, ni) => (
                           <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(255,69,58,0.6)' }}>{name}</p>
                         ))}
+                        {!nom.winner && categoryWinners[nom.category] && (
+                          <Link href={`/filmes/${categoryWinners[nom.category].id}`}
+                            className="inline-flex items-center gap-1 mt-1.5"
+                            style={{ color: 'rgba(255,200,60,0.75)', fontSize: 11 }}>
+                            <span>🏆</span>
+                            <span>Venceu: {categoryWinners[nom.category].ptTitle || categoryWinners[nom.category].title}</span>
+                          </Link>
+                        )}
                       </div>
                       {nom.winner && (
                         <span className="text-sm flex-shrink-0">🏆</span>

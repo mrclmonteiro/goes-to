@@ -973,7 +973,7 @@ export default function FilmesPage() {
           `}</style>
           <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Os grandes indicados</p>
           <Link href="/categorias/best-picture"
-            className="block relative rounded-3xl overflow-hidden transition-transform duration-150 active:scale-[0.97]"
+            className="block relative rounded-3xl overflow-hidden transition-transform duration-150 active:scale-[1.03]"
             style={{
               height: 320,
               background: categoryCardBg('Best Picture'),
