@@ -46,14 +46,17 @@ export async function POST(request: NextRequest) {
     // Service role para contornar RLS; cai no anon se não configurado
     const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
 
-    const { data: profile } = await dbClient
+    const { data: profile, error: profileError } = await dbClient
       .from('user_profiles')
       .select('is_admin')
       .eq('id', user.id)
       .maybeSingle()
 
     if (!profile?.is_admin) {
-      return NextResponse.json({ error: 'Forbidden: não é admin' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden: não é admin',
+        debug: { userId: user.id, profile, profileError: profileError?.message, hasServiceKey: !!serviceKey }
+      }, { status: 403 })
     }
 
     const { data: subs, error: subsError } = await dbClient
