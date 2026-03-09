@@ -488,38 +488,52 @@ export default function FilmesPage() {
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
       setCatRatings(catRatingsData ?? [])
-      // Feed: últimas avaliações de user_films (user_id garantido)
-      // Tenta ordenar por updated_at; se não existir, cai sem ordenação
-      let feedRaw: { user_id: string; film_id: string; rating: number | null; updated_at?: string | null }[] = []
-      const { data: fwd, error: fwdErr } = await supabase
-        .from('user_films')
-        .select('user_id, film_id, rating, updated_at')
-        .not('rating', 'is', null)
+      // Feed: últimas avaliações de user_category_ratings (user_id existe para novas inserções)
+      // Fallback: user_films para avaliações antigas sem categoria
+      let feedRaw: { user_id: string; film_id: string; rating: number | null; category: string; created_at?: string | null }[] = []
+      const { data: fwdCat, error: fwdCatErr } = await supabase
+        .from('user_category_ratings')
+        .select('user_id, film_id, rating, category, created_at')
+        .not('user_id', 'is', null)
         .gt('rating', 0)
-        .order('updated_at', { ascending: false })
-        .limit(30)
-      if (!fwdErr) {
-        feedRaw = fwd ?? []
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (!fwdCatErr && fwdCat && fwdCat.length > 0) {
+        feedRaw = fwdCat
       } else {
-        const { data: fnd } = await supabase
+        // Fallback: user_films sem categoria
+        const { data: fnd, error: fndErr } = await supabase
           .from('user_films')
-          .select('user_id, film_id, rating')
+          .select('user_id, film_id, rating, updated_at')
+          .not('user_id', 'is', null)
           .not('rating', 'is', null)
           .gt('rating', 0)
+          .order('updated_at', { ascending: false })
           .limit(30)
-        feedRaw = (fnd ?? []).map((r: { user_id: string; film_id: string; rating: number | null }) => ({ ...r, updated_at: null }))
+        if (!fndErr && fnd) {
+          feedRaw = fnd.map((r: { user_id: string; film_id: string; rating: number | null; updated_at?: string | null }) => ({ ...r, category: '', created_at: r.updated_at ?? null }))
+        } else {
+          const { data: fnd2 } = await supabase
+            .from('user_films')
+            .select('user_id, film_id, rating')
+            .not('user_id', 'is', null)
+            .not('rating', 'is', null)
+            .gt('rating', 0)
+            .limit(30)
+          feedRaw = (fnd2 ?? []).map((r: { user_id: string; film_id: string; rating: number | null }) => ({ ...r, category: '', created_at: null }))
+        }
       }
-      const feedFilms = (feedRaw ?? []).filter((r: { user_id: string; rating: number | null }) => r.user_id && (r.rating ?? 0) > 0)
+      const feedFilms = feedRaw.filter(r => r.user_id && (r.rating ?? 0) > 0)
       if (feedFilms.length > 0) {
-        const uids = [...new Set(feedFilms.map((r: { user_id: string }) => r.user_id))]
+        const uids = [...new Set(feedFilms.map(r => r.user_id))]
         const { data: profData } = await supabase.from('user_profiles').select('id, display_name, username, avatar_index').in('id', uids)
         const profMap = Object.fromEntries((profData ?? []).map((p: { id: string; display_name: string | null; username: string | null; avatar_index: number }) => [p.id, p]))
-        setFeedItems(feedFilms.map((r: { user_id: string; film_id: string; rating: number | null; updated_at?: string | null }) => ({
+        setFeedItems(feedFilms.map(r => ({
           user_id: r.user_id,
           film_id: r.film_id,
-          category: '',
+          category: r.category ?? '',
           rating: r.rating ?? 0,
-          created_at: r.updated_at ?? null,
+          created_at: r.created_at ?? null,
           display_name: profMap[r.user_id]?.display_name ?? null,
           username: profMap[r.user_id]?.username ?? null,
           avatar_index: profMap[r.user_id]?.avatar_index ?? 0,
