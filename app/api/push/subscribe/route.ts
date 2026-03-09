@@ -10,23 +10,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 })
     }
 
-    // Verificar autenticação via JWT no header Authorization
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '').trim()
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Token ausente' }, { status: 401 })
     }
 
-    const serviceClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
+    // Validar JWT com anon key (garantidamente configurada no Vercel)
+    const anonClient = createClient(supabaseUrl, anonKey)
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: `JWT inválido: ${authError?.message ?? 'sem usuário'}` }, { status: 401 })
     }
 
-    const { error } = await serviceClient.from('push_subscriptions').upsert(
+    // Service role para contornar RLS; cai no anon se não configurado
+    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
+
+    const { error } = await dbClient.from('push_subscriptions').upsert(
       {
         user_id: user.id,
         endpoint: subscription.endpoint,
@@ -37,12 +40,11 @@ export async function POST(request: NextRequest) {
     )
 
     if (error) {
-      console.error('Push subscribe error:', error)
-      return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 })
+      return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
-  } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  } catch (err) {
+    return NextResponse.json({ error: `Server error: ${String(err)}` }, { status: 500 })
   }
 }

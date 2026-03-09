@@ -23,35 +23,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'title e message são obrigatórios' }, { status: 400 })
     }
 
-    // Verificar autenticação e admin via JWT no header Authorization
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '').trim()
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Token ausente' }, { status: 401 })
     }
 
-    const serviceClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
+    if (!supabaseUrl || !anonKey) {
+      return NextResponse.json({ error: 'Env SUPABASE não configuradas' }, { status: 500 })
+    }
+
+    // Validar JWT com anon key (garantidamente configurada no Vercel)
+    const anonClient = createClient(supabaseUrl, anonKey)
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: `JWT inválido: ${authError?.message ?? 'sem usuário'}` }, { status: 401 })
     }
 
-    const { data: profile } = await serviceClient
+    // Service role para contornar RLS; cai no anon se não configurado
+    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
+
+    const { data: profile } = await dbClient
       .from('user_profiles')
       .select('is_admin')
       .eq('id', user.id)
       .maybeSingle()
 
     if (!profile?.is_admin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden: não é admin' }, { status: 403 })
     }
 
-    const { data: subs } = await serviceClient
+    const { data: subs, error: subsError } = await dbClient
       .from('push_subscriptions')
       .select('endpoint, p256dh, auth')
+
+    if (subsError) {
+      return NextResponse.json({ error: `Erro ao buscar subscriptions: ${subsError.message}` }, { status: 500 })
+    }
 
     if (!subs || subs.length === 0) {
       return NextResponse.json({ sent: 0, failed: 0 })
@@ -82,7 +93,7 @@ export async function POST(request: NextRequest) {
       }
     })
     if (staleEndpoints.length > 0) {
-      await serviceClient
+      await dbClient
         .from('push_subscriptions')
         .delete()
         .in('endpoint', staleEndpoints)
