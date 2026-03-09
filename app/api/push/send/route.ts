@@ -43,8 +43,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `JWT inválido: ${authError?.message ?? 'sem usuário'}` }, { status: 401 })
     }
 
-    // Verificar admin com anonClient (usuário lê o próprio perfil, RLS permite)
-    const { data: profile } = await anonClient
+    // Service role para queries de banco (bypassa RLS)
+    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    })
+
+    const { data: profile } = await dbClient
       .from('user_profiles')
       .select('is_admin')
       .eq('id', user.id)
@@ -53,9 +57,6 @@ export async function POST(request: NextRequest) {
     if (!profile?.is_admin) {
       return NextResponse.json({ error: 'Forbidden: não é admin' }, { status: 403 })
     }
-
-    // Service role para ler subscriptions de todos os usuários (bypassa RLS)
-    const dbClient = serviceKey ? createClient(supabaseUrl, serviceKey) : anonClient
 
     const { data: subs, error: subsError } = await dbClient
       .from('push_subscriptions')
