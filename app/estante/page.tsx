@@ -54,7 +54,7 @@ const BOLAO_CATEGORIES = [
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee?: string | null }
-type Profile = { display_name: string | null; username: string | null; avatar_index: number; goal_category: string }
+type Profile = { display_name: string | null; username: string | null; avatar_index: number; goal_category: string; is_admin?: boolean }
 
 function SectionTitle({ children, className = '' }: { children: React.ReactNode, className?: string }) {
   return <p className={`text-lg font-semibold ${className}`} style={{ color: 'white' }}>{children}</p>
@@ -470,6 +470,8 @@ export default function EstantePage() {
   const [savingConfig, setSavingConfig] = useState(false)
   const [configMsg, setConfigMsg] = useState('')
   const [tempAvatarIndex, setTempAvatarIndex] = useState(0)
+  const [notifStatus, setNotifStatus] = useState<'idle' | 'subscribed' | 'denied'>('idle')
+  const [notifLoading, setNotifLoading] = useState(false)
 
   // Pre-load app icon as base64 for html2canvas
   useEffect(() => {
@@ -524,6 +526,43 @@ export default function EstantePage() {
     }
     load().catch(e => console.error('[estante] load error:', e))
   }, [router])
+
+  // Push notifications
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission === 'denied') { setNotifStatus('denied'); return }
+    if (Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.pushManager.getSubscription().then(sub => {
+          if (sub) setNotifStatus('subscribed')
+        })
+      }).catch(() => {})
+    }
+  }, [])
+
+  async function subscribeToNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    setNotifLoading(true)
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') { setNotifStatus('denied'); return }
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      })
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      })
+      if (res.ok) setNotifStatus('subscribed')
+    } catch (e) {
+      console.error('Push subscribe error:', e)
+    } finally {
+      setNotifLoading(false)
+    }
+  }
 
   const filmCategories = (filmId: string) => nominations.filter(n => n.film_id === filmId).map(n => n.category)
 
@@ -739,6 +778,39 @@ export default function EstantePage() {
                 boxShadow: '0 0 6px rgba(255,69,58,0.8)' }}/>
             )}
           </button>
+          {/* Notificações */}
+          {typeof window !== 'undefined' && 'PushManager' in window && notifStatus !== 'denied' && (
+            <button
+              onClick={notifStatus === 'subscribed' ? undefined : subscribeToNotifications}
+              disabled={notifLoading}
+              className="flex items-center justify-center flex-shrink-0 relative"
+              style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: notifStatus === 'subscribed' ? 'default' : 'pointer', opacity: notifLoading ? 0.5 : 1 }}
+            >
+              {notifStatus === 'subscribed' ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" fill="rgba(255,255,255,0.15)" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13.73 21a2 2 0 01-3.46 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="18" cy="6" r="3.5" fill="#34C759" stroke="#0a0a0f" strokeWidth="1.5"/>
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13.73 21a2 2 0 01-3.46 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          )}
+          {/* Admin (só visível para admins) */}
+          {profile.is_admin && (
+            <button onClick={() => router.push('/admin')}
+              className="flex items-center justify-center flex-shrink-0 relative"
+              style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
           {/* Config */}
           <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true) }}
             className="flex items-center justify-center flex-shrink-0"

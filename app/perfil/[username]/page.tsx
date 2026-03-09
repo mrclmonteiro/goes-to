@@ -29,6 +29,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
+  'Best Documentary Short Film': 'Curta Documentário',
+  'Best Animated Short Film': 'Curta Animação',
+  'Best Live Action Short Film': 'Curta Ficção',
 }
 
 const AVATARS = [
@@ -166,17 +169,19 @@ export default function PerfilPage({ params }: { params: Promise<{ username: str
 
       {/* Botão voltar */}
       <button onClick={() => window.history.back()}
-        className="fixed z-[100] flex items-center justify-center"
+        className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
         style={{
+          background: 'rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(6px) saturate(280%)',
+          WebkitBackdropFilter: 'blur(6px) saturate(280%)',
+          border: '1px solid transparent',
+          boxShadow: 'var(--lg-shadow)',
           top: 'max(env(safe-area-inset-top), 45px)', left: 15,
-          width: 44, height: 44, borderRadius: 22,
-          background: 'rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.13)',
+          width: 44, height: 44, overflow: 'hidden',
         }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M15 18l-6-6 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-[2px]" style={{ position: 'relative', zIndex: 3 }}>
+          <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
 

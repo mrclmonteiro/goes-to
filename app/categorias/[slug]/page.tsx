@@ -14,7 +14,7 @@ import {
 } from '@/lib/categories'
 
 type Film = { id: string; title: string }
-type Nomination = { film_id: string; category: string; nominee: string | null }
+type Nomination = { film_id: string; category: string; nominee: string | null; winner: boolean }
 type UserFilm = { film_id: string; rating: number | null; watched: boolean }
 type MovieData = { ptTitle: string | null; poster: string | null }
 
@@ -172,13 +172,14 @@ export default function CategoriaPage() {
   }, [category])
 
   const nomFilms = films.filter(f => nominations.some(n => n.film_id === f.id))
+  const nomWinners = new Set(nominations.filter(n => n.winner).map(n => n.film_id))
 
   const nominees = isPersonCat
     ? nominations
         .filter(n => n.nominee)
         .flatMap(n =>
           (n.nominee as string).split(/,| e /).map(s => s.trim()).filter(Boolean)
-            .map(name => ({ name, film: films.find(f => f.id === n.film_id)! }))
+            .map(name => ({ name, film: films.find(f => f.id === n.film_id)!, winner: n.winner }))
         )
         .filter(n => n.film)
     : []
@@ -305,13 +306,13 @@ export default function CategoriaPage() {
 
         {isPersonCat ? (
           <div className="grid grid-cols-3 gap-3">
-            {nominees.map(({ name, film }, i) => {
+            {nominees.map(({ name, film, winner }, i) => {
               const poster = (movieData[film.title] as any)?.poster
               const photo = personPhotos[name]
               return (
                 <Link key={`${name}-${i}`} href={`/filmes/${film.id}`}
                   className="poster-press relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
+                  style={{ aspectRatio: '2/3', border: `1px solid ${winner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.14)'}` }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -319,6 +320,9 @@ export default function CategoriaPage() {
                     }
                   </div>
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 55%)' }}/>
+                  {winner && (
+                    <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(255,69,58,0.9)', color: 'white' }}>🏆</div>
+                  )}
                   {(() => { const uf = getMyUF(film.id); return (
                     <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
                       className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"
@@ -347,10 +351,11 @@ export default function CategoriaPage() {
             {nomFilms.map(film => {
               const poster = (movieData[film.title] as any)?.poster
               const ptTitle = (movieData[film.title] as any)?.ptTitle
+              const isWinner = nomWinners.has(film.id)
               return (
                 <Link key={film.id} href={`/filmes/${film.id}`}
                   className="poster-press relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
+                  style={{ aspectRatio: '2/3', border: `1px solid ${isWinner ? 'rgba(255,69,58,0.6)' : 'rgba(255,255,255,0.14)'}` }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -360,6 +365,9 @@ export default function CategoriaPage() {
                     }
                   </div>
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }}/>
+                  {isWinner && (
+                    <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(255,69,58,0.9)', color: 'white' }}>🏆</div>
+                  )}
                   {(() => { const uf = getMyUF(film.id); return (
                     <button onClick={e => { e.preventDefault(); toggleWatched(film.id) }}
                       className="lg-btn absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center z-10"

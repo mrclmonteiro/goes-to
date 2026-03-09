@@ -233,6 +233,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
+  'Best Documentary Short Film': 'Curta Documentário',
+  'Best Animated Short Film': 'Curta Animação',
+  'Best Live Action Short Film': 'Curta Ficção',
 }
 
 // Abbreviated labels for the share card (max ~14 chars)
@@ -260,7 +263,7 @@ const CAT_SHORT: Record<string, string> = {
   'Documentário': 'Documentário',
 }
 
-type Nomination = { film_id: string; category: string; nominee: string | null }
+type Nomination = { film_id: string; category: string; nominee: string | null; winner: boolean }
 type Film = { id: string; title: string }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Profile = { display_name: string | null; username: string | null; avatar_index: number }
@@ -448,7 +451,7 @@ export default function FilmePage() {
 
   const backdrop = details?.backdrop
   const genres = details?.genres ?? []
-  const filmNominations = nominations.map(n => ({ category: n.category, nominee: n.nominee ?? null }))
+  const filmNominations = nominations.map(n => ({ category: n.category, nominee: n.nominee ?? null, winner: n.winner }))
 
   return (
     <>
@@ -604,9 +607,9 @@ export default function FilmePage() {
                     <div className="flex items-center gap-3 py-3.5">
                       <svg width="12" height="18" viewBox="0 0 14 20" fill="none" style={{ flexShrink: 0 }}>
                         <path d="M7 1 C5 3 2 5 1 8 C0 11 2 14 4 15 C5 16 6 17 7 19 C8 17 9 16 10 15 C12 14 14 11 13 8 C12 5 9 3 7 1Z"
-                          fill="rgba(255,69,58,0.35)" stroke="rgba(255,69,58,0.25)" strokeWidth="0.5"/>
+                          fill={nom.winner ? 'rgba(255,69,58,0.7)' : 'rgba(255,69,58,0.35)'} stroke={nom.winner ? 'rgba(255,69,58,0.5)' : 'rgba(255,69,58,0.25)'} strokeWidth="0.5"/>
                       </svg>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                           {CATEGORY_LABELS[nom.category] ?? nom.category}
                         </p>
@@ -614,7 +617,9 @@ export default function FilmePage() {
                           <p key={ni} className="text-xs mt-0.5" style={{ color: 'rgba(255,69,58,0.6)' }}>{name}</p>
                         ))}
                       </div>
-                      {/* Rating badge inline */}
+                      {nom.winner && (
+                        <span className="text-sm flex-shrink-0">🏆</span>
+                      )}
                       {ratings[CATEGORY_LABELS[nom.category] ?? nom.category] > 0 && (
                         <span className="ml-auto text-xs font-bold flex-shrink-0"
                           style={{ color: '#FF453A' }}>

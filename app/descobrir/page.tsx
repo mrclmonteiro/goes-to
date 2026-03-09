@@ -28,6 +28,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
+  'Best Documentary Short Film': 'Curta Documentário',
+  'Best Animated Short Film': 'Curta Animação',
+  'Best Live Action Short Film': 'Curta Ficção',
 }
 
 const PERSON_CATEGORIES = [
@@ -37,16 +40,16 @@ const PERSON_CATEGORIES = [
 ]
 
 const FACTS = [
-  { emoji: '🏆', title: 'Recorde histórico', text: 'No Oscar 2026, Sinners lidera com 16 indicações — batendo o recorde anterior de 14, que pertencia a A Malvada (1950), Titanic (1997) e La La Land (2016).', grad: ['#78350f','#92400e'] },
-  { emoji: '🌍', title: '4 línguas no páreo', text: 'O Oscar 2026 marca um recorde inédito: quatro atuações em língua não-inglesa indicadas no mesmo ano — Lilleaas, Moura, Reinsve e Skarsgård disputam as categorias de interpretação.', grad: ['#1e3a5f','#1e40af'] },
-  { emoji: '👩', title: '76 mulheres indicadas', text: 'O Oscar 2026 estabelece um novo recorde de representatividade: 76 mulheres indicadas nesta edição, superando o anterior de 71, registrado em 2023.', grad: ['#4a1d96','#6d28d9'] },
-  { emoji: '🎬', title: 'Spielberg faz história', text: 'Com Hamnet, Steven Spielberg chega a 14 indicações de Melhor Filme como produtor no Oscar — um recorde absoluto desde 1951, quando o sistema de votação foi reformado.', grad: ['#064e3b','#065f46'] },
-  { emoji: '🎵', title: 'Diane Warren, 17ª vez', text: 'Diane Warren recebe sua 17ª indicação ao Oscar na categoria Canção Original — o 9º ano consecutivo. Apesar dos recordes, ela ainda não levou a estatueta, tendo recebido o Oscar honorário em 2022.', grad: ['#831843','#9d174d'] },
-  { emoji: '🇧🇷', title: 'Brasil na disputa', text: 'The Secret Agent representa o Brasil no Oscar 2026 — a 6ª vez que o país chega à fase final da categoria de Melhor Filme Internacional. O último a disputar foi Ainda Estou Aqui (2024), que venceu a categoria.', grad: ['#14532d','#166534'] },
-  { emoji: '🗳️', title: 'Oscar em números', text: 'No Oscar 2026: 317 filmes elegíveis, 10.136 votantes da Academia e mais de 200 países acompanhando a cerimônia, que acontece em 15 de março.', grad: ['#1c1917','#44403c'] },
-  { emoji: '🗿', title: 'A estatueta', text: 'O troféu do Oscar mede 34 cm, pesa 3,8 kg e representa um cavaleiro com espada sobre um rolo de filme. Desde a primeira cerimônia, em 1929, já foram entregues mais de 3.491 estatuetas.', grad: ['#312e81','#3730a3'] },
-  { emoji: '⏱️', title: 'Maior e menor cerimônia', text: 'A cerimônia do Oscar mais longa da história durou 4h23min, em 2002. A mais curta foi em 1959, com apenas 1h40min. A transmissão pela ABC, nos EUA, começou em 1976.', grad: ['#7c2d12','#9a3412'] },
-  { emoji: '🆕', title: 'Nova categoria', text: 'O Oscar 2026 estreia a categoria Melhor Elenco (Achievement in Casting) — a primeira novidade desde a criação de Melhor Filme de Animação, em 2001.', grad: ['#0c4a6e','#075985'] },
+  { emoji: '🏆', title: 'Recorde histórico', text: 'Sinners chegou onde nenhum filme havia chegado: 16 indicações. A marca anterior era de 14 — dividida entre A Malvada (1950), Titanic (1997) e La La Land (2016). Ryan Coogler entrou para a história antes mesmo da cerimônia.', grad: ['#78350f','#92400e'] },
+  { emoji: '🌍', title: '4 línguas no páreo', text: 'Nunca antes quatro atuações em língua não-inglesa disputaram o Oscar no mesmo ano. Lilleaas e Reinsve falam norueguês, Skarsgård sueco e Wagner Moura, português. O mundo está na corrida.', grad: ['#1e3a5f','#1e40af'] },
+  { emoji: '👩', title: '76 mulheres indicadas', text: '76 mulheres indicadas estão nesta edição, sendo o maior número da história, superando o recorde de 71 em 2023. Ano após ano, o Oscar vai ficando com menos desculpas.', grad: ['#4a1d96','#6d28d9'] },
+  { emoji: '🎬', title: 'Spielberg faz história', text: 'Com Hamnet, Steven Spielberg chega à sua 14ª indicação de Melhor Filme como produtor, um recorde absoluto desde 1951. Ele tem 75 anos, continua produzindo e claramente não tem planos de parar.', grad: ['#064e3b','#065f46'] },
+  { emoji: '🎵', title: 'Diane Warren, 17ª vez', text: '17 indicações. 9 anos seguidos. Zero estatuetas. Diane Warren é o maior fenômeno de azar dourado da história do Oscar. Ela até ganhou um honorário em 2022, talvez como consolo. Será que dessa vez vai ser diferente?', grad: ['#831843','#9d174d'] },
+  { emoji: '🇧🇷', title: 'Brasil na disputa', text: 'O Agente Secreto leva o Brasil à fase final pela 6ª vez na história. A última aparição brasileira foi Ainda Estou Aqui, que saiu com o troféu e marcou o nosso primeiro Oscar da história. O país chega com moral.', grad: ['#14532d','#166534'] },
+  { emoji: '🗳️', title: 'Oscar em números', text: '317 filmes elegíveis, 10.136 membros votantes, mais de 200 países assistindo. E uma cerimônia que, todo ano, o mundo para para ver. Dessa vez, é no dia 15 de março.', grad: ['#1c1917','#44403c'] },
+  { emoji: '🗿', title: 'A estatueta', text: '34 cm de altura, 3,8 kg e um cavaleiro com espada sobre um rolo de filme. Desde 1929, mais de 3.491 desses troféus já foram entregues. É simples, é dourado e todo mundo quer um.', grad: ['#312e81','#3730a3'] },
+  { emoji: '⏱️', title: 'Maior e menor cerimônia', text: 'A cerimônia mais longa durou 4h23min, em 2002. A mais curta, 1h40min, em 1959, quando ninguém tinha muito a dizer. A ABC entrou na jogada em 1976 e nunca mais saiu.', grad: ['#7c2d12','#9a3412'] },
+  { emoji: '🆕', title: 'Nova categoria', text: 'Melhor Elenco estreia no Oscar 2026, sendo a primeira categoria nova desde Melhor Animação, em 2001. 25 anos depois, a Academia finalmente reconhece quem coloca as pessoas certas na frente da câmera.', grad: ['#0c4a6e','#075985'] },
 ]
 
 type Film = { id: string; title: string }

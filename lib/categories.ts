@@ -20,6 +20,9 @@ export const ORDERED_CATEGORIES = [
   'Best Visual Effects',
   'Best Casting',
   'Best Documentary Feature',
+  'Best Documentary Short Film',
+  'Best Animated Short Film',
+  'Best Live Action Short Film',
 ] as const
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -44,6 +47,9 @@ export const CATEGORY_LABELS: Record<string, string> = {
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
+  'Best Documentary Short Film': 'Curta Documentário',
+  'Best Animated Short Film': 'Curta Animação',
+  'Best Live Action Short Film': 'Curta Ficção',
 }
 
 // Structure: [blob1, blob2, blob3, BASE_COLOR, ...extraBlobs]
@@ -72,6 +78,9 @@ export const CATEGORY_AURA: Record<string, readonly [string, string, string, str
   'Best Visual Effects':        ['#06b6d4', '#7c3aed', '#a5f3fc', '#01001e'],
   'Best Casting':               ['#d97706', '#fcd34d', '#f59e0b', '#140c00'],
   'Best Documentary Feature':   ['#92400e', '#451a03', '#fbbf24', '#100400'],
+  'Best Documentary Short Film': ['#ca8a04', '#fcd34d', '#713f12', '#0e0900'],
+  'Best Animated Short Film':    ['#e879f9', '#c026d3', '#f5d0fe', '#160018'],
+  'Best Live Action Short Film': ['#0284c7', '#075985', '#7dd3fc', '#00080f'],
 }
 
 // Explicit blob positions [x%, y%] per category for maximum visual variety
@@ -97,6 +106,9 @@ const CATEGORY_POSITIONS: Record<string, [number, number][]> = {
   'Best Visual Effects':        [[22,12],[80,75],[72,18]],
   'Best Casting':               [[50,52],[10,18],[88,12]],
   'Best Documentary Feature':   [[22,28],[75,72],[50,42]],
+  'Best Documentary Short Film': [[28,70],[78,18],[52,42]],
+  'Best Animated Short Film':    [[68,25],[15,72],[88,70]],
+  'Best Live Action Short Film': [[22,35],[72,75],[55,15]],
 }
 
 /** Generates a CSS `background` string with layered radial gradients (for static cards). */

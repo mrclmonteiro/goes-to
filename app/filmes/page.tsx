@@ -31,6 +31,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Visual Effects': 'Efeitos Visuais',
   'Best Casting': 'Elenco',
   'Best Documentary Feature': 'Documentário',
+  'Best Documentary Short Film': 'Curta Documentário',
+  'Best Animated Short Film': 'Curta Animação',
+  'Best Live Action Short Film': 'Curta Ficção',
 }
 
 const AVATARS = [
