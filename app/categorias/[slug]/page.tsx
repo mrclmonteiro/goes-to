@@ -280,7 +280,7 @@ export default function CategoriaPage() {
 
         {/* Bottom fade to page background */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, transparent 35%, rgba(10,10,15,0.68) 65%, #0a0a0f 100%)'
+          background: 'linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(10,10,15,0.45) 78%, #0a0a0f 100%)'
         }}/>
 
         {/* Category title — centered */}
@@ -290,7 +290,7 @@ export default function CategoriaPage() {
       </div>
 
       {/* ── Content ─────────────────────────────────────────────── */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-2">
 
         {/* Termômetro */}
         <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>Termômetro</p>
@@ -310,8 +310,8 @@ export default function CategoriaPage() {
               const photo = personPhotos[name]
               return (
                 <Link key={`${name}-${i}`} href={`/filmes/${film.id}`}
-                  className="relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  className="poster-press relative rounded-2xl overflow-hidden"
+                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -349,8 +349,8 @@ export default function CategoriaPage() {
               const ptTitle = (movieData[film.title] as any)?.ptTitle
               return (
                 <Link key={film.id} href={`/filmes/${film.id}`}
-                  className="relative rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  className="poster-press relative rounded-2xl overflow-hidden"
+                  style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                   <div className="absolute inset-0">
                     {poster
                       ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>

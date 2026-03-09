@@ -33,6 +33,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Best Documentary Feature': 'Documentário',
 }
 
+const AVATARS = [
+  '🎬', '🍿', '🎭', '🏆', '🎞️', '⭐', '🎪', '🎨',
+  '🦁', '🎈', '🤵', '🦇', '🗼', '☕️', '🛳', '💰',
+  '🐶', '👵', '🐔', '👩‍🦱', '💀', '🛸', '🏊‍♀️', '🤡',
+  '🦈'
+]
 const AVATAR_COLORS = [
   ['#A1C4FD', '#C2E9FB'], ['#B5EAD7', '#83C5BE'], ['#FFDAC1', '#FF9AA2'],
   ['#C7CEEA', '#A3B1C6'], ['#FDFD96', '#F6D365'], ['#E0C3FC', '#8EC5FC'],
@@ -58,9 +64,10 @@ const HERO_N = HERO_SLIDES.length
 const FILM_CATEGORIES = ['Best Picture','Best Animated Feature','Best International Feature','Best Adapted Screenplay','Best Original Screenplay','Best Cinematography','Best Film Editing','Best Original Score','Best Original Song','Best Costume Design','Best Production Design','Best Makeup and Hairstyling','Best Sound','Best Visual Effects','Best Casting','Best Documentary Feature']
 const PERSON_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 const ALL_CATEGORIES = [...FILM_CATEGORIES, ...PERSON_CATEGORIES]
-const FEATURED_CATEGORIES = ['Best Picture', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
+const FEATURED_CATEGORIES = ['Best Director', 'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress']
 
 type Film = { id: string; title: string }
+type FeedEntry = { user_id: string; film_id: string; category: string; rating: number; created_at: string | null; display_name: string | null; username: string | null; avatar_index: number }
 type UserFilm = { film_id: string; watched: boolean; rating: number | null }
 type Nomination = { film_id: string; category: string; nominee: string | null }
 type MovieData = { ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null }
@@ -173,8 +180,8 @@ function PosterCard({ film, userFilm, onToggle, poster, ptTitle }: {
 }) {
   return (
     <Link href={`/filmes/${film.id}`}
-      className="relative flex flex-col rounded-2xl overflow-hidden"
-      style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+      className="poster-press relative flex flex-col rounded-2xl overflow-hidden"
+      style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
       <div className="absolute inset-0">
         {poster
           ? <img src={poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -248,6 +255,35 @@ function BolaoPromoSlide() {
   )
 }
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return ''
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60) return 'agora'
+  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+  if (diff < 604800) return `há ${Math.floor(diff / 86400)}d`
+  return `há ${Math.floor(diff / 604800)} sem`
+}
+
+function FeedStars({ rating }: { rating: number }) {
+  const full = Math.floor(rating)
+  const hasHalf = rating % 1 >= 0.5
+  return (
+    <span className="inline-flex align-middle gap-px mx-0.5">
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg key={i} width="10" height="10" viewBox="0 0 24 24">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            fill={i < full ? '#FF453A' : (i === full && hasHalf) ? 'rgba(255,69,58,0.45)' : 'none'}
+            stroke={i < full || (i === full && hasHalf) ? 'none' : 'rgba(255,255,255,0.18)'}
+            strokeWidth="1.5"
+          />
+        </svg>
+      ))}
+    </span>
+  )
+}
+
 function useCountdown() {
   const [diff, setDiff] = useState(() => OSCAR_DATE.getTime() - Date.now())
   useEffect(() => {
@@ -292,6 +328,103 @@ function HScrollRow({ children }: { children: React.ReactNode }) {
   )
 }
 
+function WelcomeModal({ onConfigure }: { onConfigure: () => void }) {
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [phase, setPhase] = useState<'in' | 'hold' | 'out'>('in')
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
+    if (phase === 'in') {
+      timer = setTimeout(() => setPhase('hold'), 600)
+    } else if (phase === 'hold') {
+      timer = setTimeout(() => setPhase('out'), 1600)
+    } else {
+      timer = setTimeout(() => {
+        setActiveIdx(i => (i + 1) % AVATARS.length)
+        setPhase('in')
+      }, 400)
+    }
+    return () => clearTimeout(timer)
+  }, [phase, activeIdx])
+
+  const colors = AVATAR_COLORS[activeIdx] ?? AVATAR_COLORS[0]
+  const emoji = AVATARS[activeIdx]
+  const emojiScale = phase === 'in' ? 1 : phase === 'hold' ? 1.08 : 0.7
+  const emojiOpacity = phase === 'in' ? 1 : phase === 'hold' ? 1 : 0
+  const emojiY = phase === 'in' ? 0 : phase === 'hold' ? -6 : 10
+
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col justify-end">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col sheet"
+        style={{ maxHeight: '92vh' }}>
+
+        {/* Pílula drag */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+        </div>
+
+        <div className="flex flex-col items-center px-6 pt-4 pb-10 gap-5"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 40px)' }}>
+
+          {/* Avatar animado */}
+          <div style={{ position: 'relative', width: 88, height: 88 }}>
+            <div style={{
+              position: 'absolute', inset: -10, borderRadius: '50%',
+              background: `radial-gradient(circle, ${colors[0]}55 0%, transparent 70%)`,
+              filter: 'blur(14px)', transition: 'background 0.4s ease',
+            }}/>
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`,
+              transition: 'background 0.4s ease',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+            }}/>
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 42,
+              transform: `translateY(${emojiY}px) scale(${emojiScale})`,
+              opacity: emojiOpacity,
+              transition: phase === 'in'
+                ? 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease'
+                : 'transform 0.35s ease, opacity 0.35s ease',
+            }}>
+              {emoji}
+            </div>
+          </div>
+
+          {/* Título */}
+          <h2 className="text-[22px] font-bold text-center" style={{ color: 'white', margin: 0 }}>
+            Seja bem-vindo ao Goes To...
+          </h2>
+
+          {/* Corpo */}
+          <p className="text-[15px] text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+            Agora que seu cadastro está confirmado, que tal personalizar o seu perfil?
+            {' '}Você pode colocar seu nome e escolher entre diversos avatares com referências ao cinema.
+            {' '}Isso permite que você compartilhe suas avaliações e que elas apareçam no feed de Novidades.
+          </p>
+
+          {/* Card de privacidade */}
+          <div className="w-full flex gap-3 items-start rounded-2xl px-4 py-3"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>🔒</span>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+              Seu email nunca aparece para outros usuários. Só o nome e o avatar que você escolher são visíveis no feed.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <Link href="/estante" onClick={() => { try { localStorage.setItem('estante_tour', '1') } catch(_){} onConfigure() }} className="primary-btn">
+            Configure seu perfil
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function FilmesPage() {
   const countdown = useCountdown()
   const [films, setFilms] = useState<Film[]>([])
@@ -299,8 +432,10 @@ export default function FilmesPage() {
   const [userFilms, setUserFilms] = useState<UserFilm[]>([])
   const [allUserFilms, setAllUserFilms] = useState<{ film_id: string; rating: number | null }[]>([])
   const [catRatings, setCatRatings] = useState<{ film_id: string; category: string; rating: number }[]>([])
+  const [feedItems, setFeedItems] = useState<FeedEntry[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [avatarIdx, setAvatarIdx] = useState(0)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
   const [loading, setLoading] = useState(true)
@@ -329,8 +464,18 @@ export default function FilmesPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserId(user.id)
-        const { data: prof } = await supabase.from('user_profiles').select('avatar_index').eq('id', user.id).maybeSingle()
+        const { data: prof } = await supabase.from('user_profiles').select('avatar_index, username').eq('id', user.id).maybeSingle()
         if (prof?.avatar_index != null) setAvatarIdx(prof.avatar_index)
+        if (!prof) {
+          const emailPrefix = (user.email ?? '').split('@')[0] || user.id.slice(0, 8)
+          await supabase.from('user_profiles').insert({
+            id: user.id,
+            username: emailPrefix,
+            display_name: emailPrefix,
+            avatar_index: 0,
+          }).select().maybeSingle()
+          setShowWelcomeModal(true)
+        }
       }
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nominationsData } = await supabase.from('nominations').select('*')
@@ -343,6 +488,43 @@ export default function FilmesPage() {
       setUserFilms(userFilmsData ?? [])
       setAllUserFilms(allFilmsData ?? [])
       setCatRatings(catRatingsData ?? [])
+      // Feed: últimas avaliações de user_films (user_id garantido)
+      // Tenta ordenar por updated_at; se não existir, cai sem ordenação
+      let feedRaw: { user_id: string; film_id: string; rating: number | null; updated_at?: string | null }[] = []
+      const { data: fwd, error: fwdErr } = await supabase
+        .from('user_films')
+        .select('user_id, film_id, rating, updated_at')
+        .not('rating', 'is', null)
+        .gt('rating', 0)
+        .order('updated_at', { ascending: false })
+        .limit(30)
+      if (!fwdErr) {
+        feedRaw = fwd ?? []
+      } else {
+        const { data: fnd } = await supabase
+          .from('user_films')
+          .select('user_id, film_id, rating')
+          .not('rating', 'is', null)
+          .gt('rating', 0)
+          .limit(30)
+        feedRaw = (fnd ?? []).map((r: { user_id: string; film_id: string; rating: number | null }) => ({ ...r, updated_at: null }))
+      }
+      const feedFilms = (feedRaw ?? []).filter((r: { user_id: string; rating: number | null }) => r.user_id && (r.rating ?? 0) > 0)
+      if (feedFilms.length > 0) {
+        const uids = [...new Set(feedFilms.map((r: { user_id: string }) => r.user_id))]
+        const { data: profData } = await supabase.from('user_profiles').select('id, display_name, username, avatar_index').in('id', uids)
+        const profMap = Object.fromEntries((profData ?? []).map((p: { id: string; display_name: string | null; username: string | null; avatar_index: number }) => [p.id, p]))
+        setFeedItems(feedFilms.map((r: { user_id: string; film_id: string; rating: number | null; updated_at?: string | null }) => ({
+          user_id: r.user_id,
+          film_id: r.film_id,
+          category: '',
+          rating: r.rating ?? 0,
+          created_at: r.updated_at ?? null,
+          display_name: profMap[r.user_id]?.display_name ?? null,
+          username: profMap[r.user_id]?.username ?? null,
+          avatar_index: profMap[r.user_id]?.avatar_index ?? 0,
+        })))
+      }
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data)
       setLoading(false)
@@ -498,6 +680,10 @@ export default function FilmesPage() {
       .slice(0, 10)
   })()
 
+  const bestPictureFilms = films.filter(f =>
+    nominations.some(n => n.film_id === f.id && n.category === 'Best Picture')
+  )
+
   if (loading) return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <Spinner size={44} />
@@ -506,6 +692,9 @@ export default function FilmesPage() {
 
   return (
     <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
+
+      {/* ── WELCOME MODAL ────────────────────────────────────────── */}
+      {showWelcomeModal && <WelcomeModal onConfigure={() => setShowWelcomeModal(false)} />}
 
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <div
@@ -691,12 +880,12 @@ export default function FilmesPage() {
       {/* ── TOP 10 ─────────────────────────────────────────────────── */}
       {top10Films.length > 0 && (
         <div className="mt-6 pb-4">
-          <p className="text-lg font-semibold px-4 mb-4" style={{ color: 'white' }}>Top 10 mais assistidos</p>
+          <p className="text-lg font-semibold px-4 mb-[5px]" style={{ color: 'white' }}>Top 10 mais assistidos</p>
           <HScrollRow>
             {top10Films.map(({ film }, i) => (
               <Link key={film.id} href={`/filmes/${film.id}`}
-                className="flex-shrink-0 relative rounded-2xl overflow-hidden"
-                style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                className="poster-press flex-shrink-0 relative rounded-2xl overflow-hidden"
+                style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                 <div className="absolute inset-0">
                   {movieData[film.title]?.poster
                     ? <img src={movieData[film.title].poster!} alt={film.title} className="w-full h-full object-cover"/>
@@ -713,7 +902,6 @@ export default function FilmesPage() {
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.5)) drop-shadow(0 2px 10px rgba(0,0,0,0.9))',
                   }}>
                   {i + 1}
                 </p>
@@ -725,14 +913,13 @@ export default function FilmesPage() {
 
       {/* ── CATEGORIAS ───────────────────────────────────────────── */}
       <div className="mt-6">
-        <div className="flex items-center gap-1 px-4 mb-4">
+        <Link href="/descobrir" className="flex items-center gap-1 px-4 mb-[5px]"
+          style={{ color: 'white', display: 'flex' }}>
           <p className="text-lg font-semibold" style={{ color: 'white' }}>Categorias</p>
-          <Link href="/descobrir" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18L15 12L9 6"/>
-            </svg>
-          </Link>
-        </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18L15 12L9 6"/>
+          </svg>
+        </Link>
         <HScrollRow>
           {FEATURED_CATEGORIES.map(cat => (
             <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
@@ -744,23 +931,153 @@ export default function FilmesPage() {
             </Link>
           ))}
           <Link href="/descobrir"
-            className="flex-shrink-0 flex items-center justify-center rounded-2xl text-center px-4"
+            className="lg-btn flex-shrink-0 flex flex-col items-start justify-end rounded-2xl gap-1 p-3"
             style={{
-              width: 130, height: 130, flexShrink: 0,
-              background: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(6px) saturate(280%)',
-              WebkitBackdropFilter: 'blur(6px) saturate(280%)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.3)',
+              width: 130, height: 130,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
             }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="8" height="8" rx="2" fill="rgba(255,255,255,0.6)"/>
+              <rect x="13" y="3" width="8" height="8" rx="2" fill="rgba(255,255,255,0.6)"/>
+              <rect x="3" y="13" width="8" height="8" rx="2" fill="rgba(255,255,255,0.6)"/>
+              <rect x="13" y="13" width="8" height="8" rx="2" fill="rgba(255,255,255,0.6)"/>
+            </svg>
             <p className="text-xs font-semibold leading-snug" style={{ color: 'rgba(255,255,255,0.7)' }}>Ver todas as categorias</p>
           </Link>
         </HScrollRow>
       </div>
 
+      {/* ── OS GRANDES INDICADOS ────────────────────────────── */}
+      {bestPictureFilms.length > 0 && (
+        <div className="mt-6 px-4">
+          <style>{`
+            @keyframes bpScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+          `}</style>
+          <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Os grandes indicados</p>
+          <Link href="/categorias/best-picture"
+            className="block relative rounded-3xl overflow-hidden transition-transform duration-150 active:scale-[0.97]"
+            style={{
+              height: 320,
+              background: categoryCardBg('Best Picture'),
+              border: '1px solid rgba(255,255,255,0.28)',
+              boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.35), 0 8px 32px rgba(0,0,0,0.35)',
+            }}>
+            {/* Scrolling poster strip — anchored to top */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, height: '62%',
+              display: 'flex', alignItems: 'center', paddingLeft: 12,
+              animation: `bpScroll ${bestPictureFilms.length * 2.5}s linear infinite`,
+              willChange: 'transform',
+            }}>
+              {[...bestPictureFilms, ...bestPictureFilms].map((film, i) => {
+                const sizes = [148, 90, 128, 86, 140, 82, 122, 94, 136, 84]
+                const offsets = [-12, 26, -22, 20, -16, 32, -8, 24, -20, 28]
+                const h = sizes[i % sizes.length]
+                const w = Math.round(h * 2 / 3)
+                const dy = offsets[i % offsets.length]
+                return (
+                  <div key={i} className="flex-shrink-0 rounded-xl overflow-hidden"
+                    style={{
+                      width: w, height: h, marginRight: 12,
+                      transform: `translateY(${dy}px)`,
+                      border: '1.5px solid rgba(255,255,255,0.22)',
+                      boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
+                    }}>
+                    {movieData[film.title]?.poster
+                      ? <img src={movieData[film.title].poster!} alt={film.title} className="w-full h-full object-cover" draggable={false}/>
+                      : <div className="w-full h-full" style={{ background: 'rgba(0,0,0,0.3)' }}/>
+                    }
+                  </div>
+                )
+              })}
+            </div>
+            {/* Left edge fade */}
+            <div className="absolute inset-y-0 left-0 w-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.35), transparent)', zIndex: 2 }}/>
+            {/* Bottom overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 15%, rgba(0,0,0,0.88) 100%)' }}/>
+            {/* Text */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+              <p className="text-xl font-bold leading-tight" style={{ color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>
+                Conheça os {bestPictureFilms.length} concorrentes a Melhor Filme
+              </p>
+              <p className="text-xs mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.42)' }}>
+                Filmes que emocionaram, dividiram opiniões e dominaram a conversa. Estes são os concorrentes ao prêmio mais cobiçado da noite.
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
+
+      {/* ── NOVIDADES ─────────────────────────────────────────────── */}
+      <div className="mt-6 mb-2">
+        <p className="text-lg font-semibold mb-1 px-4" style={{ color: 'white' }}>Novidades dos usuários</p>
+        {feedItems.length === 0 ? (
+          <div className="mx-4 mt-3 rounded-2xl flex flex-col items-center py-10 gap-2"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ fontSize: 36 }}>🍿</span>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Nenhuma novidade ainda</p>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {feedItems.map((item, i) => {
+              const film = films.find(f => f.id === item.film_id)
+              const poster = film ? (movieData[film.title]?.poster ?? null) : null
+              const ptTitle = film ? (movieData[film.title]?.ptTitle ?? film.title) : '?'
+              const catLabel = CATEGORY_LABELS[item.category] ?? item.category
+              const colors = AVATAR_COLORS[item.avatar_index] ?? AVATAR_COLORS[0]
+              const emoji = AVATARS[item.avatar_index] ?? '🎬'
+              const href = item.username ? `/perfil/${encodeURIComponent(item.username)}` : `/perfil/${encodeURIComponent(item.user_id)}`
+              return (
+                <Link key={i} href={href}
+                  className="flex gap-3 px-4 py-4 active:bg-white/5 transition-colors"
+                  style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                  {/* Avatar pequeno */}
+                  {/* Conteúdo */}
+                  <div className="flex-1 min-w-0">
+                    {/* Linha 1: avatar pequeno + @username + timestamp */}
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <div className="rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ width: 20, height: 20, background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`, border: '1px solid rgba(255,255,255,0.2)', fontSize: 11 }}>
+                        {emoji}
+                      </div>
+                      <span className="text-[12px] font-medium leading-none" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        @{item.username ?? item.user_id.slice(0, 8)}
+                      </span>
+                      {item.created_at && (
+                        <span className="text-[11px] leading-none ml-auto flex-shrink-0" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                          {timeAgo(item.created_at)}
+                        </span>
+                      )}
+                    </div>
+                    {/* Linha 2: texto da avaliação */}
+                    <p className="text-[15px] leading-snug" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                      <span style={{ color: 'white', fontWeight: 600 }}>{item.display_name ?? item.username ?? 'Usuário'}</span>
+                      {' deu '}
+                      <FeedStars rating={item.rating} />
+                      {' para '}
+                      <span style={{ color: 'white', fontWeight: 700 }}>{ptTitle}</span>
+                      {item.category && (
+                        <>{' em '}<span style={{ color: 'rgba(255,255,255,0.45)' }}>{catLabel}</span></>
+                      )}
+                    </p>
+                  </div>
+                  {/* Pôster */}
+                  {poster && (
+                    <img src={poster} alt={ptTitle}
+                      className="rounded-xl flex-shrink-0 object-cover"
+                      style={{ width: 44, height: 64 }} />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {/* ── COUNTDOWN ─────────────────────────────────────────────── */}
       <div className="px-4 mt-6 mb-4">
-        <p className="text-lg font-semibold mb-3" style={{ color: 'white' }}>Oscar 2026 começa em</p>
+        <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Oscar 2026 começa em</p>
         <div className="rounded-3xl p-5 flex items-center gap-4" style={{
           background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
         }}>

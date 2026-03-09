@@ -114,7 +114,7 @@ function GaugeChart({ ratings }: { ratings: { title: string; rating: number }[] 
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <div className="flex gap-3 overflow-x-auto pl-4 pr-4"
+      <div className="flex gap-3 overflow-x-auto pl-4 pr-4 py-2"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {children}
         <div style={{ minWidth: 4, flexShrink: 0 }}/>
@@ -481,7 +481,7 @@ export default function DescobrirPage() {
         const topFilm = loaded.find((f: Film) => f.id === topRated[0].film_id)
         if (topFilm) {
           const tmdbData = await fetchAllMovieData([topFilm.title])
-          const tmdbId = (tmdbData[topFilm.title] as any)?.id
+          const tmdbId = (tmdbData[topFilm.title] as any)?.tmdbId
           if (tmdbId) setSimilar(await fetchSimilarMovies(tmdbId))
         }
       }
@@ -565,7 +565,7 @@ export default function DescobrirPage() {
 
           {/* ── Termômetro ─────────────────────────────────────────── */}
           <div className="px-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-[5px]">
               <SectionTitle>Termômetro</SectionTitle>
 
               {/* Dropdown — liquid glass igual Estante */}
@@ -634,7 +634,7 @@ export default function DescobrirPage() {
           {/* ── Todas as categorias ────────────────────────────────── */}
           <div className="px-4">
             <SectionTitle>Categorias</SectionTitle>
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3 mt-[5px]">
               {ORDERED_CATEGORIES.map(cat => (
                 <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
                   className="lg-btn relative rounded-2xl overflow-hidden flex items-center justify-center p-4 text-center"
@@ -650,14 +650,14 @@ export default function DescobrirPage() {
           {/* ── Você ainda não viu ─────────────────────────────────── */}
           {unwatched.length > 0 && (
             <div>
-              <div className="px-4 mb-4">
+              <div className="px-4 mb-[5px]">
                 <SectionTitle>Você ainda não viu</SectionTitle>
               </div>
               <HScrollRow>
                 {unwatched.slice(0, 12).map(film => (
                   <Link key={film.id} href={`/filmes/${film.id}`}
-                    className="flex-shrink-0 relative rounded-2xl overflow-hidden"
-                    style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    className="poster-press flex-shrink-0 relative rounded-2xl overflow-hidden"
+                    style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                     <div className="absolute inset-0">
                       {(movieData[film.title] as any)?.poster
                         ? <img src={(movieData[film.title] as any).poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -679,17 +679,17 @@ export default function DescobrirPage() {
           {/* ── Você pode gostar ───────────────────────────────────── */}
           {similar.length > 0 && (
             <div>
-              <div className="px-4 mb-1">
+              <div className="px-4 mb-[5px]">
                 <SectionTitle>Você pode gostar</SectionTitle>
                 <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Baseado nos filmes que você mais curtiu</p>
               </div>
-              <div className="mt-3">
+              <div>
                 <HScrollRow>
                   {similar.map(film => (
                     <Link key={film.title}
                       href={`/filme-externo?id=${film.tmdbId}&title=${encodeURIComponent(film.title)}`}
-                      className="flex-shrink-0 relative rounded-2xl overflow-hidden"
-                      style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      className="poster-press flex-shrink-0 relative rounded-2xl overflow-hidden"
+                      style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                       <div className="absolute inset-0">
                         {film.poster
                           ? <img src={film.poster} alt={film.title} className="w-full h-full object-cover"/>
@@ -710,7 +710,7 @@ export default function DescobrirPage() {
           {/* ── Mais curiosidades ──────────────────────────────────── */}
           <div className="px-4">
             <SectionTitle>Mais curiosidades</SectionTitle>
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3 mt-[5px]">
               {FACTS.map((fact, i) => (
                 <button key={i} onClick={() => { setFactSheet(fact); setIsFactDaily(false) }}
                   className="lg-btn rounded-3xl p-4 text-left relative overflow-hidden"

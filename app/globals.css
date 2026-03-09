@@ -143,6 +143,19 @@ html, body {
   filter: brightness(1.45);
 }
 
+/* ── poster-press: zoom no tap, sem borda liquid glass ──────────────── */
+.poster-press {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  will-change: transform;
+  transition: transform 0.35s cubic-bezier(0.34, 1.15, 0.64, 1);
+}
+.poster-press:active {
+  transform: scale(1.06);
+  transition: transform 0.09s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
 /* Overlay branco no :active — funciona em WebKit onde filter+backdrop-filter  */
 /* conflitam (stacking context), e também em icons já brancos (brightness noop) */
 .lg-btn::after {

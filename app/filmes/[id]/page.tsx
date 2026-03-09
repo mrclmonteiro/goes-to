@@ -11,7 +11,7 @@ import Spinner from '../../components/Spinner'
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <div className="flex gap-5 overflow-x-auto pl-4 pr-4"
+      <div className="flex gap-5 overflow-x-auto pl-4 pr-4 py-2"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {children}
         <div style={{ minWidth: 4, flexShrink: 0 }}/>
@@ -375,7 +375,7 @@ export default function FilmePage() {
     }
   }
 
-  async function saveRating(cat: string, value: number) {
+  async function saveRating(cat: string, value: number, engCat?: string) {
     if (!userId || !film) return
     const supabase = createClient()
     if (!supabase) return
@@ -389,6 +389,12 @@ export default function FilmePage() {
     } else {
       await supabase.from('user_films').insert({ user_id: userId, film_id: id, watched: true, rating: avg })
       setUserFilm({ film_id: id, watched: true, rating: avg })
+    }
+    if (engCat) {
+      await supabase.from('user_category_ratings').delete().eq('user_id', userId).eq('film_id', id).eq('category', engCat)
+      if (value > 0) {
+        await supabase.from('user_category_ratings').insert({ user_id: userId, film_id: id, category: engCat, rating: value })
+      }
     }
   }
 
@@ -872,7 +878,7 @@ export default function FilmePage() {
                                 const val = x < rect.width / 2 ? n - 0.5 : n
                                 // toggle: toca o mesmo valor → limpa (HIG: reversível)
                                 navigator.vibrate?.(6)
-                                saveRating(cat, val === stars ? 0 : val)
+                                saveRating(cat, val === stars ? 0 : val, nom.category)
                               }}>
                               <svg width="28" height="28" viewBox="0 0 24 24" style={{ pointerEvents: 'none', display: 'block' }}>
                                 <defs>

@@ -279,7 +279,7 @@ function BuscaInner() {
         {q.length < 2 && (
           <>
             <div className="px-4">
-              <p className="text-lg font-semibold mb-3" style={{ color: 'white' }}>Categorias</p>
+              <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Categorias</p>
               <div className="grid grid-cols-2 gap-3">
                 {ORDERED_CATEGORIES.map(cat => (
                   <Link key={cat} href={`/categorias/${categorySlug(cat)}`}
@@ -295,13 +295,13 @@ function BuscaInner() {
 
             {watchedFilms.length > 0 && (
               <div>
-                <p className="text-lg font-semibold mb-3 px-4" style={{ color: 'white' }}>Assistidos recentemente</p>
+                <p className="text-lg font-semibold mb-[5px] px-4" style={{ color: 'white' }}>Assistidos recentemente</p>
                 <div className="relative">
                   <div className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-1"
                     style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
                     {watchedFilms.slice(0, 8).map(film => (
                       <Link key={film.id} href={`/filmes/${film.id}`}
-                        className="lg-btn flex-shrink-0 relative rounded-2xl overflow-hidden"
+                        className="poster-press flex-shrink-0 relative rounded-2xl overflow-hidden"
                         style={{ width: 110, aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.07)' }}>
                         <div className="absolute inset-0">
                           {movieData[film.title]?.poster
@@ -359,7 +359,7 @@ function BuscaInner() {
             {relatedResults.length > 0 && (
               <div>
                 <p className="px-4 text-lg font-semibold mb-1" style={{ color: 'white' }}>Relacionados</p>
-                <p className="px-4 text-sm mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <p className="px-4 text-sm mb-[5px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
                   Filmes com &ldquo;{rawQuery}&rdquo; nos créditos
                 </p>
                 {relatedResults.map((item, i) => renderItem(item, i + 1000, i > 0))}

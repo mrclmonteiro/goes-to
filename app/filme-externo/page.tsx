@@ -114,7 +114,7 @@ function BottomSheet({ open, onClose, title, children }: {
 function HScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <div className="flex gap-4 overflow-x-auto pl-5 pr-5"
+      <div className="flex gap-4 overflow-x-auto pl-5 pr-5 py-2"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {children}
         <div style={{ minWidth: 4, flexShrink: 0 }}/>

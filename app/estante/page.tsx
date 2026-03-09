@@ -273,6 +273,160 @@ function BottomSheet({ open, onClose, children, title, onAction, actionLabel }: 
   )
 }
 
+// ── Tour de boas-vindas ─────────────────────────────────────────────
+function InlineGear() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+      style={{ display: 'inline', verticalAlign: 'middle', marginBottom: 1 }}>
+      <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="2"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  )
+}
+
+function InlineBolao() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+      style={{ display: 'inline', verticalAlign: 'middle', marginBottom: 1 }}>
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="9" y="3" width="6" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+const TOUR_STEPS = [
+  { msg: <>Seu perfil fica aqui, na página <b>Estante</b></>, anchor: 'profile' as const },
+  { msg: <>Você pode editá-lo a qualquer momento clicando em <InlineGear/></>, anchor: 'toolbar-config' as const },
+  { msg: <>Em <InlineGear/> você altera o nome de exibição, nome de usuário, e-mail e senha</>, anchor: 'toolbar-config' as const },
+  { msg: <>Você também pode escolher entre diversos avatares super divertidos (e com algumas surpresas…)</>, anchor: 'toolbar-config' as const },
+  { msg: <>Em <InlineBolao/> você pode fazer o seu bolão e compartilhar com os amigos</>, anchor: 'toolbar-bolao' as const },
+  { msg: <>Você também pode definir uma meta de filmes que vai assistir 🎯</>, anchor: 'meta' as const },
+]
+
+type TourAnchor = typeof TOUR_STEPS[number]['anchor']
+
+function EstanteTour({
+  step, onAdvance, toolbarRef, profileRef, metaRef,
+}: {
+  step: number
+  onAdvance: () => void
+  toolbarRef: { current: HTMLDivElement | null }
+  profileRef: { current: HTMLDivElement | null }
+  metaRef: { current: HTMLDivElement | null }
+}) {
+  const [visible, setVisible] = useState(false)
+  const [bubblePos, setBubblePos] = useState<{
+    left: number; top?: number; bottom?: number; width: number; tailX: number; tailSide: 'top' | 'bottom'
+  } | null>(null)
+
+  useEffect(() => {
+    let outerRaf = 0, innerRaf = 0
+    let mounted = true
+    setVisible(false)
+
+    outerRaf = requestAnimationFrame(() => {
+      if (!mounted) return
+      const W = window.innerWidth
+      const BW = Math.min(280, W - 20)
+      const anchor: TourAnchor = TOUR_STEPS[step]?.anchor
+      const tbr = toolbarRef.current?.getBoundingClientRect()
+      const pfr = profileRef.current?.getBoundingClientRect()
+      const mtr = metaRef.current?.getBoundingClientRect()
+      let pos: typeof bubblePos = null
+
+      if (anchor === 'profile' && pfr) {
+        const bl = Math.max(10, W / 2 - BW / 2)
+        pos = { left: bl, top: pfr.bottom + 14, width: BW, tailX: W / 2 - bl - 8, tailSide: 'top' }
+      } else if ((anchor === 'toolbar-config' || anchor === 'toolbar-bolao') && tbr) {
+        const bl = W - BW - 10
+        const bx = anchor === 'toolbar-config' ? tbr.right - 27 : tbr.right - 74
+        pos = { left: bl, top: tbr.bottom + 10, width: BW, tailX: Math.max(16, Math.min(bx - bl - 8, BW - 24)), tailSide: 'top' }
+      } else if (anchor === 'meta' && mtr) {
+        const bl = Math.max(10, W / 2 - BW / 2)
+        pos = { left: bl, bottom: window.innerHeight - mtr.top + 10, width: BW, tailX: W / 2 - bl - 8, tailSide: 'bottom' }
+      }
+
+      if (mounted) setBubblePos(pos)
+      innerRaf = requestAnimationFrame(() => { if (mounted) setVisible(true) })
+    })
+
+    return () => {
+      mounted = false
+      cancelAnimationFrame(outerRaf)
+      cancelAnimationFrame(innerRaf)
+    }
+  }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!bubblePos) return null
+  const isLast = step === TOUR_STEPS.length - 1
+  const tailBorders = bubblePos.tailSide === 'top'
+    ? { borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '10px solid white' }
+    : { borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '10px solid white' }
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 500,
+        background: visible ? 'rgba(0,0,0,0.42)' : 'rgba(0,0,0,0)',
+        backdropFilter: 'blur(1px)',
+        transition: 'background 0.25s ease',
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+      onClick={onAdvance}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          left: bubblePos.left, top: bubblePos.top, bottom: bubblePos.bottom, width: bubblePos.width,
+          background: 'white', borderRadius: 18, padding: '14px 16px 12px',
+          color: '#0a0a0f', fontSize: 14, lineHeight: 1.5, fontWeight: 500,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(6px)',
+          transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+          pointerEvents: visible ? 'auto' : 'none',
+        }}
+      >
+        {/* Tail */}
+        <div style={{
+          position: 'absolute', width: 0, height: 0,
+          ...(bubblePos.tailSide === 'top' ? { top: -9 } : { bottom: -9 }),
+          left: bubblePos.tailX,
+          ...tailBorders,
+        }}/>
+
+        {/* Message */}
+        <p style={{ margin: 0, marginBottom: 12 }}>{TOUR_STEPS[step].msg}</p>
+
+        {/* Footer: dots + button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            {TOUR_STEPS.map((_, i) => (
+              <div key={i} style={{
+                height: 5, width: i === step ? 14 : 5, borderRadius: 3,
+                background: i === step ? '#FF453A' : 'rgba(0,0,0,0.15)',
+                transition: 'width 0.3s ease, background 0.3s ease',
+              }}/>
+            ))}
+          </div>
+          <button
+            onClick={onAdvance}
+            style={{
+              background: '#FF453A', color: 'white', border: 'none', borderRadius: 99,
+              cursor: 'pointer', padding: '6px 14px', fontSize: 13, fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(255,69,58,0.4)',
+            }}
+          >
+            {isLast ? 'Entendido!' : 'Próximo →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function EstantePage() {
   const router = useRouter()
   const shareRef = useRef<HTMLDivElement>(null)
@@ -300,6 +454,10 @@ export default function EstantePage() {
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
   const goalBtnRef = useRef<HTMLButtonElement>(null)
   const [goalBtnAnchor, setGoalBtnAnchor] = useState<{top: number, right: number} | null>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const metaRef = useRef<HTMLDivElement>(null)
+  const [tourStep, setTourStep] = useState(-1)
   const [showConfetti, setShowConfetti] = useState(false)
   const [activeEgg, setActiveEgg] = useState<string | null>(null)
   const [configOpen, setConfigOpen] = useState(false)
@@ -396,6 +554,14 @@ export default function EstantePage() {
     }
     setPrevProgress(progress)
   }, [progress, prevProgress, customTarget])
+
+  useEffect(() => {
+    if (loading) return
+    try {
+      const flag = localStorage.getItem('estante_tour')
+      if (flag) { localStorage.removeItem('estante_tour'); setTimeout(() => setTourStep(0), 700) }
+    } catch (_) {}
+  }, [loading])
 
   async function updateGoal(cat: string) {
     if (!userId) return
@@ -553,7 +719,7 @@ export default function EstantePage() {
 
 
         {/* Botões agrupados: Bolão + Configurações */}
-        <div className="lg-btn fixed z-[100] flex items-center pointer-events-auto"
+        <div ref={toolbarRef} className="lg-btn fixed z-[100] flex items-center pointer-events-auto"
           style={{ ...lgStyle, top: 'max(env(safe-area-inset-top), 45px)', right: '15px',
                    height: '44px', borderRadius: '22px', padding: '0 6px', gap: '4px', position: 'fixed' }}>
           {/* HIG Toolbar: glare diagonal */}
@@ -585,7 +751,7 @@ export default function EstantePage() {
         </div>
 
         {/* Perfil */}
-        <div className="flex flex-col items-center relative z-10" style={{ marginTop: '100px', marginBottom: '33px' }}>
+        <div ref={profileRef} className="flex flex-col items-center relative z-10" style={{ marginTop: '100px', marginBottom: '33px' }}>
           <div className="relative rounded-full flex items-center justify-center mb-4 shadow-2xl pointer-events-none"
             style={{
               width: '125px', height: '125px',
@@ -605,7 +771,7 @@ export default function EstantePage() {
         <div className="px-4 flex flex-col gap-5">
 
           {/* Meta */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
+          <div ref={metaRef} style={{ position: 'relative', zIndex: 10 }}>
             <div className="flex items-center justify-between mb-3">
               <SectionTitle className={goalComplete ? 'text-[#FF453A]' : ''}>
                 {goalComplete ? '🏆 Meta concluída!' : 'Minha meta'}
@@ -740,7 +906,7 @@ export default function EstantePage() {
                 {watchedFilms.map(film => {
                   const uf = userFilms.find(u => u.film_id === film.id)
                   return (
-                    <Link key={film.id} href={`/filmes/${film.id}`} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '2/3' }}>
+                    <Link key={film.id} href={`/filmes/${film.id}`} className="poster-press relative rounded-2xl overflow-hidden" style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.14)' }}>
                       <div className="absolute inset-0">
                         {posters[film.title]
                           ? <Image src={posters[film.title]!} alt={film.title} fill className="object-cover" />
@@ -1357,6 +1523,15 @@ export default function EstantePage() {
         </div>
       </BottomSheet>
 
+      {tourStep >= 0 && (
+        <EstanteTour
+          step={tourStep}
+          onAdvance={() => tourStep < TOUR_STEPS.length - 1 ? setTourStep(s => s + 1) : setTourStep(-1)}
+          toolbarRef={toolbarRef}
+          profileRef={profileRef}
+          metaRef={metaRef}
+        />
+      )}
       {showInstallGate && <InstallGate onClose={() => setShowInstallGate(false)} />}
     </>
   )
