@@ -117,7 +117,7 @@ export default function AdminPage() {
         setPushTitle('')
         setPushMessage('')
       } else {
-        setPushResult(`Erro: ${data.error}`)
+        setPushResult(`Erro: ${JSON.stringify(data)}`)
       }
     } catch {
       setPushResult('Erro ao enviar')
