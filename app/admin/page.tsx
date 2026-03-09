@@ -28,14 +28,18 @@ export default function AdminPage() {
   const [pushMessage, setPushMessage] = useState('')
   const [pushSending, setPushSending] = useState(false)
   const [pushResult, setPushResult] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       if (!supabase) { router.replace('/'); return }
 
+      const { data: { session } } = await supabase.auth.getSession()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/'); return }
+
+      if (session?.access_token) setAccessToken(session.access_token)
 
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -85,13 +89,16 @@ export default function AdminPage() {
     setPushSending(true)
     setPushResult(null)
     try {
+      // Garantir token fresco
       const supabase = createClient()
       const { data: { session } } = await supabase!.auth.getSession()
+      const token = session?.access_token ?? accessToken
+      if (!token) { setPushResult('Erro: sessão expirada, recarregue a página'); return }
       const res = await fetch('/api/push/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ title: pushTitle.trim(), message: pushMessage.trim(), url: '/filmes' }),
       })
