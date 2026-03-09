@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 webpush.setVapidDetails(
   `mailto:${process.env.VAPID_MAILTO}`,
@@ -24,29 +23,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'title e message são obrigatórios' }, { status: 400 })
     }
 
-    // Verificar autenticação e admin via cookie session
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Verificar autenticação e admin via JWT no header Authorization
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: profile } = await supabase
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: profile } = await serviceClient
       .from('user_profiles')
       .select('is_admin')
       .eq('id', user.id)
@@ -56,14 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Buscar todas as subscriptions via service role
-    const serviceSupabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    )
-
-    const { data: subs } = await serviceSupabase
+    const { data: subs } = await serviceClient
       .from('push_subscriptions')
       .select('endpoint, p256dh, auth')
 
@@ -96,7 +82,7 @@ export async function POST(request: NextRequest) {
       }
     })
     if (staleEndpoints.length > 0) {
-      await serviceSupabase
+      await serviceClient
         .from('push_subscriptions')
         .delete()
         .in('endpoint', staleEndpoints)

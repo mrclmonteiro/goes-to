@@ -551,12 +551,19 @@ export default function EstantePage() {
         userVisibleOnly: true,
         applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       })
+      // Obter token JWT para autenticar na API route
+      const supabase = createClient()
+      const { data: { session } } = await supabase!.auth.getSession()
       const res = await fetch('/api/push/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ subscription: sub.toJSON() }),
       })
       if (res.ok) setNotifStatus('subscribed')
+      else console.error('Push subscribe failed:', await res.text())
     } catch (e) {
       console.error('Push subscribe error:', e)
     } finally {
