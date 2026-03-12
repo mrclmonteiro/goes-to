@@ -1052,6 +1052,7 @@ export default function FilmePage() {
                   fontSize: 18, fontWeight: 800, color: 'white',
                   lineHeight: 1.2, marginBottom: 6,
                   display: '-webkit-box',
+                  maxHeight: '2.4em',
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
