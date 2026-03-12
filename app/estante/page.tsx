@@ -1497,7 +1497,7 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>
                       {profile.display_name ?? 'Cinéfilo'}
                     </p>
-                    <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>@{profile.username}</p>
+                    <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: -7, paddingBottom: 10, }}>@{profile.username}</p>
                   </div>
                   <div style={{ width: 34, height: 34, borderRadius: 99,
                     background: `linear-gradient(135deg, ${AVATAR_COLORS[profile.avatar_index]?.[0]}, ${AVATAR_COLORS[profile.avatar_index]?.[1]})`,
@@ -1529,7 +1529,7 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     borderRadius: 12, padding: '10px 12px', marginBottom: 12,
                   }}>
                     <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.12em',
-                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2, marginTop: -7, paddingBottom: 10, lineHeight: 1.2, }}>
+                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2, marginTop: -5, paddingBottom: 10, lineHeight: 1.2, }}>
                       🏆 Melhor Filme
                     </p>
                     <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A', 
@@ -1542,7 +1542,7 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                 )
               })()}
 
-              {/* Other 9 categories — compact 2-col grid */}
+              {/* compact 2-col grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginTop: 2 }}>
                 {BOLAO_CATEGORIES.filter(c => c.cat !== 'Best Picture').map(c => {
                   const raw = bolao[c.cat] || ''
@@ -1561,7 +1561,7 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                   return (
                     <div key={c.cat} style={{ minWidth: 0, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <p style={{ fontSize: 7, fontWeight: 600, color: 'rgba(255,255,255,0.3)',
-                        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1, marginTop: -3,
+                        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1, marginTop: -7, paddingBottom: 10,
                         overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                         {c.label}
                       </p>
