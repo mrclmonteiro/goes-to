@@ -1050,7 +1050,7 @@ export default function FilmePage() {
                 </p>
                 <p style={{
                   fontSize: 18, fontWeight: 800, color: 'white',
-                  lineHeight: 1.2, marginBottom: 6,
+                  lineHeight: 1.6, marginBottom: 6,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
                 }}>
@@ -1091,7 +1091,7 @@ export default function FilmePage() {
                 }}>
                   <p style={{
                     fontSize: 9, color: 'rgba(255,255,255,0.45)',
-                    fontWeight: 600, lineHeight: 1.2,
+                    fontWeight: 600, lineHeight: 1.6,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {CAT_SHORT[cat] ?? cat}
