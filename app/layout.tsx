@@ -34,12 +34,12 @@ export const metadata: Metadata = {
     description: "Um novo app para acompanhar, avaliar e compartilhar os filmes indicados às principais premiações",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
-    keywords: {
+    keywords: [
     "votar oscar",
     "filmes oscar",
     "letterboxd oscar",
     "aplicativo oscar"
-    },
+  ],
   twitter: {
     card: "summary_large_image",
     images: ["/og-image.png"],
