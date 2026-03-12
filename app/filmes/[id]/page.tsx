@@ -1023,7 +1023,7 @@ export default function FilmePage() {
                 }}>
                   {AVATARS[profile.avatar_index]}
                 </div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2 }}>
                   {profile.display_name ?? 'Cinéfilo'}
                 </p>
               </div>
@@ -1050,7 +1050,7 @@ export default function FilmePage() {
                 </p>
                 <p style={{
                   fontSize: 18, fontWeight: 800, color: 'white',
-                  lineHeight: 1.6, marginBottom: 6,
+                  lineHeight: 1.1, marginBottom: 6,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
                   paddingBottom: 10,
@@ -1092,7 +1092,7 @@ export default function FilmePage() {
                 }}>
                   <p style={{
                     fontSize: 9, color: 'rgba(255,255,255,0.45)',
-                    fontWeight: 600, lineHeight: 1.6, paddingBottom: 10,
+                    fontWeight: 600, lineHeight: 1.1, paddingBottom: 10,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {CAT_SHORT[cat] ?? cat}
