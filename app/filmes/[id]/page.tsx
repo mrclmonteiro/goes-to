@@ -1051,10 +1051,7 @@ export default function FilmePage() {
                 <p style={{
                   fontSize: 18, fontWeight: 800, color: 'white',
                   lineHeight: 1.2, marginBottom: 6,
-                  display: '-webkit-box',
                   maxHeight: '2.4em',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                 } as any}>
                   {details?.ptTitle || film.title}
@@ -1084,7 +1081,6 @@ export default function FilmePage() {
               gridTemplateColumns: '1fr 1fr',
               gap: '6px 12px',
               alignContent: 'start',
-              overflow: 'hidden',
             }}>
               {ratedCategories.map(([cat, stars]) => (
                 <div key={cat} style={{
