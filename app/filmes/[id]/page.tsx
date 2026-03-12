@@ -1105,7 +1105,7 @@ export default function FilmePage() {
                         background: n <= stars ? '#FF453A' : 'rgba(255,255,255,0.1)',
                       }}/>
                     ))}
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -7, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -5, flexShrink: 0 }}>
                       {stars}
                     </span>
                   </div>
