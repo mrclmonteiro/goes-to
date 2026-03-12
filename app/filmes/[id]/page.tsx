@@ -1011,7 +1011,7 @@ export default function FilmePage() {
                     : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
                   }
                 </div>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -5, }}>Goes To...</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, }}>Goes To...</p>
               </div>
               {/* Avatar + nome */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 10, }}>
@@ -1019,7 +1019,7 @@ export default function FilmePage() {
                   width: 28, height: 28, borderRadius: 99,
                   background: 'rgba(167,139,250,0.2)',
                   border: '1.5px solid rgba(167,139,250,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 3,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 6,
                 }}>
                   {AVATARS[profile.avatar_index]}
                 </div>
@@ -1105,7 +1105,7 @@ export default function FilmePage() {
                         background: n <= stars ? '#FF453A' : 'rgba(255,255,255,0.1)',
                       }}/>
                     ))}
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -5, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -6, flexShrink: 0 }}>
                       {stars}
                     </span>
                   </div>
