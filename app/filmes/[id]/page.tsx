@@ -972,20 +972,20 @@ export default function FilmePage() {
       <BottomSheet open={shareOpen} onClose={() => setShareOpen(false)} title="Minhas notas">
         <div className="px-5 py-4 flex flex-col gap-5">
 
-          {/* ── Card 9:16 — wrapper arredondado só na UI ── */}
-          <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
-          <div ref={shareRef}
-            style={{
-              width: '100%', height: '100%',
-              background: 'linear-gradient(160deg, #0f0c29 0%, #1a0533 45%, #0a0a0f 100%)',
-              borderRadius: 0,
-              display: 'flex', flexDirection: 'column',
-              padding: '32px 26px 28px',
-              position: 'relative',
-              fontFamily: 'Inter, system-ui, sans-serif',
-            }}>
 
-            {/* Orbe decorativo */}
+          <div style={{ borderRadius: 24, overflow: 'hidden', width: '100%', aspectRatio: '9/16' }}>
+        <div ref={shareRef}
+        style={{
+            width: '100%', height: '100%',
+            background: 'linear-gradient(160deg, #0f0c29 0%, #1a0533 45%, #0a0a0f 100%)',
+            borderRadius: 0,
+            display: 'flex', flexDirection: 'column',
+            padding: '32px 26px 28px',
+            position: 'relative',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            overflow: 'hidden',
+        }}>
+
             <div style={{
               position: 'absolute', top: '-5%', right: '-15%',
               width: '70%', height: '35%', borderRadius: '50%',
@@ -1053,7 +1053,7 @@ export default function FilmePage() {
                   lineHeight: 1.2, marginBottom: 6,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
-                } as any}>
+                }}>
                   {details?.ptTitle || film.title}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
