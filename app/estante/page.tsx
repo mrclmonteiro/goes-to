@@ -1489,12 +1489,12 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     }
                   </div>
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, }}>Goes To...</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, paddingBottom: 10, }}>Goes To...</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -3, }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>
                       {profile.display_name ?? 'Cinéfilo'}
                     </p>
                     <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>@{profile.username}</p>
@@ -1508,14 +1508,14 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                 </div>
               </div>
 
-              {/* Melhor Filme + grid centralizados verticalmente */}
+              {/* Melhor Filme */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
 
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3, marginBottom: 14, marginTop: -3, }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3, marginBottom: 14, marginTop: -7, paddingBottom: 10, }}>
                 Estes são meus palpites para o Oscar 2026
               </p>
 
-              {/* Melhor Filme — destaque */}
+              {/* Melhor Filme */}
               {(() => {
                 const bpCat = BOLAO_CATEGORIES.find(c => c.cat === 'Best Picture')!
                 const bpRaw = bolao[bpCat.cat] || ''
@@ -1529,11 +1529,11 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     borderRadius: 12, padding: '10px 12px', marginBottom: 12,
                   }}>
                     <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.12em',
-                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2, marginTop: -3, }}>
+                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2, marginTop: -7, paddingBottom: 10, lineHeight: 1.2, }}>
                       🏆 Melhor Filme
                     </p>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A', marginTop: -3,
-                      lineHeight: 1.2, overflow: 'hidden',
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A', 
+                      lineHeight: 1.2, overflow: 'hidden', marginTop: -7, paddingBottom: 10,
                       display: '-webkit-box', WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical' as any }}>
                       {bpPt}
@@ -1566,12 +1566,12 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                         {c.label}
                       </p>
                       <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.85)',
-                        lineHeight: 1.3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginTop: -3, }}>
+                        lineHeight: 1.5, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginTop: -7, paddingBottom: 10, }}>
                         {selectedNominee || pt}
                       </p>
                       {selectedNominee && (
-                        <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', lineHeight: 1.2,
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: -3, }}>
+                        <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: -7, paddingBottom: 10, }}>
                           {pt}
                         </p>
                       )}
