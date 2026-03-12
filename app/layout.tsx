@@ -12,19 +12,41 @@ export const dynamic = 'force-dynamic'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: 'Goes To...',
-  description: 'Acompanhe os indicados ao Oscar 2026',
+  manifest: "/manifest.json",
+  title: "Goes To...",
+  description: "Um novo app para acompanhar, avaliar e compartilhar os filmes indicados às principais premiações",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Goes To...',
+    statusBarStyle: "black-translucent",
+    title: "Goes To...",
+    startupImage: "/apple-touch-icon.png",
   },
-  // Next.js gera "mobile-web-app-capable" (Chrome) mas não "apple-mobile-web-app-capable" (iOS).
-  // Sem esta tag no iOS, o WebView não expande para cobrir as safe-areas físicas da tela.
-  other: {
-    'apple-mobile-web-app-capable': 'yes',
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon-192.png", sizes: "192x192" },
+      { url: "/icon-512.png", sizes: "512x512" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
-}
+  openGraph: {
+    title: "Goes To...",
+    description: "Um novo app para acompanhar, avaliar e compartilhar os filmes indicados às principais premiações",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    eywords: ["votar oscar", "filmes oscar", "letterboxd oscar", "aplicativo oscar"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+  canonical: "https://goes-to.vercel.app",
+  },
+  robots: {
+  index: true,
+  follow: true,
+  },
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -32,7 +54,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#0a0a0f',
+  themeColor: '#db3a30',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
