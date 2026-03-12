@@ -1011,7 +1011,7 @@ export default function FilmePage() {
                     : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
                   }
                 </div>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>Goes To...</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -5, }}>Goes To...</p>
               </div>
               {/* Avatar + nome */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 10, }}>
@@ -1019,11 +1019,11 @@ export default function FilmePage() {
                   width: 28, height: 28, borderRadius: 99,
                   background: 'rgba(167,139,250,0.2)',
                   border: '1.5px solid rgba(167,139,250,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 3,
                 }}>
                   {AVATARS[profile.avatar_index]}
                 </div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2, marginTop: -3, }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2, marginTop: -5, }}>
                   {profile.display_name ?? 'Cinéfilo'}
                 </p>
               </div>
@@ -1058,7 +1058,7 @@ export default function FilmePage() {
                   {details?.ptTitle || film.title}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 16, fontWeight: 900, color: '#FF453A' }}>{avgRating}</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: '#FF453A', marginTop: -3, }}>{avgRating}</span>
                   <span style={{ fontSize: 11, color: '#FF453A' }}>★</span>
                   <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>/ 5 · média</span>
                 </div>
@@ -1070,7 +1070,7 @@ export default function FilmePage() {
             {/* Título da seção */}
             <p style={{
               fontSize: 9, fontWeight: 700, letterSpacing: '0.16em',
-              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12,
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12, marginTop: -2,
             }}>
               Minhas avaliações por categoria
             </p>
@@ -1105,7 +1105,7 @@ export default function FilmePage() {
                         background: n <= stars ? '#FF453A' : 'rgba(255,255,255,0.1)',
                       }}/>
                     ))}
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -3, flexShrink: 0 }}>
                       {stars}
                     </span>
                   </div>
