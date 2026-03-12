@@ -1489,12 +1489,12 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     }
                   </div>
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, paddingBottom: 10, }}>Goes To...</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -6, paddingBottom: 10, }}>Goes To...</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -6, paddingBottom: 10, }}>
                       {profile.display_name ?? 'Cinéfilo'}
                     </p>
                     <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: -7, paddingBottom: 10, }}>@{profile.username}</p>
@@ -1503,7 +1503,7 @@ const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
                     background: `linear-gradient(135deg, ${AVATAR_COLORS[profile.avatar_index]?.[0]}, ${AVATAR_COLORS[profile.avatar_index]?.[1]})`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 16, flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.3)' }}>
-                    {AVATARS[profile.avatar_index]}
+                    <p style={{ marginTop: -7, paddingBottom: 10, lineHeight: 1.3, }}>{AVATARS[profile.avatar_index]}</p>
                   </div>
                 </div>
               </div>
