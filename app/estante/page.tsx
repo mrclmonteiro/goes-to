@@ -712,17 +712,15 @@ export default function EstantePage() {
   }
 
   function pickFilm(optionKey: string) {
-    const cat = BOLAO_CATEGORIES[bolaoStep].cat
-    const newBolao = { ...bolao, [cat]: optionKey }
-    saveBolao(newBolao)
-    const allDone = BOLAO_CATEGORIES.every(c => newBolao[c.cat])
-    if (allDone) {
-      setBolaoOpen(false)
-      setTimeout(() => setBolaoResultsOpen(true), 420)
-    } else if (bolaoStep < BOLAO_CATEGORIES.length - 1) {
-      setTimeout(() => setBolaoStep(s => s + 1), 160)
-    }
+  const cat = BOLAO_CATEGORIES[bolaoStep].cat
+  const newBolao = { ...bolao, [cat]: optionKey }
+  saveBolao(newBolao)
+  const allDone = BOLAO_CATEGORIES.every(c => newBolao[c.cat])
+  if (allDone) {
+    setBolaoOpen(false)
+    setTimeout(() => setBolaoResultsOpen(true), 420)
   }
+}
 
   const glass = {
     background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)',
@@ -1342,59 +1340,74 @@ export default function EstantePage() {
                   </div>
                 ) : (
                   nomineeOptions.map((opt, idx) => {
-                    const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
-                    const isSelected = bolao[step.cat] === optionKey
-                    return (
-                      <button key={optionKey} onClick={() => pickFilm(optionKey)}
-                        className="lg-btn flex items-center gap-3 rounded-2xl text-left transition-all"
-                        style={{
-                          padding: '10px 12px',
-                          background: isSelected ? 'rgba(255,69,58,0.12)' : 'rgba(255,255,255,0.04)',
-                          border: isSelected ? '1px solid rgba(255,69,58,0.4)' : '1px solid transparent',
-                          cursor: 'pointer',
-                        }}>
-                        {/* Poster */}
-                        <div style={{ width: 40, height: 60, borderRadius: 8, overflow: 'hidden',
-                          flexShrink: 0, background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.08)' }}>
-                          {opt.poster
-                            ? <img src={opt.poster!} alt={opt.filmTitle}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-                            : <div style={{ width: '100%', height: '100%', display: 'flex',
-                                alignItems: 'center', justifyContent: 'center' }}>
-                                <span style={{ fontSize: 16 }}>🎬</span>
-                              </div>
-                          }
-                        </div>
-                        {/* Title + nominee */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 600,
-                            color: isSelected ? '#FF453A' : 'rgba(255,255,255,0.85)',
-                            lineHeight: 1.3, marginBottom: 2,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {opt.filmTitle}
-                          </p>
-                          {opt.nominee && (
-                          <div style={{ fontSize: 11, color: '#FF453A', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {opt.nominee}
-                          </div>
-                          )}
-                        </div>
-                        {/* Check */}
-                        <div style={{
-                          width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                          background: isSelected ? '#FF453A' : 'rgba(255,255,255,0.08)',
-                          border: isSelected ? 'none' : '1.5px solid rgba(255,255,255,0.15)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.15s',
-                        }}>
-                          {isSelected && (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                              <path d="M5 12L10 17L19 7" stroke="#0a0a0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </div>
-                      </button>
+const optionKey = opt.nominee ? `${opt.filmId}-${opt.nominee}` : opt.filmId
+  const isSelected = bolao[step.cat] === optionKey
+  const isLast = idx === nomineeOptions.length - 1
+  return (
+    <button key={optionKey} onClick={() => pickFilm(optionKey)}
+      className="flex items-center gap-3 w-full text-left"
+      style={{
+        padding: '10px 0',
+        background: 'none',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.07)',
+        cursor: 'pointer',
+      }}>
+
+      {/* Check à esquerda */}
+      <div style={{
+        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+        background: isSelected ? '#FF453A' : 'transparent',
+        border: isSelected ? 'none' : '1.5px solid rgba(255,255,255,0.22)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all 0.15s',
+      }}>
+        {isSelected && (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+      </div>
+
+      {/* Poster */}
+      <div style={{
+        width: 40, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}>
+        {opt.poster
+          ? <img src={opt.poster!} alt={opt.filmTitle}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+          : <div style={{ width: '100%', height: '100%', display: 'flex',
+              alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 16 }}>🎬</span>
+            </div>
+        }
+      </div>
+
+      {/* Texto */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontSize: 15, fontWeight: 600,
+          color: isSelected ? '#FF453A' : 'rgba(255,255,255,0.9)',
+          lineHeight: 1.3, overflow: 'hidden',
+          textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          transition: 'color 0.15s',
+        }}>
+          {opt.nominee || opt.filmTitle}
+        </p>
+        {opt.nominee && (
+          <p style={{
+            fontSize: 12, color: 'rgba(255,255,255,0.38)',
+            lineHeight: 1.3, marginTop: 1,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {opt.filmTitle}
+          </p>
+        )}
+      </div>
+    </button>
                     )
                   })
                 )}
@@ -1476,12 +1489,12 @@ export default function EstantePage() {
                     }
                   </div>
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>Goes To...</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, }}>Goes To...</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -3, }}>
                       {profile.display_name ?? 'Cinéfilo'}
                     </p>
                     <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>@{profile.username}</p>
@@ -1498,7 +1511,7 @@ export default function EstantePage() {
               {/* Melhor Filme + grid centralizados verticalmente */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
 
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3, marginBottom: 14 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3, marginBottom: 14, marginTop: -3, }}>
                 Estes são meus palpites para o Oscar 2026
               </p>
 
@@ -1516,10 +1529,10 @@ export default function EstantePage() {
                     borderRadius: 12, padding: '10px 12px', marginBottom: 12,
                   }}>
                     <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.12em',
-                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2 }}>
+                      textTransform: 'uppercase', color: 'rgba(255,69,58,0.6)', marginBottom: 2, marginTop: -3, }}>
                       🏆 Melhor Filme
                     </p>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A',
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#FF453A', marginTop: -3,
                       lineHeight: 1.2, overflow: 'hidden',
                       display: '-webkit-box', WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical' as any }}>
@@ -1548,17 +1561,17 @@ export default function EstantePage() {
                   return (
                     <div key={c.cat} style={{ minWidth: 0, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <p style={{ fontSize: 7, fontWeight: 600, color: 'rgba(255,255,255,0.3)',
-                        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1,
+                        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1, marginTop: -3,
                         overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                         {c.label}
                       </p>
                       <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.85)',
-                        lineHeight: 1.3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                        lineHeight: 1.3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginTop: -3, }}>
                         {selectedNominee || pt}
                       </p>
                       {selectedNominee && (
                         <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', lineHeight: 1.2,
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: -3, }}>
                           {pt}
                         </p>
                       )}
