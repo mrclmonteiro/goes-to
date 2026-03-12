@@ -1000,7 +1000,7 @@ export default function FilmePage() {
             }}/>
 
             {/* Topo: app + user */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 3, }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 6, }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: 8, overflow: 'hidden',
@@ -1014,7 +1014,7 @@ export default function FilmePage() {
                 <p style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>Goes To...</p>
               </div>
               {/* Avatar + nome */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 3, }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 6, }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: 99,
                   background: 'rgba(167,139,250,0.2)',
@@ -1053,7 +1053,7 @@ export default function FilmePage() {
                   lineHeight: 1.6, marginBottom: 6,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
-                  paddingBottom: 2,
+                  paddingBottom: 5,
                 }}>
                   {details?.ptTitle || film.title}
                 </p>
@@ -1092,7 +1092,7 @@ export default function FilmePage() {
                 }}>
                   <p style={{
                     fontSize: 9, color: 'rgba(255,255,255,0.45)',
-                    fontWeight: 600, lineHeight: 1.6, paddingBottom: 2,
+                    fontWeight: 600, lineHeight: 1.6, paddingBottom: 5,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {CAT_SHORT[cat] ?? cat}
