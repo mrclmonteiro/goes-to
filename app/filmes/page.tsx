@@ -1093,7 +1093,6 @@ export default function FilmesPage() {
         </HScrollRow>
       </div>
 
-      {/* ── OS GRANDES INDICADOS ────────────────────────────── */}
       {bestPictureFilms.length > 0 && (
         <div className="mt-6 px-4">
           <style>{`

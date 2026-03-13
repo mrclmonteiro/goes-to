@@ -156,9 +156,7 @@ export default function AdminPage() {
 
       {/* Push Notifications — topo */}
       <div className="px-4 mb-6">
-        <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          Enviar notificação push
-        </p>
+          <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Enviar notificação push</p>
         <div className="flex flex-col gap-3 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
           <input
             value={pushTitle}
@@ -200,7 +198,7 @@ export default function AdminPage() {
       </div>
 
           
-      {/* Category picker */}
+      <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Escolher categoria para definir vencedor</p>
       <div className="px-4 mb-6">
         <div className="flex flex-col gap-1">
           {ORDERED_CATEGORIES.map(cat => {
@@ -230,9 +228,9 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Nominees for selected category */}
+      <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Definir vencedor</p>
       <div className="px-4">
-        <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <p className="text-xs tracking-widest font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {CATEGORY_LABELS[selectedCat] ?? selectedCat}
         </p>
         <div className="flex flex-col gap-2">
