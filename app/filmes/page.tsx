@@ -428,6 +428,115 @@ function WelcomeModal({ onConfigure }: { onConfigure: () => void }) {
   )
 }
 
+function NotifModal({ onClose, onGoToEstante }: { onClose: () => void; onGoToEstante: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col justify-end">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}/>
+      <div className="relative w-full rounded-t-[32px] flex flex-col sheet" style={{ maxHeight: '92vh' }}>
+        <style>{`
+          @keyframes bellShake {
+            0%, 100% { transform: rotate(0deg); }
+            15%       { transform: rotate(18deg); }
+            30%       { transform: rotate(-16deg); }
+            45%       { transform: rotate(14deg); }
+            60%       { transform: rotate(-10deg); }
+            75%       { transform: rotate(6deg); }
+          }
+          @keyframes ripple {
+            0%   { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(2.4); opacity: 0; }
+          }
+          @keyframes ripple2 {
+            0%   { transform: scale(0.8); opacity: 0.35; }
+            100% { transform: scale(2.4); opacity: 0; }
+          }
+        `}</style>
+
+        {/* Pílula drag */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}/>
+        </div>
+
+        <div className="flex flex-col items-center px-6 pt-4 pb-10 gap-5"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 40px)' }}>
+
+          {/* Emoji com ondas + sino */}
+          <div style={{ position: 'relative', width: 96, height: 96 }}>
+            {/* Ondas de rádio */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              borderRadius: '50%',
+              background: 'rgba(255,69,58,0.18)',
+              animation: 'ripple 2s ease-out infinite',
+            }}/>
+            <div style={{
+              position: 'absolute', inset: 0,
+              borderRadius: '50%',
+              background: 'rgba(255,69,58,0.12)',
+              animation: 'ripple2 2s ease-out infinite 0.7s',
+            }}/>
+            {/* Círculo de fundo */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(255,69,58,0.25), rgba(255,69,58,0.08))',
+              border: '1.5px solid rgba(255,255,255,0.15)',
+            }}/>
+            {/* 📲 principal */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 44,
+            }}>
+              📲
+            </div>
+            {/* 🔔 no canto superior direito, animado */}
+            <div style={{
+              position: 'absolute', top: 2, right: 2,
+              fontSize: 24,
+              animation: 'bellShake 1.4s ease-in-out infinite',
+              transformOrigin: 'top center',
+              filter: 'drop-shadow(0 2px 6px rgba(255,69,58,0.5))',
+            }}>
+              🔔
+            </div>
+          </div>
+
+          {/* Título */}
+          <h2 className="text-[22px] font-bold text-center" style={{ color: 'white', margin: 0 }}>
+            Que tal ativar as notificações?
+          </h2>
+
+          {/* Corpo */}
+          <p className="text-[15px] text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+            Faltam poucas horas para conhecer os grandes vencedores e você não quer ficar de fora de cada novidade, não é?
+            {' '}Além disso, fique por dentro de todas as novidades do app.{' '}
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>A gente não manda spam!</span>
+          </p>
+
+          {/* Card de privacidade */}
+          <div className="w-full flex gap-3 items-start rounded-2xl px-4 py-3"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>🔒</span>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+              Notificações só chegam quando há novidades relevantes. Você pode desativar a qualquer momento.
+            </p>
+          </div>
+
+          {/* CTAs */}
+          <Link href="/estante" onClick={onGoToEstante} className="primary-btn w-full text-center">
+            Ativar notificações
+          </Link>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.28)',
+              fontSize: 14, cursor: 'pointer', padding: '8px', minHeight: 44 }}>
+            Não, obrigado
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function FilmesPage() {
   const countdown = useCountdown()
   const [films, setFilms] = useState<Film[]>([])
@@ -439,10 +548,10 @@ export default function FilmesPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [avatarIdx, setAvatarIdx] = useState(0)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [showNotifModal, setShowNotifModal] = useState(false)
   const [movieData, setMovieData] = useState<Record<string, MovieData>>({})
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
   const [loading, setLoading] = useState(true)
-
   const [heroIdx, setHeroIdx] = useState(0)
   const [heroProgress, setHeroProgress] = useState(0)
   const [textVisible, setTextVisible] = useState(true)
@@ -466,20 +575,26 @@ export default function FilmesPage() {
       if (!supabase) return
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        setUserId(user.id)
-        const { data: prof } = await supabase.from('user_profiles').select('avatar_index, username').eq('id', user.id).maybeSingle()
-        if (prof?.avatar_index != null) setAvatarIdx(prof.avatar_index)
-        if (!prof) {
-          const emailPrefix = (user.email ?? '').split('@')[0] || user.id.slice(0, 8)
-          await supabase.from('user_profiles').insert({
-            id: user.id,
-            username: emailPrefix,
-            display_name: emailPrefix,
-            avatar_index: 0,
-          }).select().maybeSingle()
-          setShowWelcomeModal(true)
-        }
-      }
+  setUserId(user.id)
+  const { data: prof } = await supabase.from('user_profiles').select('avatar_index, username').eq('id', user.id).maybeSingle()
+  if (prof?.avatar_index != null) setAvatarIdx(prof.avatar_index)
+
+  const notifDismissed = localStorage.getItem('notif_modal_dismissed')
+  if (!notifDismissed && 'PushManager' in window && Notification.permission === 'default') {
+    setTimeout(() => setShowNotifModal(true), 1500)
+  }
+
+  if (!prof) {
+    const emailPrefix = (user.email ?? '').split('@')[0] || user.id.slice(0, 8)
+    await supabase.from('user_profiles').insert({
+      id: user.id,
+      username: emailPrefix,
+      display_name: emailPrefix,
+      avatar_index: 0,
+    }).select().maybeSingle()
+    setShowWelcomeModal(true)
+  }
+}
       const { data: filmsData } = await supabase.from('films').select('*')
       const { data: nominationsData } = await supabase.from('nominations').select('*')
       const { data: userFilmsData } = await supabase.from('user_films').select('*').eq('user_id', user?.id ?? '')
@@ -712,6 +827,19 @@ export default function FilmesPage() {
 
       {/* ── WELCOME MODAL ────────────────────────────────────────── */}
       {showWelcomeModal && <WelcomeModal onConfigure={() => setShowWelcomeModal(false)} />}
+
+      {showNotifModal && !showWelcomeModal && (
+  <NotifModal
+    onClose={() => {
+      localStorage.setItem('notif_modal_dismissed', '1')
+      setShowNotifModal(false)
+    }}
+    onGoToEstante={() => {
+      localStorage.setItem('notif_modal_dismissed', '1')
+      setShowNotifModal(false)
+    }}
+  />
+)}
 
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <div
