@@ -242,13 +242,13 @@ export default function LoginPage() {
             ].map(({ href, label, svg }) => (
               <a key={label} href={href} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center"
-                style={{ color: "rgba(255,255,255,0.5)'", lineHeight: 0 }}>
+                style={{ color: "rgba(255,255,255,0.35)'", lineHeight: 0 }}>
                 {svg}
               </a>
             ))}
             </div>
             <div className="flex items-center gap-2">
-    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)'" }}>Gostou?</span>
+    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)'" }}>Gostou?</span>
     <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer"
       style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "5px 12px", textDecoration: "none" }}>
       <span style={{ fontSize: 13 }}>☕</span>
