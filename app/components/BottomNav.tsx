@@ -60,23 +60,18 @@ const TABS = [
   },
 ]
 
-// Variante com blur mais pesado — exclusiva da nav bar persistente
 const navGlass: React.CSSProperties = {
   background: 'rgba(12,12,16,0.5)',
   backdropFilter: 'blur(3px) saturate(350%)',
   WebkitBackdropFilter: 'blur(3px) saturate(350%)',
-  /* Borda fina: lado iluminado (top-left) mais brilhante, lado em sombra (bottom-right) mais escuro */
   border: '1px solid transparent',
-  /* Fresnel + Glare + Dispersão cromática — baseado no LiquidGlassFragment.metal */
   boxShadow: [
     '0 8px 32px rgba(0,0,0,0.2)',
     'inset 1px 1px 0px rgba(255,255,255,0.12)',
     'inset -1px -1px 0px rgba(0,0,0,0.18)',
     'inset 1px 1px 0px rgba(255,120,100,0.03)',
     'inset -1px -1px 0px rgba(100,130,255,0.02)',
-    // Glow corner topo-esquerda — luz direta (quente)
     'inset 14px 14px 24px rgba(255,255,255,0.05)',
-    // Glow corner baixo-direita — reflexo frio
     'inset -14px -14px 24px rgba(160,190,255,0.03)',
   ].join(', '),
 }
@@ -127,7 +122,6 @@ export default function BottomNav() {
     }
   }
 
-  // ✅ Função que estava faltando — recolhe a busca e volta para a aba ativa
   function handleCondensedPillPress() {
     setStage('idle')
     setQuery('')
@@ -148,7 +142,7 @@ export default function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-5"
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 15px)', height: 'auto' }}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 10px)', height: 'auto' }}
     >
 
       {/* ── Main pill + bubble wrapper ─────────────────────────────────── */}
