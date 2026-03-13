@@ -1102,7 +1102,7 @@ export default function EstantePage() {
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>Marcelo Monteiro</span> com auxílio da{' '}
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>Claude</span>.
           </p>
-          div className="flex gap-4 items-center justify-between">
+          <div className="flex gap-4 items-center justify-between">
                       <div className="flex gap-4 items-center">
                       {[
                         { href: "https://x.com/mrclmonteiro", label: "X", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
@@ -1127,6 +1127,7 @@ export default function EstantePage() {
                 <span style={{ fontSize: 11, fontWeight: 600, color: "white", whiteSpace: "nowrap" }}>Me apoia um café</span>
               </a>
             </div>
+                </div>
         </div>
       </BottomSheet>
 
