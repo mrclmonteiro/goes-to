@@ -19,20 +19,20 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Goes To...",
-    startupImage: "/assets/apple-touch-icon.png",
+    startupImage: "/apple-touch-icon.png",
   },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/assets/icon-192.png", sizes: "192x192" },
-      { url: "/assets/icon-512.png", sizes: "512x512" },
+      { url: "/icon-192.png", sizes: "192x192" },
+      { url: "/icon-512.png", sizes: "512x512" },
     ],
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Goes To...",
     description: "Um novo app para acompanhar, avaliar e compartilhar os filmes indicados às principais premiações",
-    images: [{ url: "/assets/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
     keywords: [
     "votar oscar",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   ],
   twitter: {
     card: "summary_large_image",
-    images: ["/assets/og-image.png"],
+    images: ["/og-image.png"],
   },
   alternates: {
   canonical: "https://goes-to.vercel.app",
