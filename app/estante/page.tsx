@@ -585,6 +585,22 @@ export default function EstantePage() {
     }
   }
 
+    async function unsubscribeFromNotifications() {
+  setNotifLoading(true)
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.getSubscription()
+    if (sub) await sub.unsubscribe()
+    setNotifStatus('idle')
+  } catch (e) {
+    console.error('Unsubscribe error:', e)
+  } finally {
+    setNotifLoading(false)
+  }
+
+  }
+
+
   const filmCategories = (filmId: string) => nominations.filter(n => n.film_id === filmId).map(n => n.category)
 
   const isCustomGoal = profile.goal_category === 'custom'
@@ -775,6 +791,18 @@ export default function EstantePage() {
 
         <EasterEgg egg={activeEgg as EggType} />
 
+{/* Admin flutuante à esquerda */}
+{profile.is_admin && (
+  <button onClick={() => router.push('/admin')}
+    className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
+    style={{ ...lgStyle, position: 'fixed', top: 'max(env(safe-area-inset-top), 45px)', left: '15px', width: '44px', height: '44px', overflow: 'hidden' }}>
+    <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 2 }} />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 3 }}>
+      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  </button>
+)}
 
         {/* Botões agrupados: Bolão + Configurações */}
         <div ref={toolbarRef} className="lg-btn fixed z-[100] flex items-center pointer-events-auto"
@@ -800,18 +828,22 @@ export default function EstantePage() {
           {/* Notificações */}
           {typeof window !== 'undefined' && 'PushManager' in window && notifStatus !== 'denied' && (
             <button
-              onClick={notifStatus === 'subscribed' ? undefined : subscribeToNotifications}
+              onClick={notifStatus === 'subscribed' ? unsubscribeFromNotifications : subscribeToNotifications}
               disabled={notifLoading}
               className="flex items-center justify-center flex-shrink-0 relative"
               style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: notifStatus === 'subscribed' ? 'default' : 'pointer', opacity: notifLoading ? 0.5 : 1 }}
             >
               {notifStatus === 'subscribed' ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" fill="rgba(255,255,255,0.15)" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M13.73 21a2 2 0 01-3.46 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="18" cy="6" r="3.5" fill="#34C759" stroke="#0a0a0f" strokeWidth="1.5"/>
-                </svg>
-              ) : (
+  <>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" fill="rgba(255,255,255,0.15)" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13.73 21a2 2 0 01-3.46 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+    <div style={{ position: 'absolute', top: 9, right: 9, width: 6, height: 6,
+      borderRadius: '50%', background: '#34C759',
+      boxShadow: '0 0 6px rgba(52,199,89,0.8)' }}/>
+  </>
+) : (
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M13.73 21a2 2 0 01-3.46 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -819,17 +851,7 @@ export default function EstantePage() {
               )}
             </button>
           )}
-          {/* Admin (só visível para admins) */}
-          {profile.is_admin && (
-            <button onClick={() => router.push('/admin')}
-              className="flex items-center justify-center flex-shrink-0 relative"
-              style={{ width: 43, height: 43, background: 'none', border: 'none', cursor: 'pointer' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          )}
+ 
           {/* Config */}
           <button onClick={() => { setTempAvatarIndex(profile.avatar_index); setConfigOpen(true) }}
             className="flex items-center justify-center flex-shrink-0"
