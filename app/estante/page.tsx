@@ -1127,7 +1127,6 @@ export default function EstantePage() {
                 <span style={{ fontSize: 11, fontWeight: 600, color: "white", whiteSpace: "nowrap" }}>Me apoia um café</span>
               </a>
             </div>
-                </div>
         </div>
       </BottomSheet>
 
