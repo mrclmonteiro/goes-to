@@ -377,12 +377,12 @@ export default function FilmePage() {
           const det = await fetchMovieDetails(basic.id)
           setDetails(det)
 
-          // Busca logo separadamente — usa o mesmo Bearer token da lib
-          // Logo selecionado por pickLogo() em tmdb.ts — sempre inglês (nunca pt)
-          if (det?.logo) setLogoUrl(det.logo)
           // Pre-load poster as base64 for html2canvas
           if (det?.poster) {
-            fetch(det.poster)
+            const urlSeparator = det.poster.includes('?') ? '&' : '?';
+            const fetchUrl = `${det.poster}${urlSeparator}cb=${Date.now()}`;
+
+            fetch(fetchUrl, { mode: 'cors' })
               .then(r => r.blob())
               .then(blob => new Promise<string>(resolve => {
                 const reader = new FileReader()
@@ -485,8 +485,20 @@ export default function FilmePage() {
 
   const backdrop = details?.backdrop
   const genres = details?.genres ?? []
-  const filmNominations = nominations.map(n => ({ category: n.category, nominee: n.nominee ?? null, winner: n.winner }))
-
+  const filmNominations = Object.values(
+    nominations.reduce((acc, curr) => {
+      if (!acc[curr.category]) {
+        acc[curr.category] = { category: curr.category, nominees: new Set<string>(), winner: false };
+      }
+      if (curr.nominee) acc[curr.category].nominees.add(curr.nominee);
+      if (curr.winner) acc[curr.category].winner = true;
+      return acc;
+    }, {} as Record<string, { category: string, nominees: Set<string>, winner: boolean }>)
+  ).map(n => ({
+    category: n.category,
+    nominee: n.nominees.size > 0 ? Array.from(n.nominees).join(', ') : null,
+    winner: n.winner
+  }));
   return (
     <>
       <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
@@ -1011,9 +1023,9 @@ export default function FilmePage() {
                     : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.1)' }}/>
                   }
                 </div>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'white', marginTop: -7, }}>Goes To...</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'white', lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>Goes To...</p>
               </div>
-              {/* Avatar + nome */}
+              {/* avatar + nome */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 10, }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: 99,
@@ -1021,7 +1033,7 @@ export default function FilmePage() {
                   border: '1.5px solid rgba(167,139,250,0.3)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 6,
                 }}>
-                  {AVATARS[profile.avatar_index]}
+                  <p style={{ lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>{AVATARS[profile.avatar_index]}</p>
                 </div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2, marginTop: -5, }}>
                   {profile.display_name ?? 'Cinéfilo'}
