@@ -5,7 +5,7 @@ import BottomNavWrapper from './components/BottomNavWrapper'
 import InstallBanner from './components/InstallBanner'
 import TouchActiveFix from './components/TouchActiveFix'
 import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from "@vercel/analytics/next"
 
 export const dynamic = 'force-dynamic'
 
