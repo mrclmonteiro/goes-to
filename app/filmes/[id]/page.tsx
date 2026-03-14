@@ -1062,7 +1062,7 @@ export default function FilmePage() {
                 </p>
                 <p style={{
                   fontSize: 18, fontWeight: 800, color: 'white',
-                  lineHeight: 1.1, marginBottom: 6, marginTop: -7, paddingBottom: 10,
+                  lineHeight: 1.1, marginBottom: 6, marginTop: -7,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
                   paddingBottom: 10,
