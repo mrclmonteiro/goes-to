@@ -485,18 +485,18 @@ export default function FilmePage() {
 
   const backdrop = details?.backdrop
   const genres = details?.genres ?? []
-  const filmNominations = Object.values(
-    nominations.reduce((acc, curr) => {
-      if (!acc[curr.category]) {
-        acc[curr.category] = { category: curr.category, nominees: new Set<string>(), winner: false };
-      }
-      if (curr.nominee) acc[curr.category].nominees.add(curr.nominee);
-      if (curr.winner) acc[curr.category].winner = true;
-      return acc;
-    }, {} as Record<string, { category: string, nominees: Set<string>, winner: boolean }>)
-  ).map(n => ({
+  const filmNominations = nominations.filter((nom, index, arr) => {
+    const firstIndex = arr.findIndex(n => n.category === nom.category && n.nominee === nom.nominee);
+    if (firstIndex !== index) return false;
+    if (!nom.nominee) {
+      const temOutroComIndicado = arr.some(n => n.category === nom.category && n.nominee);
+      if (temOutroComIndicado) return false;
+    }
+    
+    return true;
+  }).map(n => ({
     category: n.category,
-    nominee: n.nominees.size > 0 ? Array.from(n.nominees).join(', ') : null,
+    nominee: n.nominee ?? null,
     winner: n.winner
   }));
   return (
@@ -1033,7 +1033,7 @@ export default function FilmePage() {
                   border: '1.5px solid rgba(167,139,250,0.3)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 6,
                 }}>
-                  <p style={{ lineHeight: 1.2, marginTop: -7, paddingBottom: 10, }}>{AVATARS[profile.avatar_index]}</p>
+                  <p style={{ lineHeight: 1.2, marginTop: -5, paddingBottom: 10, }}>{AVATARS[profile.avatar_index]}</p>
                 </div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2, marginTop: -5, }}>
                   {profile.display_name ?? 'Cinéfilo'}
