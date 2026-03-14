@@ -1033,7 +1033,7 @@ export default function FilmePage() {
                   border: '1.5px solid rgba(167,139,250,0.3)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, paddingBottom: 6,
                 }}>
-                  <p style={{ lineHeight: 1.2, marginTop: -5, paddingBottom: 10, }}>{AVATARS[profile.avatar_index]}</p>
+                  <p style={{ lineHeight: 1.2, marginTop: -3, paddingBottom: 10, }}>{AVATARS[profile.avatar_index]}</p>
                 </div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.2, marginTop: -5, }}>
                   {profile.display_name ?? 'Cinéfilo'}
@@ -1056,13 +1056,13 @@ export default function FilmePage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
                   fontSize: 10, fontWeight: 700, letterSpacing: '0.15em',
-                  textTransform: 'uppercase', color: 'rgba(167,139,250,0.7)', marginBottom: 4,
+                  textTransform: 'uppercase', color: 'rgba(167,139,250,0.7)', marginBottom: 4, marginTop: -7, paddingBottom: 10, lineHeight: 1.2,
                 }}>
                   Oscar 2026
                 </p>
                 <p style={{
                   fontSize: 18, fontWeight: 800, color: 'white',
-                  lineHeight: 1.1, marginBottom: 6, marginTop: -3,
+                  lineHeight: 1.1, marginBottom: 6, marginTop: -7, paddingBottom: 10,
                   maxHeight: '2.4em',
                   overflow: 'hidden',
                   paddingBottom: 10,
@@ -1082,7 +1082,7 @@ export default function FilmePage() {
             {/* Título da seção */}
             <p style={{
               fontSize: 9, fontWeight: 700, letterSpacing: '0.16em',
-              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12, marginTop: -2,
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12, marginTop: -5, paddingBottom: 10, lineHeight: 1.2,
             }}>
               Minhas avaliações por categoria
             </p>
@@ -1139,9 +1139,7 @@ export default function FilmePage() {
                         </svg>
                       );
                     })}
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#FF453A', marginLeft: 4, flexShrink: 0 }}>
-                      {stars}
-                    </span>
+                    
                   </div>
                 </div>
               ))}
