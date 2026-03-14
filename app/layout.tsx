@@ -5,7 +5,7 @@ import BottomNavWrapper from './components/BottomNavWrapper'
 import InstallBanner from './components/InstallBanner'
 import TouchActiveFix from './components/TouchActiveFix'
 import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
-
+import { Analytics } from '@vercel/analytics/react';
 
 export const dynamic = 'force-dynamic'
 
@@ -110,6 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <InstallBanner/>
         <TouchActiveFix />
         <ServiceWorkerRegistration />
+        <Analytics />
       </body>
     </html>
   )
