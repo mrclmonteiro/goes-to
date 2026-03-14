@@ -1109,15 +1109,37 @@ export default function FilmePage() {
                   }}>
                     {CAT_SHORT[cat] ?? cat}
                   </p>
-                  {/* Mini star bar */}
+                  {/* estrelinhas */}
                   <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {[1,2,3,4,5].map(n => (
-                      <div key={n} style={{
-                        flex: 1, height: 3, borderRadius: 99,
-                        background: n <= stars ? '#FF453A' : 'rgba(255,255,255,0.1)',
-                      }}/>
-                    ))}
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#FF453A', marginLeft: 3, marginTop: -6, flexShrink: 0 }}>
+                    {[1, 2, 3, 4, 5].map(n => {
+                      const full = stars >= n;
+                      const half = !full && stars >= n - 0.5 && stars > n - 1;
+                      const starId = `share-half-${cat.replace(/\s/g, '-')}-${n}`;
+                      return (
+                        <svg key={n} width="12" height="12" viewBox="0 0 24 24" style={{ display: 'block' }}>
+                          <defs>
+                            <clipPath id={starId}>
+                              <rect x="0" y="0" width="12" height="24" />
+                            </clipPath>
+                          </defs>
+                          {/* estrela de fundo (vazia) */}
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                            fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinejoin="round" />
+                          {/* meia estrela preenchida */}
+                          {half && (
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                              fill="#FF453A" stroke="none"
+                              clipPath={`url(#${starId})`} />
+                          )}
+                          {/* estrela inteira preenchida */}
+                          {full && (
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                              fill="#FF453A" stroke="none" />
+                          )}
+                        </svg>
+                      );
+                    })}
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#FF453A', marginLeft: 4, flexShrink: 0 }}>
                       {stars}
                     </span>
                   </div>
