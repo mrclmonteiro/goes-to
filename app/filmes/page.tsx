@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner'
 import { categoryCardBg, categorySlug } from '@/lib/categories'
 
 const OSCAR_DATE = new Date('2026-03-15T23:00:00Z')
+const OSCAR_END = new Date('2026-03-16T00:00:00')
 const HERO_DURATION = 6000
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -822,6 +823,10 @@ export default function FilmesPage() {
     </main>
   )
 
+  const now = Date.now()
+  const hasOscarEnded = now >= OSCAR_END.getTime()
+  const hasOscarStarted = !countdown && !hasOscarEnded
+
   return (
     <main className="min-h-screen pb-36" style={{ background: '#0a0a0f', color: 'white' }}>
 
@@ -1022,6 +1027,57 @@ export default function FilmesPage() {
       </div>
 
 
+      {!hasOscarEnded && (
+        <div className="px-4 mt-6 mb-4">
+          <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Chegou o dia!</p>
+          <div className="rounded-3xl p-5 flex items-center gap-4" style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {hasOscarStarted ? (
+              <div className="w-full text-center">
+                <p className="text-sm font-semibold" style={{ color: '#FF453A' }}>A cerimônia já começou! 🤞</p>
+              </div>
+            ) : (
+              <>
+                {/* Calendar tile */}
+                <div className="rounded-2xl overflow-hidden flex-shrink-0 w-14 h-14 flex flex-col"
+                  style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+                  <div className="flex items-center justify-center text-[10px] font-bold tracking-widest uppercase py-0.5"
+                    style={{ background: '#e53e3e', color: 'white' }}>MAR</div>
+                  <div className="flex-1 flex items-center justify-center font-bold text-2xl"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: 'white' }}>15</div>
+                </div>
+
+                {/* Countdown numbers */}
+                <div className="flex-1">
+                  {countdown && (
+                    <div className="flex gap-3">
+                      {[{ v: countdown.d, l: 'dias' }, { v: countdown.h, l: 'horas' }, { v: countdown.m, l: 'min' }, { v: countdown.s, l: 'seg' }].map(({ v, l }) => (
+                        <div key={l} className="text-center">
+                          <p className="text-xl font-bold tabular-nums">{String(v).padStart(2, '0')}</p>
+                          <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{l}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Botão adicionar ao calendário */}
+                <a
+                  href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
+                  download="oscar2026.ics"
+                  title="Adicionar ao calendário"
+                  className="lg-btn w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ ...lgStyle, position: 'relative', color: 'rgba(255,255,255,0.85)' }}
+                >
+                  <CalendarIcon/>
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── TOP 10 ─────────────────────────────────────────────────── */}
       {top10Films.length > 0 && (
         <div className="mt-6 pb-4">
@@ -1219,49 +1275,7 @@ export default function FilmesPage() {
         )}
       </div>
 
-      {/* ── COUNTDOWN ─────────────────────────────────────────────── */}
-      <div className="px-4 mt-6 mb-4">
-        <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Oscar 2026 começa em</p>
-        <div className="rounded-3xl p-5 flex items-center gap-4" style={{
-          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-        }}>
-          {/* Calendar tile */}
-          <div className="rounded-2xl overflow-hidden flex-shrink-0 w-14 h-14 flex flex-col"
-            style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
-            <div className="flex items-center justify-center text-[10px] font-bold tracking-widest uppercase py-0.5"
-              style={{ background: '#e53e3e', color: 'white' }}>MAR</div>
-            <div className="flex-1 flex items-center justify-center font-bold text-2xl"
-              style={{ background: 'rgba(255,255,255,0.08)', color: 'white' }}>15</div>
-          </div>
 
-          {/* Countdown numbers */}
-          <div className="flex-1">
-            {countdown ? (
-              <div className="flex gap-3">
-                {[{ v: countdown.d, l: 'dias' }, { v: countdown.h, l: 'horas' }, { v: countdown.m, l: 'min' }, { v: countdown.s, l: 'seg' }].map(({ v, l }) => (
-                  <div key={l} className="text-center">
-                    <p className="text-xl font-bold tabular-nums">{String(v).padStart(2, '0')}</p>
-                    <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{l}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm font-semibold" style={{ color: '#FF453A' }}>É hoje! 🎦</p>
-            )}
-          </div>
-
-          {/* Botão adicionar ao calendário */}
-          <a
-            href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:20260315T230000Z%0ADTEND:20260316T030000Z%0ASUMMARY:Oscar%202026%0ADESCRIPTION:Cerim%C3%B4nia%20do%20Oscar%202026%0AEND:VEVENT%0AEND:VCALENDAR"
-            download="oscar2026.ics"
-            title="Adicionar ao calendário"
-            className="lg-btn w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ ...lgStyle, position: 'relative', color: 'rgba(255,255,255,0.85)' }}
-          >
-            <CalendarIcon/>
-          </a>
-        </div>
-      </div>
 
     </main>
   )
