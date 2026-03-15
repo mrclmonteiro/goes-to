@@ -330,14 +330,39 @@ export default function CategoriaPage() {
               }
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.92) 100%)' }} />
               <div className="absolute top-4 left-4 z-10 text-2xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>🏆</div>
-              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                {winnerDetails?.logo
-                  ? <img src={winnerDetails.logo} alt={winnerFilm.title} className="h-12 mb-2 object-contain object-left" style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} />
-                  : <p className="text-2xl font-bold mb-1 leading-tight" style={{ color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>{(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}</p>
-                }
-                {winnerDetails?.tagline && (
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{winnerDetails.tagline}</p>
-                )}
+              <div className="absolute bottom-0 left-0 right-0 p-5 z-10 flex items-end gap-4">
+                                {isPersonCat && winnerNom?.nominee && (() => {
+                  const firstName = (winnerNom.nominee as string).split(/,| e /)[0].trim();
+                  const photo = personPhotos[firstName];
+                  return (
+                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 shadow-lg" style={{ border: '2px solid rgba(255,255,255,0.8)' }}>
+                      {photo ? (
+                        <img src={photo} alt={firstName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-white/20 backdrop-blur-md text-white">
+                          {firstName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <div className="flex-1">
+                  
+                  {isPersonCat && winnerNom?.nominee && (
+                    <p className="text-lg font-bold mb-1" style={{ color: '#E5E7EB' }}>
+                      {winnerNom.nominee}
+                    </p>
+                  )}
+                  {winnerDetails?.logo
+                    ? <img src={winnerDetails.logo} alt={winnerFilm.title} className="h-12 mb-2 object-contain object-left" style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} />
+                    : <p className="text-2xl font-bold mb-1 leading-tight" style={{ color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>{(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}</p>
+                  }
+                  {winnerDetails?.tagline && (
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{winnerDetails.tagline}</p>
+                  )}
+                  
+                </div>
               </div>
             </Link>
           </div>
