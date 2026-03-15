@@ -577,7 +577,7 @@ export default function FilmesPage() {
   const [liveUpdates, setLiveUpdates] = useState<LiveUpdate[]>([])
   const [selectedUpdate, setSelectedUpdate] = useState<LiveUpdate | null>(null)
   const [liveModalOpen, setLiveModalOpen] = useState(false)
-  const shareRef = useRef<HTMLDivElement>(null)
+  const shareRef = useRef<HTMLDivElement | null>(null)
 
   const heroSlide = HERO_SLIDES[heroIdx]
   // for gauge: use nearest preceding category slide (or first category)
@@ -1111,117 +1111,64 @@ export default function FilmesPage() {
             </div>
           </div>
 
-          {/* ── LIVE UPDATES ───────────────────────────────────── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-lg font-semibold" style={{ color: 'white' }}>Acompanhe com a gente</p>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.12em]"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)' }}>
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '999px',
-                    background: '#ff3b30',
-                    boxShadow: '0 0 0 4px rgba(255,59,48,0.35)',
-                    animation: 'livePulse 1.4s ease-in-out infinite',
-                  }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.88)' }}>Ao vivo</span>
-              </div>
-            </div>
-            <style>{`
-              @keyframes livePulse {
-                0%   { transform: scale(1);   opacity: 1; }
-                50%  { transform: scale(1.25); opacity: 0.5; }
-                100% { transform: scale(1);   opacity: 1; }
-              }
-            `}</style>
-
-            <div className="rounded-3xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              {liveUpdates.length === 0 ? (
-                <div className="py-4 text-center">
-                  <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    Fique ligado para acompanhar as atualizações
-                  </p>
-                </div>
-              ) : (
-                <div className="relative">
-                  <div className="space-y-3">
-                    {liveUpdates.slice(0, 4).map(upd => {
-                      const isWinner = upd.kind === 'winner'
-                      const time = upd.created_at ? new Date(upd.created_at) : null
-                      const hh = time ? String(time.getHours()).padStart(2, '0') : '--'
-                      const mm = time ? String(time.getMinutes()).padStart(2, '0') : '--'
-                      const text = upd.plain_text || upd.title || ''
-                      return (
-                        <button
-                          key={upd.id}
-                          className="w-full text-left rounded-2xl px-3.5 py-3 active:bg-white/5"
-                          style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}
-                          onClick={() => { setSelectedUpdate(upd); setLiveModalOpen(true) }}
-                        >
-                          <div className="flex items-start gap-2.5">
-                            {isWinner && (
-                              <div
-                                className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.12em] flex items-center gap-1"
-                                style={{
-                                  background: 'linear-gradient(135deg, #f5d76e, #f1c40f)',
-                                  color: '#2b1900',
-                                  boxShadow: '0 0 0 1px rgba(255,255,255,0.25), 0 4px 16px rgba(0,0,0,0.7)',
-                                }}
-                              >
-                                <span>Vencedor</span>
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              {upd.title && (
-                                <p className="text-[13px] font-semibold mb-0.5" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                                  {upd.title}
-                                </p>
-                              )}
-                              {text && (
-                                <p className="text-[12px] leading-snug line-clamp-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                  {text}
-                                </p>
-                              )}
-                            </div>
-                            <span className="text-[11px] flex-shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                              {hh}:{mm}
-                            </span>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div
-                    className="pointer-events-none"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(to top, rgba(10,10,15,0.96) 0%, transparent 40%)',
-                    }}
-                  />
-                  <div className="mt-3 flex justify-center relative z-10">
-                    <button
-                      onClick={() => {
-                        if (liveUpdates[0]) {
-                          setSelectedUpdate(liveUpdates[0])
-                          setLiveModalOpen(true)
-                        }
-                      }}
-                      className="px-4 py-1.5 rounded-full text-[12px] font-semibold"
-                      style={{ background: 'rgba(255,255,255,0.12)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }}
-                    >
-                      Ver mais
-                    </button>
-                  </div>
-                </div>
-              )}
+{/* NOVA SEÇÃO: Acompanhe com a gente */}
+        <div className="mb-10 px-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Acompanhe com a gente</h2>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-red-500 tracking-wide">AO VIVO</span>
             </div>
           </div>
+
+          <div className="flex flex-col relative">
+            {liveUpdates.length === 0 ? (
+              <p className="text-center text-sm py-6 border-b" style={{ color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.08)' }}>
+                Fique ligado para acompanhar as atualizações
+              </p>
+            ) : (
+              <div className="flex flex-col">
+                {liveUpdates.slice(0, 4).map(upd => {
+                  const time = upd.created_at ? new Date(upd.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'
+                  const isWinner = upd.kind === 'winner'
+                  
+                  return (
+                    <div 
+                      key={upd.id} 
+                      className="py-5 border-b flex flex-col gap-2 cursor-pointer transition-colors"
+                      style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+                      onClick={() => { setSelectedUpdate(upd); setLiveModalOpen(true); }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {isWinner ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 uppercase">🏆 Vencedor</span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white/70 uppercase">📝 Update</span>
+                        )}
+                        <span className="text-[11px] text-white/40">{time}</span>
+                      </div>
+                      
+                      {upd.title && <h4 className="text-[15px] font-bold text-white/90">{upd.title}</h4>}
+                      
+                      <p className="text-[14px] line-clamp-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                        {upd.plain_text || (isWinner ? `O Oscar de ${CATEGORY_LABELS[upd.category || ''] || upd.category} vai para...` : '')}
+                      </p>
+                      
+                      <span className="text-[12px] font-bold underline mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        Ver atualização completa
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {/* O gradiente agora é menor (h-12) para não tapar o clique das atualizações */}
+            {liveUpdates.length > 0 && (
+              <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-[#0a0a0f] to-transparent pointer-events-none" />
+            )}
+          </div>
         </div>
-      )}
+        </div> )}
 
       {/* ── TOP 10 ─────────────────────────────────────────────────── */}
       {top10Films.length > 0 && (
@@ -1293,188 +1240,6 @@ export default function FilmesPage() {
           </Link>
         </HScrollRow>
       </div>
-
-      {/* ── LIVE MODAL ───────────────────────────────────────────── */}
-      {selectedUpdate && liveModalOpen && (
-        <div className="fixed inset-0 z-[999] flex flex-col justify-end">
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
-            onClick={() => setLiveModalOpen(false)}
-          />
-          <div
-            className="relative w-full rounded-t-[32px] flex flex-col sheet"
-            style={{ maxHeight: '92vh', overflow: 'hidden', background: 'rgba(10,10,15,0.98)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-          >
-            <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 pointer-events-none">
-              <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} />
-            </div>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <button
-                onClick={() => setLiveModalOpen(false)}
-                className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ ...lgStyle, width: 40, height: 40 }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-              <button
-                onClick={async () => {
-                  if (!shareRef.current) return
-                  await shareOrDownload(shareRef as React.RefObject<HTMLDivElement>)
-                }}
-                className="lg-btn rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: '#FF453A',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  boxShadow: '0 6px 18px rgba(255,69,58,0.5)',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 12V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V12" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M12 4V16" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M8 8L12 4L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div
-              ref={shareRef}
-              className="px-6 pb-8 pt-2 overflow-y-auto"
-              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}
-            >
-              {selectedUpdate.kind === 'winner' ? (
-                (() => {
-                  const film = selectedUpdate.film_id
-                    ? films.find(f => f.id === selectedUpdate.film_id)
-                    : null
-                  const filmTitle = film ? (movieData[film.title]?.ptTitle || film.title) : null
-                  const poster = film ? (movieData[film.title]?.poster ?? null) : null
-                  const catLabel = selectedUpdate.category
-                    ? (CATEGORY_LABELS[selectedUpdate.category] ?? selectedUpdate.category)
-                    : null
-                  const personName = selectedUpdate.person_name
-                  const personPhoto = selectedUpdate.person_photo_url
-                  return (
-                    <div className="flex flex-col items-center text-center gap-4">
-                      <div
-                        className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]"
-                        style={{
-                          background: 'linear-gradient(135deg, #f5d76e, #f1c40f)',
-                          color: '#2b1900',
-                          boxShadow: '0 0 0 1px rgba(255,255,255,0.4), 0 10px 30px rgba(0,0,0,0.85)',
-                        }}
-                      >
-                        Vencedor
-                      </div>
-                      {poster && (
-                        <div
-                          style={{
-                            position: 'relative',
-                            width: 170,
-                            height: 255,
-                            borderRadius: 24,
-                            overflow: 'hidden',
-                            boxShadow:
-                              '0 20px 50px rgba(0,0,0,0.9), 0 0 40px rgba(245,215,110,0.5)',
-                            border: '1px solid rgba(255,255,255,0.6)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: 'absolute',
-                              inset: -40,
-                              background:
-                                'radial-gradient(circle at 50% 0%, rgba(245,215,110,0.6) 0%, transparent 55%)',
-                              opacity: 0.9,
-                            }}
-                          />
-                          <img
-                            src={poster}
-                            alt={filmTitle ?? ''}
-                            className="w-full h-full object-cover relative"
-                            style={{ filter: 'saturate(1.05)' }}
-                          />
-                        </div>
-                      )}
-                      {catLabel && (
-                        <p
-                          className="text-xs font-semibold uppercase tracking-[0.18em]"
-                          style={{ color: 'rgba(255,255,255,0.7)', letterSpacing: '0.18em' }}
-                        >
-                          {catLabel}
-                        </p>
-                      )}
-                      {filmTitle && (
-                        <p
-                          className="text-2xl font-bold leading-tight"
-                          style={{ color: 'white', textShadow: '0 0 24px rgba(0,0,0,0.9)' }}
-                        >
-                          {filmTitle}
-                        </p>
-                      )}
-                      {personName && (
-                        <div className="mt-2 flex flex-col items-center gap-2">
-                          {personPhoto && (
-                            <div
-                              className="rounded-full overflow-hidden"
-                              style={{
-                                width: 80,
-                                height: 80,
-                                border: '2px solid rgba(255,255,255,0.8)',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.9)',
-                              }}
-                            >
-                              <img
-                                src={personPhoto}
-                                alt={personName}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <p
-                            className="text-base font-semibold"
-                            style={{ color: 'rgba(255,255,255,0.95)' }}
-                          >
-                            {personName}
-                          </p>
-                        </div>
-                      )}
-                      {selectedUpdate.rich_html && (
-                        <div
-                          className="mt-4 text-left text-[13px] leading-relaxed"
-                          style={{ color: 'rgba(255,255,255,0.78)' }}
-                          dangerouslySetInnerHTML={{ __html: selectedUpdate.rich_html }}
-                        />
-                      )}
-                    </div>
-                  )
-                })()
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {selectedUpdate.title && (
-                    <p
-                      className="text-lg font-semibold"
-                      style={{ color: 'white' }}
-                    >
-                      {selectedUpdate.title}
-                    </p>
-                  )}
-                  {selectedUpdate.rich_html && (
-                    <div
-                      className="text-[14px] leading-relaxed"
-                      style={{ color: 'rgba(255,255,255,0.8)' }}
-                      dangerouslySetInnerHTML={{ __html: selectedUpdate.rich_html }}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {bestPictureFilms.length > 0 && (
         <div className="mt-6 px-4">
