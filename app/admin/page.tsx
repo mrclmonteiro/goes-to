@@ -221,7 +221,7 @@ export default function AdminPage() {
         const { data: removed } = await query.select().throwOnError()
           
         if (removed && removed.length > 0) {
-          const removedIds = removed.map(r => r.id)
+          const removedIds = removed.map((r: { id: string }) => r.id)
           setUpdates(prev => prev.filter(u => !removedIds.includes(u.id)))
         }
       }
