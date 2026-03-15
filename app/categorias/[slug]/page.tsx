@@ -123,8 +123,6 @@ export default function CategoriaPage() {
   const category = slugToCategory(slug)
   const categoryLabel = category ? (CATEGORY_LABELS[category] ?? category) : slug
   const aura = category ? CATEGORY_AURA[category] : ['#888888', '#666666', '#444444', '#0a0a0f'] as const
-  const isPersonCat = category ? PERSON_CATEGORIES_SET.has(category) : false
-
   const [userId, setUserId] = useState<string | null>(null)
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
@@ -134,6 +132,7 @@ export default function CategoriaPage() {
   const [personPhotos, setPersonPhotos] = useState<Record<string, string | null>>({})
   const [winnerDetails, setWinnerDetails] = useState<WinnerDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const isPersonCat = nominations.some(n => n.nominee && n.nominee.trim() !== '')
 
   useEffect(() => {
     if (!category) { setLoading(false); return }
@@ -157,7 +156,8 @@ export default function CategoriaPage() {
       const data = await fetchAllMovieData(loaded.map((f: Film) => f.title))
       setMovieData(data as any)
       setLoading(false)
-      if (isPersonCat) {
+      const hasProfessionals = noms.some((n: Nomination) => n.nominee && n.nominee.trim() !== '')
+      if (hasProfessionals) {
         const nominees = noms
           .filter((n: Nomination) => n.nominee)
           .flatMap((n: Nomination) =>
@@ -401,7 +401,7 @@ export default function CategoriaPage() {
               <span className="text-xs font-medium" style={{ color: usersGuessedRight ? '#34C759' : '#FF453A' }}>
                 {usersGuessedRight
                   ? 'A galera acertou o vencedor!'
-                  : `A galera errou — venceu ${(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}`}
+                  : `A galera errou — venceu ${(isPersonCat && winnerNom?.nominee) ? winnerNom.nominee : ((movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title)}`}
               </span>
             </div>
           )}
