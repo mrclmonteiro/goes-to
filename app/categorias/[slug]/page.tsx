@@ -333,7 +333,6 @@ export default function CategoriaPage() {
               <div className="absolute bottom-0 left-0 right-0 p-5 z-10 flex items-end gap-4">
                 {isPersonCat && winnerNom?.nominee ? (
                   <>
-                    {/* 1. SE FOR PROFISSIONAL: Mostra a Foto */}
                     {(() => {
                       const firstName = (winnerNom.nominee as string).split(/,| e /)[0].trim();
                       const photo = personPhotos[firstName];
@@ -350,22 +349,25 @@ export default function CategoriaPage() {
                       );
                     })()}
 
-                    {/* 2. SE FOR PROFISSIONAL: Mostra o Nome do Profissional + Logo do filme pequeno */}
                     <div className="flex-1">
-                      <p className="text-xl font-bold mb-1" style={{ color: '#E5E7EB', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+                      <p className="text-base font-medium mb-1.5" style={{ color: '#E5E7EB', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
                         {winnerNom.nominee}
                       </p>
                       {winnerDetails?.logo ? (
-                        <img src={winnerDetails.logo} alt={winnerFilm.title} className="h-8 object-contain object-left opacity-90" style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} />
+                        <img 
+                          src={winnerDetails.logo} 
+                          alt={winnerFilm.title} 
+                          className="h-12 mb-2 object-contain object-left" 
+                          style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} 
+                        />
                       ) : (
-                        <p className="text-lg font-bold leading-tight" style={{ color: 'rgba(255,255,255,0.8)', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>
+                        <p className="text-2xl font-bold mb-1 leading-tight" style={{ color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.7)' }}>
                           {(movieData[winnerFilm.title] as any)?.ptTitle || winnerFilm.title}
                         </p>
                       )}
                     </div>
                   </>
                 ) : (
-                  /* 3. SE NÃO FOR PROFISSIONAL: Renderização original (Só o Filme) */
                   <div className="flex-1">
                     {winnerDetails?.logo ? (
                       <img src={winnerDetails.logo} alt={winnerFilm.title} className="h-12 mb-2 object-contain object-left" style={{ filter: 'brightness(0) invert(1)', maxWidth: '70%' }} />
