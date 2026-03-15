@@ -304,19 +304,16 @@ export default function CategoriaPage() {
           background: 'linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(10,10,15,0.45) 78%, #0a0a0f 100%)'
         }}/>
 
-        {/* Category title — centered */}
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none">
           <h1 className="text-3xl font-bold leading-tight" style={{ textShadow: '0 2px 24px rgba(0,0,0,0.45)' }}>{categoryLabel}</h1>
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────── */}
       <div className="px-4 mt-2">
 
-        {/* ── O grande vencedor ────────────────────────────────────── */}
         {winnerFilm && (
           <div className="mb-8">
-            <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>O grande vencedor</p>
+            <p className="text-lg font-semibold mb-4" style={{ color: 'white' }}>E o prêmio Goes To...</p>
             <Link href={`/filmes/${winnerFilm.id}`}
               className="block relative rounded-3xl overflow-hidden transition-transform duration-150 active:scale-[1.03]"
               style={{
