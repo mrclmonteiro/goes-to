@@ -377,7 +377,10 @@ export default function FilmePage() {
           const det = await fetchMovieDetails(basic.id)
           setDetails(det)
 
-          // Pre-load poster as base64 for html2canvas
+          if (det?.logo) {
+            setLogoUrl(det.logo)
+          }
+
           if (det?.poster) {
             const urlSeparator = det.poster.includes('?') ? '&' : '?';
             const fetchUrl = `${det.poster}${urlSeparator}cb=${Date.now()}`;

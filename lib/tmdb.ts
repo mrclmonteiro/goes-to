@@ -70,6 +70,7 @@ export async function fetchMovieData(title: string) {
     backdrop: backdrops[0] ?? null,
     backdrops,
     overview: movie.overview ?? null,
+    logo: pickLogo(images),
   }
 }
 
@@ -200,12 +201,12 @@ export async function fetchMovieDetails(tmdbId: number) {
 }
 
 export async function fetchAllMovieData(titles: string[]): Promise<Record<string, {
-  ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null; tmdbId: number | null
+  ptTitle: string | null; poster: string | null; backdrop: string | null; backdrops: string[]; overview: string | null; tmdbId: number | null; logo: string | null // 👈 Adicionado logo na tipagem
 }>> {
   const pairs = await Promise.all(titles.map(async t => [t, await fetchMovieData(t)] as const))
   return Object.fromEntries(pairs.map(([t, d]) => [t, d
-    ? { ptTitle: d.ptTitle, poster: d.poster, backdrop: d.backdrop, backdrops: d.backdrops, overview: d.overview, tmdbId: d.id ?? null }
-    : { ptTitle: null, poster: null, backdrop: null, backdrops: [], overview: null, tmdbId: null }
+    ? { ptTitle: d.ptTitle, poster: d.poster, backdrop: d.backdrop, backdrops: d.backdrops, overview: d.overview, tmdbId: d.id ?? null, logo: d.logo ?? null } // 👈 Repassando o logo
+    : { ptTitle: null, poster: null, backdrop: null, backdrops: [], overview: null, tmdbId: null, logo: null } 
   ]))
 }
 
