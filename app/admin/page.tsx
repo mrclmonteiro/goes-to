@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { ORDERED_CATEGORIES, CATEGORY_LABELS } from '@/lib/categories'
@@ -17,13 +17,102 @@ const lgStyle: React.CSSProperties = {
 type Film = { id: string; title: string }
 type Nomination = { id?: string; film_id: string; category: string; nominee: string | null; winner: boolean }
 
+// --- TIPOS DO LIVESTREAM ---
+type LiveUpdate = {
+  id?: string
+  created_at?: string
+  kind: 'update' | 'winner'
+  title: string | null
+  plain_text: string | null
+  rich_html: string | null
+  category: string | null
+  film_id: string | null
+  person_name: string | null
+  person_photo_url: string | null
+  is_published: boolean
+}
+
+// --- COMPONENTE DO EDITOR RICH TEXT ---
+function RichTextEditor({ 
+  initialHtml, 
+  onChange 
+}: { 
+  initialHtml: string, 
+  onChange: (html: string, plain: string) => void 
+}) {
+  const editorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== initialHtml && !editorRef.current.contains(document.activeElement)) {
+      editorRef.current.innerHTML = initialHtml || ''
+    }
+  }, [initialHtml])
+
+  const exec = (command: string, value?: string) => {
+    document.execCommand(command, false, value)
+    editorRef.current?.focus()
+    update()
+  }
+
+  const update = () => {
+    if (!editorRef.current) return
+    onChange(editorRef.current.innerHTML, editorRef.current.innerText)
+  }
+
+  const insertLink = () => {
+    const url = prompt('URL do link (ex: https://...):')
+    if (url) exec('createLink', url)
+  }
+
+  const insertYouTube = () => {
+    const url = prompt('Cole a URL do YouTube:')
+    if (!url) return
+    const videoIdMatch = url.match(/[?&]v=([^&]+)/) || url.match(/youtu\.be\/([^?]+)/)
+    const videoId = videoIdMatch ? videoIdMatch[1] : null
+    if (videoId) {
+      const iframe = `<br><div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; margin: 16px 0;"><iframe style="position:absolute; top:0; left:0; width:100%; height:100%;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div><br>`
+      exec('insertHTML', iframe)
+    } else {
+      alert('Não foi possível identificar o vídeo na URL.')
+    }
+  }
+
+  const insertTweet = () => {
+    const embedCode = prompt('Cole aqui o código HTML de embed do Tweet:')
+    if (embedCode) {
+      exec('insertHTML', `<br><div style="display:flex; justify-content:center; margin: 16px 0;">${embedCode}</div><br>`)
+    }
+  }
+
+  return (
+    <div className="border rounded-xl overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.2)' }}>
+      <div className="flex flex-wrap gap-1 p-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)' }}>
+        <button type="button" onClick={() => exec('bold')} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded font-bold text-white transition-colors">B</button>
+        <button type="button" onClick={() => exec('italic')} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded italic text-white transition-colors">I</button>
+        <div className="w-px h-6 my-auto mx-1 bg-white/10" />
+        <button type="button" onClick={insertLink} className="px-3 h-8 flex items-center justify-center hover:bg-white/10 rounded text-sm text-white transition-colors">🔗 Link</button>
+        <button type="button" onClick={insertYouTube} className="px-3 h-8 flex items-center justify-center hover:bg-white/10 rounded text-sm text-red-400 transition-colors">▶️ YouTube</button>
+        <button type="button" onClick={insertTweet} className="px-3 h-8 flex items-center justify-center hover:bg-white/10 rounded text-sm text-blue-400 transition-colors">🐦 Tweet</button>
+      </div>
+      <div
+        ref={editorRef}
+        className="p-4 min-h-[150px] outline-none"
+        contentEditable
+        onInput={update}
+        onBlur={update}
+        style={{ color: 'rgba(255,255,255,0.9)', fontSize: '15px', lineHeight: '1.6' }}
+      />
+    </div>
+  )
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
   const [films, setFilms] = useState<Film[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
-  const [saving, setSaving] = useState<string | null>(null) // film_id+category being saved
+  const [saving, setSaving] = useState<string | null>(null)
   const [selectedCat, setSelectedCat] = useState<string>(ORDERED_CATEGORIES[0])
   const [pushTitle, setPushTitle] = useState('')
   const [pushMessage, setPushMessage] = useState('')
@@ -31,8 +120,11 @@ export default function AdminPage() {
   const [pushResult, setPushResult] = useState<string | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
 
-  // onAuthStateChange é o único método 100% confiável para capturar o token
-  // getSession/refreshSession podem retornar null dependendo do contexto
+  // Estados do Livestream
+  const [updates, setUpdates] = useState<LiveUpdate[]>([])
+  const [editingUpdate, setEditingUpdate] = useState<Partial<LiveUpdate> | null>(null)
+  const [isSavingUpdate, setIsSavingUpdate] = useState(false)
+
   useEffect(() => {
     const supabase = createClient()
     if (!supabase) return
@@ -50,7 +142,6 @@ export default function AdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/'); return }
 
-      // refreshSession garante token fresco (getSession pode retornar null no admin)
       const { data: { session } } = await supabase.auth.refreshSession()
       if (session?.access_token) setAccessToken(session.access_token)
 
@@ -64,12 +155,16 @@ export default function AdminPage() {
 
       setAuthorized(true)
 
-      const [{ data: filmsData }, { data: nomsData }] = await Promise.all([
+      // Adicionando a busca dos live updates aqui
+      const [{ data: filmsData }, { data: nomsData }, { data: updatesData }] = await Promise.all([
         supabase.from('films').select('id, title'),
         supabase.from('nominations').select('film_id, category, nominee, winner'),
+        supabase.from('oscar_live_updates').select('*').order('created_at', { ascending: false })
       ])
+      
       setFilms(filmsData ?? [])
       setNominations(nomsData ?? [])
+      setUpdates(updatesData ?? [])
       setLoading(false)
     }
     load()
@@ -126,6 +221,52 @@ export default function AdminPage() {
     }
   }
 
+  // Funções do Livestream
+  async function saveUpdate() {
+    if (!editingUpdate) return
+    setIsSavingUpdate(true)
+    const supabase = createClient()
+    if (!supabase) return
+
+    try {
+      if (editingUpdate.id) {
+        const { data, error } = await supabase
+          .from('oscar_live_updates')
+          .update(editingUpdate)
+          .eq('id', editingUpdate.id)
+          .select()
+          .single()
+        
+        if (error) throw error
+        if (data) setUpdates(prev => prev.map(u => u.id === data.id ? data : u))
+      } else {
+        const { data, error } = await supabase
+          .from('oscar_live_updates')
+          .insert({ ...editingUpdate, is_published: true })
+          .select()
+          .single()
+          
+        if (error) throw error
+        if (data) setUpdates(prev => [data, ...prev])
+      }
+      setEditingUpdate(null)
+    } catch (err) {
+      console.error(err)
+      alert('Erro ao salvar atualização')
+    } finally {
+      setIsSavingUpdate(false)
+    }
+  }
+
+  async function deleteUpdate(id: string) {
+    if (!confirm('Tem certeza que deseja excluir esta atualização permanentemente?')) return
+    const supabase = createClient()
+    if (!supabase) return
+    
+    await supabase.from('oscar_live_updates').delete().eq('id', id)
+    setUpdates(prev => prev.filter(u => u.id !== id))
+  }
+
   const noms = nominations.filter(n => n.category === selectedCat)
 
   if (loading || !authorized) return (
@@ -137,7 +278,7 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen pb-24" style={{ background: '#0a0a0f', color: 'white' }}>
 
-      {/* Back button — fixed, liquid glass */}
+      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="lg-btn fixed z-[100] flex items-center justify-center rounded-full"
@@ -154,7 +295,7 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold">Admin</h1>
       </div>
 
-      {/* Push Notifications — topo */}
+      {/* Push Notifications */}
       <div className="px-4 mb-6">
           <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Enviar notificação push</p>
         <div className="flex flex-col gap-3 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -197,8 +338,164 @@ export default function AdminPage() {
         </div>
       </div>
 
-          
-      <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Escolher categoria para definir vencedor</p>
+      {/* Live Stream: Editor e Lista */}
+      <div className="px-4 mb-10 mt-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            🔴 Live Stream Updates
+          </h2>
+          <button 
+            onClick={() => setEditingUpdate({ kind: 'update', rich_html: '', plain_text: '', is_published: true })}
+            className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          >
+            + Adicionar
+          </button>
+        </div>
+
+        {editingUpdate && (
+          <div className="mb-8 p-5 rounded-2xl bg-black/40 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4">
+              {editingUpdate.id ? 'Editar Atualização' : 'Nova Atualização'}
+            </h3>
+            
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-white/50 mb-1 uppercase tracking-wide">Tipo</label>
+                <select 
+                  className="w-full bg-white/5 border border-white/10 text-white p-3 rounded-xl outline-none"
+                  value={editingUpdate.kind}
+                  onChange={e => setEditingUpdate({ ...editingUpdate, kind: e.target.value as 'update' | 'winner' })}
+                >
+                  <option value="update">📝 Atualização Geral</option>
+                  <option value="winner">🏆 Anúncio de Vencedor</option>
+                </select>
+              </div>
+
+              {editingUpdate.kind === 'winner' && (
+                <div className="grid grid-cols-1 gap-4 p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1 uppercase">Categoria</label>
+                    <select 
+                      className="w-full bg-black/50 border border-white/10 text-white p-2.5 rounded-lg outline-none"
+                      value={editingUpdate.category || ''}
+                      onChange={e => setEditingUpdate({ ...editingUpdate, category: e.target.value })}
+                    >
+                      <option value="">Selecione...</option>
+                      {ORDERED_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{CATEGORY_LABELS[cat] || cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1 uppercase">Filme</label>
+                    <select 
+                      className="w-full bg-black/50 border border-white/10 text-white p-2.5 rounded-lg outline-none"
+                      value={editingUpdate.film_id || ''}
+                      onChange={e => setEditingUpdate({ ...editingUpdate, film_id: e.target.value })}
+                    >
+                      <option value="">Selecione...</option>
+                      {films.map(f => (
+                        <option key={f.id} value={f.id}>{f.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1 uppercase">Nome (Opcional - Ex: Diretor)</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-black/50 border border-white/10 text-white p-2.5 rounded-lg outline-none"
+                      value={editingUpdate.person_name || ''}
+                      onChange={e => setEditingUpdate({ ...editingUpdate, person_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1 uppercase">Foto (URL - Opcional)</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-black/50 border border-white/10 text-white p-2.5 rounded-lg outline-none"
+                      value={editingUpdate.person_photo_url || ''}
+                      onChange={e => setEditingUpdate({ ...editingUpdate, person_photo_url: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-white/50 mb-1 uppercase tracking-wide">Título (Opcional)</label>
+                <input 
+                  type="text"
+                  className="w-full bg-white/5 border border-white/10 text-white p-3 rounded-xl outline-none"
+                  value={editingUpdate.title || ''}
+                  onChange={e => setEditingUpdate({ ...editingUpdate, title: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-white/50 mb-1 uppercase tracking-wide">Conteúdo do Post</label>
+                <RichTextEditor 
+                  initialHtml={editingUpdate.rich_html || ''}
+                  onChange={(html, plain) => setEditingUpdate({ ...editingUpdate, rich_html: html, plain_text: plain })}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-2">
+                <button 
+                  onClick={() => setEditingUpdate(null)}
+                  className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white font-medium"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={saveUpdate}
+                  disabled={isSavingUpdate}
+                  className="bg-white text-black px-6 py-2.5 rounded-xl font-bold hover:bg-white/90 disabled:opacity-50"
+                >
+                  {isSavingUpdate ? 'Salvando...' : 'Publicar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-3">
+          {updates.length === 0 && !editingUpdate && (
+            <p className="text-white/40 text-center py-6 text-sm">Nenhuma atualização no momento.</p>
+          )}
+          {updates.map(upd => (
+            <div key={upd.id} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 items-start sm:items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {upd.kind === 'winner' ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 uppercase">🏆 Vencedor</span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 uppercase">📝 Update</span>
+                  )}
+                </div>
+                {upd.title && <h4 className="text-sm font-bold text-white truncate">{upd.title}</h4>}
+                <p className="text-xs text-white/50 line-clamp-2 mt-1">{upd.plain_text}</p>
+              </div>
+              
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button 
+                  onClick={() => setEditingUpdate(upd)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white"
+                >
+                  ✏️
+                </button>
+                <button 
+                  onClick={() => deleteUpdate(upd.id!)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Definir Vencedores Tradicional */}
+      <p className="text-lg font-semibold mb-[5px] px-4" style={{ color: 'white' }}>Escolher categoria para definir vencedor</p>
       <div className="px-4 mb-6">
         <div className="flex flex-col gap-1">
           {ORDERED_CATEGORIES.map(cat => {
@@ -228,7 +525,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <p className="text-lg font-semibold mb-[5px]" style={{ color: 'white' }}>Definir vencedor</p>
+      <p className="text-lg font-semibold mb-[5px] px-4" style={{ color: 'white' }}>Definir vencedor</p>
       <div className="px-4">
         <p className="text-xs tracking-widest font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {CATEGORY_LABELS[selectedCat] ?? selectedCat}
