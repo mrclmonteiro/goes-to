@@ -170,26 +170,76 @@ export default function AdminPage() {
     load()
   }, [router])
 
-  async function toggleWinner(filmId: string, category: string, currentWinner: boolean) {
-    const key = `${filmId}-${category}`
+  async function toggleWinner(nom: Nomination) {
+    const { film_id, category, nominee, winner: currentWinner } = nom
+    const key = `${film_id}-${category}`
     setSaving(key)
     const supabase = createClient()
     if (!supabase) return
 
-    await supabase
-      .from('nominations')
-      .update({ winner: !currentWinner })
-      .eq('film_id', filmId)
-      .eq('category', category)
+    try {
+      // 1. Atualiza a tabela nominations e FORÇA o erro caso o banco falhe
+      await supabase
+        .from('nominations')
+        .update({ winner: !currentWinner })
+        .eq('film_id', film_id)
+        .eq('category', category)
+        .throwOnError()
 
-    setNominations(prev =>
-      prev.map(n =>
-        n.film_id === filmId && n.category === category
-          ? { ...n, winner: !currentWinner }
-          : n
+      // 2. Cria ou remove a atualização automática no livestream
+      if (!currentWinner) {
+        // Virou vencedor: cria o post no livestream
+        const { data: newUpdate } = await supabase
+          .from('oscar_live_updates')
+          .insert({
+            kind: 'winner',
+            category: category,
+            film_id: film_id,
+            person_name: nominee, 
+            is_published: true
+          })
+          .select()
+          .single()
+          .throwOnError()
+          
+        if (newUpdate) setUpdates(prev => [newUpdate, ...prev])
+      } else {
+        // Deixou de ser vencedor (desmarcou): remove o post do livestream
+        let query = supabase
+          .from('oscar_live_updates')
+          .delete()
+          .eq('kind', 'winner')
+          .eq('category', category)
+          .eq('film_id', film_id)
+
+        if (nominee) {
+          query = query.eq('person_name', nominee)
+        } else {
+          query = query.is('person_name', null)
+        }
+
+        const { data: removed } = await query.select().throwOnError()
+          
+        if (removed && removed.length > 0) {
+          const removedIds = removed.map(r => r.id)
+          setUpdates(prev => prev.filter(u => !removedIds.includes(u.id)))
+        }
+      }
+
+      // 3. Atualiza a UI das indicações
+      setNominations(prev =>
+        prev.map(n =>
+          n.film_id === film_id && n.category === category
+            ? { ...n, winner: !currentWinner }
+            : n
+        )
       )
-    )
-    setSaving(null)
+    } catch (err) {
+      console.error("Erro no toggleWinner:", err)
+      alert('Erro ao alterar vencedor. O banco de dados e a interface foram mantidos sincronizados.')
+    } finally {
+      setSaving(null)
+    }
   }
 
   async function sendPush() {
@@ -539,7 +589,7 @@ export default function AdminPage() {
             return (
               <button
                 key={key}
-                onClick={() => toggleWinner(nom.film_id, nom.category, nom.winner)}
+                onClick={() => toggleWinner(nom)}
                 disabled={!!saving}
                 className="flex items-center gap-4 px-4 py-4 rounded-2xl text-left"
                 style={{
